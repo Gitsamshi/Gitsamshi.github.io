@@ -1,0 +1,89 @@
+baseURL = "https://gitsamshi.github.io/"
+languageCode = "zh-cn"
+defaultContentLanguage = "en"
+title = "Zhan Shi"
+theme = "PaperMod"
+[pagination]
+  pagerSize = 10
+enableRobotsTXT = true
+
+[params]
+  author = "Zhan Shi"
+  description = "Applied Scientist | LLM Systems, Agent Evolution, RL Training"
+  env = "production"
+  showReadingTime = true
+  showShareButtons = false
+  showPostNavLinks = true
+  showBreadCrumbs = true
+  showCodeCopyButtons = true
+  showToc = true
+  TocOpen = false
+  defaultTheme = "auto"
+  disableThemeToggle = false
+
+  [params.homeInfoParams]
+    Title = "Hi, I'm Zhan Shi 👋"
+    Content = """Applied Scientist in the Bay Area. \
+Working on LLM systems, agent evolution frameworks, and RL training. \
+Building [A-Evolve](https://github.com/gitsamshi) — an agent evolution framework that automatically evolves prompt strategies, skill libraries, and orchestration flows.\n\n\
+Previously at ByteDance (TikTok e-Commerce). Ph.D. from Queen's University. \
+ACL-2017 Outstanding Paper Award recipient."""
+
+  [[params.socialIcons]]
+    name = "github"
+    url = "https://github.com/gitsamshi"
+  [[params.socialIcons]]
+    name = "googlescholar"
+    url = "https://scholar.google.com/citations?user=yROrWMkAAAAJ"
+  [[params.socialIcons]]
+    name = "linkedin"
+    url = "https://www.linkedin.com/in/zshipassion/"
+  [[params.socialIcons]]
+    name = "email"
+    url = "mailto:shizhanszh34@gmail.com"
+
+  [params.editPost]
+    disabled = true
+
+  [params.assets]
+    disableHLJS = false
+
+[params.cover]
+  hiddenInList = false
+  hiddenInSingle = false
+
+[menu]
+  [[menu.main]]
+    identifier = "blog"
+    name = "Blog"
+    url = "/posts/"
+    weight = 1
+  [[menu.main]]
+    identifier = "publications"
+    name = "Publications"
+    url = "/publications/"
+    weight = 2
+  [[menu.main]]
+    identifier = "about"
+    name = "About"
+    url = "/about/"
+    weight = 3
+  [[menu.main]]
+    identifier = "search"
+    name = "Search"
+    url = "/search/"
+    weight = 4
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
+[markup]
+  [markup.highlight]
+    style = "monokai"
+    lineNos = false
+    codeFences = true
+  [markup.goldmark.renderer]
+    unsafe = true
+
+[minify]
+  disableXML = true
