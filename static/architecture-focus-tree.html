@@ -303,7 +303,7 @@
   // ---------- layout constants ----------
   var COL = { GL5:180, GL4:390, GL3:600, GL2:810, GL1:1020, T:1230, GR1:1440, GR2:1650, GR3:1860, GR4:2070, GR5:2280 };
   var NODEW=158, BOXH=112, ROW=160, TOP=120;
-  var CANVAS_W=2400;
+  var CANVAS_W=2400, XOFF=0, PADX=120;
   function yOf(year){ return TOP + (year-2015)*ROW; }
 
   // ---------- node data ----------
@@ -511,7 +511,7 @@
   }
 
   // geometry + svg helpers
-  function cx(n){ return COL[n.col]; }
+  function cx(n){ return COL[n.col]+XOFF; }
   function topY(n){ return yOf(n.year); }
   function geo(n){
     var x=cx(n), t=topY(n);
@@ -560,6 +560,14 @@
     wires.innerHTML='';
     var maxY=0; N.forEach(function(n){ var y=yOf(n.year); if(y>maxY)maxY=y; });
     var CANVAS_H=maxY+BOXH+50;
+    // fit + center: use only the columns this page actually occupies
+    var minC=Infinity,maxC=-Infinity;
+    N.forEach(function(n){ var c=COL[n.col]; if(c<minC)minC=c; if(c>maxC)maxC=c; });
+    if(!isFinite(minC)){ minC=maxC=COL.T; }
+    var contentLeft=minC-NODEW/2, contentRight=maxC+NODEW/2;
+    XOFF=PADX-contentLeft;                       // shift leftmost node to sit at PADX
+    CANVAS_W=(contentRight-contentLeft)+PADX*2;  // wrap content + symmetric padding
+    canvas.style.width=CANVAS_W+'px';
     canvas.style.height=CANVAS_H+'px';
     wires.setAttribute('width',CANVAS_W);
     wires.setAttribute('height',CANVAS_H);
