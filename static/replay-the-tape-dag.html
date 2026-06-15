@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Replay the Tape · Weighted DAG of Architecture Evolution 2015–2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#0e1116; --gold:#d8b15a; --gold-bright:#f3d488; --gold-deep:#9a7327;
+    --frame-1:#caa257; --frame-2:#5e5230; --frame-3:#2c2a1e;
+    --ink:#e7ecf2; --ink-dim:#9fa7b3; --ink-faint:#6b7280;
+    --plate:#161b22; --plate-2:#1d242e;
+    --hist:#f3d488;          /* realized timeline */
+    --ghost:#8b93a7; --ghost-deep:#39404f;
+    --revive:#4fd6b4; --revive-deep:#1c6e5c;
+    --confluence:#5aa9e6;    /* recombination edges */
+    --draw:#e0773d;          /* draw-weight accent */
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--ink);font-family:"IBM Plex Mono","Noto Serif SC",monospace;line-height:1.5;
+    background:
+      radial-gradient(1200px 800px at 75% -10%, #1a2740 0%, transparent 55%),
+      radial-gradient(900px 600px at 8% 110%, #20160f 0%, transparent 60%),
+      linear-gradient(180deg,#11151c,#0b0e13 75%);}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 20px}
+
+  header.banner{padding:34px 0 10px;text-align:center}
+  .banner .kicker{font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold-deep)}
+  .banner h1{font-family:"Cinzel",serif;font-weight:900;font-size:clamp(24px,4vw,44px);
+    margin:.18em 0 .12em;color:var(--gold-bright);letter-spacing:.03em;text-shadow:0 2px 0 #000,0 0 22px rgba(216,177,90,.25)}
+  .banner p{max-width:820px;margin:.4em auto 0;color:var(--ink-dim);font-size:13.5px}
+  .banner p b{color:var(--gold-bright)}
+  .rule{height:2px;max-width:520px;margin:16px auto 0;background:linear-gradient(90deg,transparent,var(--gold-deep),var(--gold),var(--gold-deep),transparent)}
+
+  /* fix-callouts */
+  .fixes{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:18px auto 4px;max-width:1100px}
+  .fix{flex:1 1 240px;max-width:340px;border:1px solid var(--frame-3);border-left:3px solid var(--confluence);
+    background:rgba(20,26,34,.7);border-radius:6px;padding:9px 12px;font-size:11.5px;color:var(--ink-dim)}
+  .fix b{color:var(--ink);display:block;font-size:12px;margin-bottom:2px;letter-spacing:.02em}
+  .fix.f2{border-left-color:var(--draw)} .fix.f3{border-left-color:var(--revive)}
+
+  /* legend + controls */
+  .bar{display:flex;flex-wrap:wrap;gap:10px 16px;justify-content:center;align-items:center;margin:18px auto 6px;max-width:1180px}
+  .lg{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--ink-dim)}
+  .lg .ln{width:26px;height:0;border-top-width:2.4px;border-top-style:solid}
+  .lg .sw{width:14px;height:14px;border-radius:3px;border:1.5px solid}
+  .sw.hist{background:linear-gradient(150deg,#3a2e16,#1c1609);border-color:var(--gold-bright)}
+  .sw.ghost{background:repeating-linear-gradient(45deg,#23262f 0 4px,#191c24 4px 8px);border-color:var(--ghost-deep);border-style:dashed}
+  .sw.rev{background:linear-gradient(150deg,#10302a,#0a1d19);border-color:var(--revive)}
+  .controls{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin:6px auto 0}
+  button.ctl{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.03em;cursor:pointer;
+    border:1px solid var(--frame-2);background:linear-gradient(180deg,#1d242e,#12161d);color:var(--ink);
+    border-radius:6px;padding:8px 15px;transition:.15s}
+  button.ctl:hover{border-color:var(--gold-deep);color:var(--gold-bright)}
+  button.ctl.primary{border-color:var(--draw);color:#ffd9bf;background:linear-gradient(180deg,#2a1c12,#1a1009)}
+  button.ctl.primary:hover{box-shadow:0 0 14px rgba(224,119,61,.4);color:#fff0e6}
+  .runline{text-align:center;font-size:12px;color:var(--ink-dim);margin:10px auto 0;min-height:18px;letter-spacing:.02em}
+  .runline b{color:var(--draw)} .runline .same{color:var(--revive)}
+
+  /* canvas */
+  .scroller{overflow-x:auto;overflow-y:hidden;padding:14px 0 60px}
+  .canvas{position:relative;margin:0 auto}
+  svg.wires{position:absolute;left:0;top:0;pointer-events:none;z-index:1}
+  .yrtab{position:absolute;left:0;transform:translateY(-50%);z-index:1;font-family:"Cinzel",serif;font-weight:700;
+    font-size:16px;color:var(--gold);background:linear-gradient(180deg,#1d242e,#12161d);border:1px solid var(--frame-2);
+    border-left:3px solid var(--gold);border-radius:4px;padding:2px 10px;letter-spacing:.05em}
+  .yrtab small{display:block;font-family:"IBM Plex Mono",monospace;font-weight:400;font-size:8.5px;color:var(--ink-faint);letter-spacing:.12em}
+
+  /* node card */
+  .node{position:absolute;z-index:2;width:152px;border-radius:7px;padding:8px 9px 9px;cursor:pointer;
+    background:linear-gradient(180deg,var(--plate-2),var(--plate));border:1px solid var(--frame-2);
+    box-shadow:0 2px 6px rgba(0,0,0,.5);transition:transform .12s,box-shadow .12s,opacity .25s,border-color .2s}
+  .node:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.6);z-index:6}
+  .node .ttl{font-size:11.5px;font-weight:600;color:var(--ink);line-height:1.25;font-family:"Noto Serif SC","IBM Plex Mono",serif}
+  .node .meta{display:flex;align-items:center;gap:6px;margin-top:6px}
+  .node .wt{font-size:9.5px;letter-spacing:.04em;color:var(--draw);border:1px solid #5a3a26;border-radius:3px;padding:0 4px}
+  .node .wbar{flex:1;height:4px;border-radius:2px;background:#0c0f14;overflow:hidden;border:1px solid #2a2f3a}
+  .node .wbar i{display:block;height:100%;background:linear-gradient(90deg,var(--draw),#f0a86e)}
+  .node .tag{position:absolute;top:-9px;left:9px;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;
+    background:var(--gold-bright);color:#1a140b;border-radius:3px;padding:0 5px;font-weight:700}
+
+  /* node states */
+  .node.hist{border-color:var(--gold-deep);background:linear-gradient(180deg,#26210f,#16120a)}
+  .node.hist .ttl{color:var(--gold-bright)}
+  .node.ghost{border-style:dashed;border-color:var(--ghost-deep);opacity:.66}
+  .node.ghost .ttl{color:var(--ghost)}
+  .node.ghost .tag{background:var(--ghost);color:#15171d}
+  .node.revive{border-color:var(--revive-deep);background:linear-gradient(180deg,#0f2a25,#0a1714)}
+  .node.revive .ttl{color:var(--revive)} .node.revive .tag{background:var(--revive);color:#04130f}
+  .node.now .tag{background:#fff0c8}
+  .node.now{border-color:var(--gold);box-shadow:0 0 18px rgba(243,212,136,.4)}
+  /* active = won this run */
+  .node.active{outline:2px solid var(--draw);outline-offset:1px}
+  .node.dimmed{opacity:.24;filter:grayscale(.5)}
+  .node .sub{margin-top:6px;font-size:9px;color:var(--revive);letter-spacing:.02em;display:flex;align-items:center;gap:4px}
+  .node .sub b{color:#86e7cf;font-weight:600}
+  .node .merge{margin-top:5px;font-size:9px;color:var(--confluence);letter-spacing:.02em}
+
+  /* tooltip */
+  #tip{position:fixed;z-index:80;max-width:330px;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .12s;
+    background:linear-gradient(180deg,#1b222c,#10141a);border:1px solid var(--frame-2);border-top:2px solid var(--gold);
+    border-radius:7px;box-shadow:0 12px 34px rgba(0,0,0,.7);padding:12px 14px}
+  #tip.on{opacity:1;transform:translateY(0)}
+  #tip .tt-tag{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-deep)}
+  #tip h5{margin:3px 0 7px;font-family:"Cinzel",serif;font-size:14.5px;color:var(--gold-bright);line-height:1.2}
+  #tip .row{font-size:12px;margin:5px 0;color:var(--ink-dim);line-height:1.5}
+  #tip .row .lbl{display:inline-block;font-size:9px;letter-spacing:.08em;padding:1px 6px;border-radius:3px;margin-right:5px;vertical-align:1px}
+  #tip .lbl.dr{background:rgba(224,119,61,.18);color:#f0a86e}
+  #tip .lbl.mg{background:rgba(90,169,230,.18);color:#8fc3ea}
+  #tip .lbl.su{background:rgba(79,214,180,.16);color:var(--revive)}
+  #tip .lbl.cf{background:rgba(159,167,179,.16);color:var(--ghost)}
+  #tip .note{margin-top:8px;padding-top:7px;border-top:1px dashed var(--frame-3);font-size:11.5px;color:var(--ink);font-style:italic}
+
+  footer{border-top:1px solid var(--frame-3);margin-top:8px;padding:18px 0 50px;color:var(--ink-faint);
+    font-size:11px;text-align:center;line-height:1.7}
+  footer b{color:var(--gold-deep)} footer a{color:var(--gold)}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="banner">
+    <div class="kicker">Replay the Tape · contingency edition</div>
+    <h1>THE WEIGHTED DAG OF ARCHITECTURE EVOLUTION</h1>
+    <p>The focus-tree said too much was destined. This is the honest rewrite: a <b>directed acyclic graph</b> where ideas <b>merge</b> (recombination), every fork is a <b>hand of cards with visible draw-weights</b>, and revived branches only light up once their <b>substrate unlocks</b>. Then — <b>reroll the tape</b> and watch a different history win.</p>
+    <div class="rule"></div>
+  </header>
+
+  <div class="fixes">
+    <div class="fix f1"><b>① Confluence edges (Civ DAG)</b>Blue edges = recombination. Transformer = attention ⊕ conv-parallelism ⊕ residual/norm. Ideas converge, not just branch.</div>
+    <div class="fix f2"><b>② Visible draw-weights (Stellaris)</b>Each fork shows the odds on the table at the time. The realized path is one sample — often not the heaviest card.</div>
+    <div class="fix f3"><b>③ Substrate unlocks (Civ Eureka)</b>Buried ideas carry a lock: they revive only when the enabling substrate lands. "Not wrong, just early" becomes a mechanic.</div>
+  </div>
+
+  <div class="bar">
+    <span class="lg"><span class="sw hist"></span>realized history</span>
+    <span class="lg"><span class="sw ghost"></span>road not taken (counterfactual)</span>
+    <span class="lg"><span class="sw rev"></span>buried → revived</span>
+    <span class="lg"><span class="ln" style="border-top-color:var(--gold)"></span>lineage</span>
+    <span class="lg"><span class="ln" style="border-top-color:var(--confluence);border-top-style:dashed"></span>confluence / merge</span>
+  </div>
+  <div class="controls">
+    <button class="ctl primary" id="btnReroll">🎲 Reroll the tape</button>
+    <button class="ctl" id="btnReset">↺ Reset to actual history</button>
+    <button class="ctl" id="btnGhosts">👁 Toggle counterfactuals</button>
+  </div>
+  <div class="runline" id="runline">Showing the timeline that actually happened. Hit <b>Reroll</b> to resample every fork by its weights.</div>
+</div>
+
+<div class="scroller">
+  <div class="canvas" id="canvas"><svg class="wires" id="wires" xmlns="http://www.w3.org/2000/svg"></svg></div>
+</div>
+
+<div class="wrap"><footer>
+  weighted DAG · a companion + critique of the <a href="architecture-focus-tree.html">architecture focus tree</a><br>
+  <b>draw-weights are subjective priors, not measured frequencies · reroll resamples forks independently and does NOT re-simulate downstream history (that would smuggle teleology back in)</b>
+</footer></div>
+
+<div id="tip"></div>
+<script>
+(function(){
+  // ---------- layout ----------
+  var COLX={A:170,B:380,C:590,D:800,E:1010,F:1220,G:1430,H:1640}; // logical columns
+  var NODEW=152, ROW=150, TOP=96, CARDH=70;
+  function yOf(yr){ return TOP+(yr-2015)*ROW; }
+
+  // ---------- DATA ----------
+  // node: {id, year, col, title, w(draw weight 0..1 at its fork), fork(group id),
+  //        actual(bool: realized history), prereq[], merge[] (confluence parents),
+  //        substrate{from,label} (revive lock), kind override optional, tip{}}
+  // A "fork" groups mutually-exclusive candidates competing at one decision point.
+  var NODES=[
+  // 2015
+  {id:'lstm',year:2015,col:'D',fork:'f15',actual:true,w:.7,title:'LSTM seq2seq + bolt-on attention',prereq:[],
+    tip:{tag:'2015 · realized',main:'Recurrent enc-dec dominates; Bahdanau attention is a differentiable patch on the RNN.',note:'Attention is an accessory here, not the trunk.'}},
+  {id:'convseq15',year:2015,col:'B',fork:'f15',w:.2,title:'Go all-in on conv sequence models',
+    tip:{tag:'2015 · card not drawn',main:'A world where dilated causal conv (WaveNet-style) becomes the default sequence backbone.',note:'Parallel, but weaker long-range modeling in 2015 tooling.'}},
+  {id:'memnet15',year:2015,col:'F',fork:'f15',w:.1,title:'External-memory nets (NTM/DNC) win',
+    tip:{tag:'2015 · card not drawn',main:'Addressable external memory becomes the primitive instead of attention-KV.',note:'Too hard to train at the time; the idea is absorbed by attention, revived later as test-time memory.'}},
+
+  // 2016 substrate
+  {id:'resid16',year:2016,col:'D',fork:'f16',actual:true,w:.85,title:'Residual + LayerNorm deep-stack substrate',prereq:['lstm'],
+    tip:{tag:'2016 · realized substrate',main:'GNMT + ResNet-v2 identity mappings: norm/activation inside the residual branch gives a clean gradient highway.',note:'This is the enabling substrate the Transformer (and pre-norm) will reuse verbatim.'}},
+
+  // 2017 — the big fork, and the recombination
+  {id:'xformer',year:2017,col:'D',fork:'f17',actual:true,w:.45,title:'Transformer: attention is all you need',
+    prereq:['resid16'], merge:[{from:'convseq15',label:'parallelism'},{from:'lstm',label:'attention'}],
+    tip:{tag:'2017 · realized · CONFLUENCE',main:'Not a clean branch: Transformer = attention (from RNN attn) ⊕ full parallelism (the conv camp\'s goal) ⊕ residual/LayerNorm substrate. Three lineages merge.',note:'1706.03762. The tree-form hides that this node has THREE parents.'}},
+  {id:'convs2s17',year:2017,col:'B',fork:'f17',w:.3,title:'ConvS2S stays the frontier',prereq:['convseq15'],
+    tip:{tag:'2017 · card not drawn',main:'Gated conv + conv-attention keeps winning translation; the field iterates on convolution another 2-3 years.',note:'1705.03122. Lost the same year — but the draw was closer than hindsight suggests.'}},
+  {id:'moe17',year:2017,col:'G',fork:'f17b',actual:true,w:.25,title:'Sparsely-gated MoE layer',prereq:['resid16'],
+    tip:{tag:'2017 · realized but dormant',main:'Conditional computation: thousands of experts, top-k per token.',note:'1701.06538. Drawn, but parked for ~4 years until the systems substrate (GShard) lands.'}},
+
+  // 2018
+  {id:'bertgpt',year:2018,col:'D',fork:'f18',actual:true,w:.6,title:'Encoder-bidir vs decoder-causal split',prereq:['xformer'],
+    tip:{tag:'2018 · realized',main:'Same Transformer block, two wirings: BERT (bidirectional) and GPT (causal).',note:'The objective fork (MLM vs causal LM) rides on top of this.'}},
+  {id:'elmo18',year:2018,col:'B',fork:'f18',w:.25,title:'Deep biLSTM (ELMo) stays king',prereq:['lstm'],
+    tip:{tag:'2018 · card not drawn',main:'Contextual embeddings from recurrence remain the dominant transfer recipe.',note:'The last highlight of recurrence before Transformers swallow the field.'}},
+
+  // 2019 — pre-norm: confluence of ResNet substrate + Transformer
+  {id:'prenorm',year:2019,col:'D',fork:'f19',actual:true,w:.55,title:'Decoder-only + Pre-Norm',prereq:['bertgpt'],
+    merge:[{from:'resid16',label:'identity path'}], substrate:{from:'resid16',label:'identity-mapping fix'},
+    tip:{tag:'2019 · realized · CONFLUENCE',main:'Pre-norm = the 2016 ResNet-v2 identity-mapping move ported to LayerNorm. Follow the gradients, not the activations.',note:'The fix existed one architecture earlier; it only needed someone burned by warmup pain.'}},
+  {id:'t5_19',year:2019,col:'B',fork:'f19',w:.3,title:'Encoder-decoder (T5) wins generation',prereq:['bertgpt'],
+    tip:{tag:'2019 · card not drawn',main:'Everything-is-text-to-text enc-dec becomes the default generative shape.',note:'A very live alternative — decoder-only\'s win was not foreordained.'}},
+  {id:'s4seed19',year:2019,col:'F',fork:'f19b',w:.15,title:'Early SSM / linear-time bet',prereq:['resid16'],
+    tip:{tag:'2019 · card not drawn (early)',main:'A timeline where structured state-space models scale years earlier.',note:'Buried: the hardware-aware scan + selection substrate (Mamba) is not ready until 2023.'}},
+  {id:'noseq19',year:2019,col:'H',fork:'f19b',actual:true,w:.85,title:'No alt-mixer bet (stay pure attention)',prereq:['bertgpt'],
+    tip:{tag:'2019 · realized',main:'The field declines to fund a serious non-attention mixer in 2019; attention is too good, too soon.',note:'The SSM seed sits unfunded until its substrate arrives.'}},
+
+  // 2020 — freeze + scale; MoE revives via systems substrate
+  {id:'freeze20',year:2020,col:'D',fork:'f20',actual:true,w:.5,title:'Freeze the skeleton, just scale (ViT)',prereq:['prenorm'],
+    tip:{tag:'2020 · realized',main:'Don\'t touch the operator; scale params/data. ViT shows the same block eats images.',note:'The decisive contingency moved OUT of architecture — into the scaling bet.'}},
+  {id:'effattn20',year:2020,col:'B',fork:'f20',w:.4,title:'Pivot to efficient/linear attention',prereq:['prenorm'],
+    tip:{tag:'2020 · card not drawn (early)',main:'A timeline that attacks the quadratic cost in 2020 instead of scaling dense attention.',note:'Buried: accuracy gap + no hardware-aligned kernels yet. Revives in 2025.'}},
+  {id:'gshard20',year:2020,col:'G',fork:'f20b',actual:true,w:.3,title:'GShard: MoE + auto-sharding',
+    prereq:['freeze20'], substrate:{from:'moe17',label:'auto-parallel systems'}, merge:[{from:'moe17',label:'sparse routing'}],
+    tip:{tag:'2020 · REVIVED',main:'The 2017 MoE comes back once compiler auto-sharding makes it trainable at 100B+.',note:'Substrate unlock: routing idea + systems = viable.'}},
+
+  // 2021 components
+  {id:'rope21',year:2021,col:'D',fork:'f21',actual:true,w:.5,title:'RoPE + dense backbone',prereq:['freeze20'],
+    tip:{tag:'2021 · realized',main:'Rotary position encoding becomes the de-facto standard; backbone otherwise frozen.',note:'2104.09864.'}},
+  {id:'alibi21',year:2021,col:'B',fork:'f21',w:.3,title:'ALiBi linear-bias wins',prereq:['freeze20'],
+    tip:{tag:'2021 · card not drawn',main:'No position embeddings, just a distance penalty — a real contender that lost to RoPE.',note:'2108.12409. Close draw.'}},
+  {id:'switch21',year:2021,col:'G',fork:'f21b',actual:true,w:.6,title:'Switch: top-1 MoE to trillions',prereq:['gshard20'],
+    tip:{tag:'2021 · realized',main:'Top-1 routing + load-balancing loss pushes sparse MoE to trillion params.',note:'2101.03961.'}},
+
+  // 2022 modern skeleton locks
+  {id:'skel22',year:2022,col:'D',fork:'f22',actual:true,w:.55,title:'Modern skeleton locks (RoPE+SwiGLU+RMSNorm)',prereq:['rope21'],
+    merge:[{from:'switch21',label:'MoE option'}],
+    tip:{tag:'2022 · realized',main:'Pre-norm decoder + RoPE + SwiGLU + RMSNorm becomes the copy-paste blueprint.',note:'Structural innovation yields to data + scaling.'}},
+  {id:'sparse22',year:2022,col:'B',fork:'f22',w:.25,title:'Sparse/approx attention reshapes trunk',prereq:['rope21'],
+    tip:{tag:'2022 · card not drawn (early)',main:'A world where block-sparse attention becomes the backbone in 2022.',note:'Buried: never beats tuned full attention — until NSA makes it natively trainable in 2025.'}},
+
+  // 2023 — Mamba revives the SSM bet
+  {id:'gqa_mla23',year:2023,col:'D',fork:'f23',actual:true,w:.5,title:'GQA + MLA + MoE on the trunk',prereq:['skel22'],
+    tip:{tag:'2023 · realized',main:'KV-cache economics drive GQA / MLA; Mixtral makes MoE open-source mainstream.',note:'2305.13245. The backbone is now tuned by the engineering ledger.'}},
+  {id:'mamba23',year:2023,col:'G',fork:'f23b',actual:true,w:.35,title:'Mamba (selective SSM)',prereq:['gqa_mla23'],
+    substrate:{from:'s4seed19',label:'HW-aware scan + selection'}, merge:[{from:'s4seed19',label:'SSM core'}],
+    tip:{tag:'2023 · REVIVED',main:'Input-dependent selective gating + hardware-aware scan finally matches Transformers on language.',note:'2312.00752. The 2019 SSM seed lights up 4 years late.'}},
+  {id:'retnet23',year:2023,col:'B',fork:'f23b',w:.2,title:'RetNet / Hyena replace attention',prereq:['skel22'],
+    tip:{tag:'2023 · card not drawn',main:'Retention / long-conv fully displaces attention as the mixer.',note:'2307.08621 / 2302.10866. Locally strong, didn\'t take the trunk.'}},
+
+  // 2024 hybrid
+  {id:'hybrid24',year:2024,col:'D',fork:'f24',actual:true,w:.55,title:'Transformer-MoE + MLA + a little SSM',prereq:['gqa_mla23'],
+    merge:[{from:'mamba23',label:'SSM layers'}],
+    tip:{tag:'2024 · realized · CONFLUENCE',main:'Attention+MoE trunk mixes in SSM layers (Jamba / Mamba-2). The mixer is no longer monolithic.',note:'Recombination, not replacement.'}},
+  {id:'diffusion24',year:2024,col:'B',fork:'f24',w:.15,title:'Diffusion LM goes mainstream early',prereq:['skel22'],
+    tip:{tag:'2024 · card not drawn (early)',main:'Non-autoregressive masked-diffusion generation displaces AR in 2024.',note:'Buried: scaling + serving not ready. Commercializes (Mercury) in 2026.'}},
+
+  // 2025 — the multi-line bet; efficiency structures revive at scale
+  {id:'linear25',year:2025,col:'D',fork:'f25',actual:true,w:.4,title:'Linear attention at scale (MiniMax-01)',prereq:['hybrid24'],
+    substrate:{from:'effattn20',label:'7:1 hybrid recipe + kernels'}, merge:[{from:'effattn20',label:'linear attn'}],
+    tip:{tag:'2025 · REVIVED',main:'7 linear : 1 softmax hybrid, 456B, trained at 1M context. Linear attention finally stands at frontier scale.',note:'2501.08313. The 2020 efficient-attention card, 5 years late.'}},
+  {id:'nsa25',year:2025,col:'G',fork:'f25b',actual:true,w:.35,title:'NSA native sparse attention',prereq:['hybrid24'],
+    substrate:{from:'sparse22',label:'hardware-aligned, natively trainable'}, merge:[{from:'sparse22',label:'sparse attn'}],
+    tip:{tag:'2025 · REVIVED',main:'Compress + select + sliding-window, natively trainable. Sparse attention stops losing to full attention.',note:'2502.11089. The 2022 sparse card lights up.'}},
+  {id:'recur25',year:2025,col:'B',fork:'f25',w:.25,title:'Depth-recurrence sprouts (HRM)',prereq:['hybrid24'],
+    substrate:{from:'s4seed19',label:'compute-in-depth'},
+    tip:{tag:'2025 · sprouting',main:'Invest compute in depth (recurrence) rather than width — Universal-Transformer idea returns.',note:'Carries into 2026 as a trunk-level contender.'}},
+
+  // 2026 NOW — plural mixers coexist
+  {id:'now26',year:2026,col:'D',fork:'f26',actual:true,w:.4,title:'Plural mixers coexist (post-Transformer)',prereq:['linear25'],
+    merge:[{from:'nsa25',label:'sparse'},{from:'recur25',label:'depth-recur'}],
+    tip:{tag:'2026 · NOW · CONFLUENCE',main:'Three lines run in parallel: depth recurrence (HRM) / sparse attention (DeepSeek-V4) / linear-attn hybrid (Qwen3.5). The biggest loosening of the trunk since 2017.',note:'For the first time the sequence-mixing operator itself has real plural competition.'}},
+  {id:'revert26',year:2026,col:'B',fork:'f26',w:.3,title:'Revert to full attention (MiniMax-M2)',prereq:['hybrid24'],
+    tip:{tag:'2026 · counter-vote',main:'An engineering verdict that linear/sparse aren\'t production-ready, reverting the flagship to full attention.',note:'A live reminder the efficiency structures are NOT settled — exactly the contingency the tree-form erased.'}},
+  {id:'mercury26',year:2026,col:'G',fork:'f26b',actual:true,w:.2,title:'Mercury: commercial diffusion LLM',prereq:['now26'],
+    substrate:{from:'diffusion24',label:'parallel decode at scale'}, merge:[{from:'diffusion24',label:'diffusion'}],
+    tip:{tag:'2026 · REVIVED',main:'First commercial-scale diffusion LLM, ~1000 tok/s on code via parallel multi-token decode.',note:'2506.17298. The 2024 diffusion card commercializes.'}},
+  ];
+
+  // ---------- refs / helpers ----------
+  var canvas=document.getElementById('canvas'), wires=document.getElementById('wires'), tip=document.getElementById('tip');
+  var SVGNS='http://www.w3.org/2000/svg';
+  function svg(t,a){var e=document.createElementNS(SVGNS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+  var byId={}; NODES.forEach(function(n){byId[n.id]=n;});
+  // forks: group -> [nodes]
+  var FORKS={}; NODES.forEach(function(n){ (FORKS[n.fork]=FORKS[n.fork]||[]).push(n); });
+  // winner[fork] = id currently shown as realized
+  var winner={}, showGhosts=true;
+  function resetActual(){ for(var f in FORKS){ var a=FORKS[f].find(function(n){return n.actual;}); winner[f]=a?a.id:FORKS[f][0].id; } }
+  function reroll(){ var changed=[]; for(var f in FORKS){ var pool=FORKS[f]; var tot=pool.reduce(function(s,n){return s+(n.w||0.01);},0);
+      var r=Math.random()*tot, pick=pool[0].id; for(var i=0;i<pool.length;i++){ r-=(pool[i].w||0.01); if(r<=0){pick=pool[i].id;break;} }
+      var actualId=(pool.find(function(n){return n.actual;})||pool[0]).id;
+      winner[f]=pick; if(pick!==actualId) changed.push(byId[pick].title); }
+    return changed; }
+
+  // geometry
+  function gx(n){ return COLX[n.col]; }
+  function gy(n){ return yOf(n.year); }
+  function isWinner(n){ return winner[n.fork]===n.id; }
+  function nodeKind(n){
+    if(!isWinner(n)) return 'ghost';
+    if(n.id==='now26') return 'now';
+    return n.substrate?'revive':'hist';
+  }
+
+  var CANVAS_W=1780;
+  function build(){
+    // size
+    var maxY=0; NODES.forEach(function(n){ if(gy(n)>maxY)maxY=gy(n); });
+    var H=maxY+CARDH+60;
+    canvas.style.width=CANVAS_W+'px'; canvas.style.height=H+'px';
+    wires.setAttribute('width',CANVAS_W); wires.setAttribute('height',H); wires.setAttribute('viewBox','0 0 '+CANVAS_W+' '+H);
+    wires.innerHTML='';
+    // clear node els
+    canvas.querySelectorAll('.node,.yrtab').forEach(function(e){e.remove();});
+
+    // year rail
+    for(var yr=2015;yr<=2026;yr++){ var t=document.createElement('div'); t.className='yrtab'; t.style.top=(yOf(yr)+CARDH/2)+'px';
+      t.innerHTML=yr+'<small>fork</small>'; canvas.appendChild(t); }
+
+    // edges first (under nodes)
+    NODES.forEach(function(n){
+      var active = isWinner(n);
+      // lineage (prereq) edges
+      (n.prereq||[]).forEach(function(pid){ drawEdge(byId[pid],n,'lineage',active && isWinner(byId[pid])); });
+      // confluence (merge) edges
+      (n.merge||[]).forEach(function(m){ var p=byId[m.from]; if(p) drawEdge(p,n,'merge',active && isWinner(p)); });
+      // substrate unlock edge (dotted vertical-ish, teal)
+      if(n.substrate){ var s=byId[n.substrate.from]; if(s) drawEdge(s,n,'substrate',active); }
+    });
+
+    // nodes
+    NODES.forEach(function(n){
+      var el=document.createElement('div'); var kind=nodeKind(n);
+      el.className='node '+kind+(active(n)?' active':'')+( (!showGhosts && kind==='ghost')?' dimmed':'');
+      el.style.left=(gx(n)-NODEW/2)+'px'; el.style.top=gy(n)+'px';
+      var tagTxt = kind==='now'?'NOW': kind==='revive'?'↻ revived': kind==='hist'?'realized':'not drawn';
+      var wpct=Math.round((n.w||0)*100);
+      var sub = (kind==='revive' && n.substrate)?('<div class="sub">🔓 <b>'+esc(n.substrate.label)+'</b></div>'):'';
+      var mg = (n.merge&&n.merge.length)?('<div class="merge">⊕ '+n.merge.map(function(m){return esc(m.label);}).join(' + ')+'</div>'):'';
+      el.innerHTML='<span class="tag">'+tagTxt+'</span><div class="ttl">'+esc(n.title)+'</div>'+
+        '<div class="meta"><span class="wt">'+wpct+'%</span><span class="wbar"><i style="width:'+wpct+'%"></i></span></div>'+sub+mg;
+      el._n=n; canvas.appendChild(el);
+    });
+  }
+  function active(n){ return isWinner(n); }
+  function esc(s){ return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function drawEdge(p,c,type,strong){
+    if(!p||!c) return;
+    var x1=gx(p), y1=gy(p)+CARDH, x2=gx(c), y2=gy(c);
+    var midy=y1+(y2-y1)*0.5;
+    var d='M '+x1+' '+y1+' C '+x1+' '+(y1+50)+' '+x2+' '+(y2-50)+' '+x2+' '+y2;
+    if(type==='lineage'){
+      wires.appendChild(svg('path',{d:d,fill:'none',stroke:'#000','stroke-width':4,'stroke-opacity':strong?.5:.25}));
+      wires.appendChild(svg('path',{d:d,fill:'none',stroke:'#caa257','stroke-width':strong?2.4:1.4,'stroke-opacity':strong?.95:.3,'stroke-linecap':'round'}));
+    } else if(type==='merge'){
+      wires.appendChild(svg('path',{d:d,fill:'none',stroke:'#5aa9e6','stroke-width':strong?2.4:1.4,'stroke-dasharray':'2 5','stroke-opacity':strong?.95:.35,'stroke-linecap':'round'}));
+      if(strong) wires.appendChild(svg('circle',{cx:x2,cy:y2,r:3.2,fill:'#5aa9e6'}));
+    } else if(type==='substrate'){
+      wires.appendChild(svg('path',{d:d,fill:'none',stroke:'#4fd6b4','stroke-width':strong?2.2:1.3,'stroke-dasharray':'7 6','stroke-opacity':strong?.9:.3,'stroke-linecap':'round'}));
+      if(strong){ wires.appendChild(svg('circle',{cx:x1,cy:y1,r:3,fill:'#9f93b8'})); wires.appendChild(svg('circle',{cx:x2,cy:y2,r:3.6,fill:'#4fd6b4'})); }
+    }
+  }
+
+  // ---------- tooltip ----------
+  function ttHTML(n){
+    var t=n.tip||{}; var h='';
+    h+='<div class="tt-tag">'+esc(t.tag||'')+'</div><h5>'+esc(n.title)+'</h5>';
+    h+='<div class="row"><span class="lbl dr">draw-weight</span>'+Math.round((n.w||0)*100)+'% at fork <code>'+esc(n.fork)+'</code></div>';
+    if(t.main) h+='<div class="row">'+esc(t.main)+'</div>';
+    if(n.merge&&n.merge.length) h+='<div class="row"><span class="lbl mg">confluence</span>'+n.merge.map(function(m){return esc(byId[m.from]?byId[m.from].title:m.from)+' ('+esc(m.label)+')';}).join(' · ')+'</div>';
+    if(n.substrate) h+='<div class="row"><span class="lbl su">substrate unlock</span>needs: '+esc(n.substrate.label)+'</div>';
+    if(!isWinner(n)) h+='<div class="row"><span class="lbl cf">counterfactual</span>did not win its fork in the shown timeline</div>';
+    if(t.note) h+='<div class="note">'+esc(t.note)+'</div>';
+    return h;
+  }
+  function showTip(e){ var el=e.target.closest('.node'); if(!el)return; tip.innerHTML=ttHTML(el._n); tip.classList.add('on'); moveTip(e); }
+  function moveTip(e){ var pad=16,w=tip.offsetWidth,hh=tip.offsetHeight,x=e.clientX+18,y=e.clientY+18;
+    if(x+w+pad>innerWidth)x=e.clientX-w-18; if(y+hh+pad>innerHeight)y=innerHeight-hh-pad; if(y<pad)y=pad;
+    tip.style.left=x+'px'; tip.style.top=y+'px'; }
+  function hideTip(){ tip.classList.remove('on'); }
+  canvas.addEventListener('mouseover',showTip);
+  canvas.addEventListener('mousemove',function(e){ if(tip.classList.contains('on'))moveTip(e); });
+  canvas.addEventListener('mouseout',function(e){ if(e.target.closest('.node'))hideTip(); });
+  canvas.addEventListener('click',function(e){ var el=e.target.closest('.node'); if(!el){hideTip();return;} tip.innerHTML=ttHTML(el._n); tip.classList.add('on'); var r=el.getBoundingClientRect(); moveTip({clientX:r.left+r.width/2,clientY:r.top}); });
+
+  // ---------- controls ----------
+  var runline=document.getElementById('runline');
+  document.getElementById('btnReroll').addEventListener('click',function(){
+    var changed=reroll(); build();
+    if(!changed.length){ runline.innerHTML='🎲 Rerolled — and the dice reproduced <span class="same">actual history</span>. (It happens; the realized path is often plausible, not unique.)'; }
+    else { runline.innerHTML='🎲 A different tape: <b>'+changed.length+'</b> fork'+(changed.length>1?'s':'')+' flipped → '+changed.slice(0,4).map(esc).join(' · ')+(changed.length>4?' …':'')+'. <span style="color:var(--ink-faint)">Downstream is NOT re-simulated — only the forks are resampled.</span>'; }
+  });
+  document.getElementById('btnReset').addEventListener('click',function(){ resetActual(); build(); runline.innerHTML='Showing the timeline that actually happened. Hit <b>Reroll</b> to resample every fork by its weights.'; });
+  document.getElementById('btnGhosts').addEventListener('click',function(){ showGhosts=!showGhosts; build(); });
+
+  resetActual(); build();
+})();
+</script>
+</body>
+</html>
