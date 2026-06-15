@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Architecture Focus Tree · Replay the Tape 2015–2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Noto+Serif+SC:wght@500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#161310; --bg-1:#221b13;
+    --gold:#d8b15a; --gold-bright:#f3d488; --gold-deep:#9a7327;
+    --frame-1:#caa257; --frame-2:#7c5e26; --frame-3:#3a2c12;
+    --ink:#efe2c6; --ink-dim:#b6a079; --ink-faint:#8a7857;
+    --plate:#1c1812; --plate-2:#272015;
+    --ghost:#9f93b8; --ghost-frame:#6b6087; --ghost-deep:#403a52;
+    --revived:#4fd6b4; --revived-deep:#1c6e5c;
+    --line-gold:#caa257; --line-mutex:#c98a5a;
+    --slot:#0d0b08;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; color:var(--ink);
+    font-family:"Noto Serif SC","IBM Plex Mono",serif; line-height:1.5;
+    background:
+      radial-gradient(1400px 900px at 70% -8%, #3a2c17 0%, transparent 55%),
+      radial-gradient(1000px 700px at 12% 105%, #241a0f 0%, transparent 60%),
+      repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 2px, transparent 2px 4px),
+      repeating-linear-gradient(90deg, rgba(120,90,40,.05) 0 3px, transparent 3px 6px),
+      linear-gradient(180deg,#211a12, #14110d 70%);
+  }
+  .wrap{max-width:1500px;margin:0 auto;padding:0 20px}
+
+  /* ===== HEADER ===== */
+  header.banner{padding:42px 0 14px;text-align:center;position:relative}
+  .banner .kingdom{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.42em;
+    text-transform:uppercase;color:var(--gold-deep)}
+  .banner h1{font-family:"Cinzel","Noto Serif SC",serif;font-weight:900;
+    font-size:clamp(26px,4.6vw,50px);margin:.18em 0 .14em;color:var(--gold-bright);
+    letter-spacing:.04em;text-shadow:0 2px 0 #000,0 0 22px rgba(216,177,90,.28)}
+  .banner h1 .cn{display:block;font-family:"Noto Serif SC",serif;font-size:.5em;color:var(--ink);letter-spacing:.06em;margin-top:.1em}
+  .banner p{max-width:760px;margin:.4em auto 0;color:var(--ink-dim);font-size:14.5px;font-family:"Noto Serif SC",serif}
+  .rule{height:2px;max-width:540px;margin:18px auto 0;
+    background:linear-gradient(90deg,transparent,var(--gold-deep),var(--gold),var(--gold-deep),transparent)}
+
+  /* ===== LEGEND ===== */
+  .legend{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 14px;margin:22px auto 8px;max-width:1180px}
+  .lg{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--ink-dim);
+    border:1px solid var(--frame-3);background:rgba(20,16,11,.7);border-radius:6px;padding:7px 13px}
+  .lg .sw{width:16px;height:16px;flex:0 0 auto;border-radius:3px}
+  .sw.gold{background:linear-gradient(150deg,var(--frame-1),var(--frame-2));border:1.5px solid var(--gold-bright)}
+  .sw.star{background:radial-gradient(circle,var(--gold-bright),var(--frame-2));border:1.5px solid var(--gold-bright);box-shadow:0 0 8px var(--gold)}
+  .sw.ghost{background:repeating-linear-gradient(45deg,#2a2536 0 4px,#1c1826 4px 8px);border:1.5px dashed var(--ghost-frame)}
+  .sw.rev{background:linear-gradient(150deg,#1c6e5c,#0e3a30);border:1.5px solid var(--revived)}
+  .lg b{color:var(--ink);font-weight:700}
+  .hint{text-align:center;color:var(--ink-faint);font-size:12px;font-family:"IBM Plex Mono",monospace;margin:4px 0 0;letter-spacing:.05em}
+
+  /* ===== TREE CANVAS ===== */
+  .scroller{overflow-x:auto;overflow-y:hidden;padding:18px 0 60px;-webkit-overflow-scrolling:touch}
+  .canvas{position:relative;margin:0 auto}
+  svg.wires{position:absolute;left:0;top:0;pointer-events:none;z-index:1}
+
+  /* year rail */
+  .yrtab{position:absolute;left:0;transform:translateY(-50%);z-index:1;
+    font-family:"Cinzel",serif;font-weight:700;font-size:19px;color:var(--gold);
+    background:linear-gradient(180deg,#2a2114,#191409);border:1px solid var(--frame-2);
+    border-left:3px solid var(--gold);border-radius:4px;padding:3px 12px 3px 10px;letter-spacing:.06em;
+    box-shadow:0 2px 6px rgba(0,0,0,.5)}
+  .yrtab small{display:block;font-family:"IBM Plex Mono",monospace;font-weight:400;font-size:9px;color:var(--ink-faint);letter-spacing:.14em}
+
+  /* ===== FOCUS NODE ===== */
+  .focus{position:absolute;z-index:2;width:158px;display:flex;flex-direction:column;align-items:center;cursor:default}
+  .focus .icon{position:relative;width:74px;height:74px;display:flex;align-items:center;justify-content:center;
+    border-radius:7px;
+    background:
+      linear-gradient(150deg,#2a2113 0%, #16110a 60%),
+      radial-gradient(circle at 50% 30%, rgba(243,212,136,.10), transparent 60%);
+    border:2px solid transparent;
+    background-clip:padding-box;}
+  /* the ornate gold frame via layered box-shadow + pseudo */
+  .focus .icon::before{content:"";position:absolute;inset:-4px;border-radius:9px;z-index:-1;
+    background:linear-gradient(145deg,var(--frame-1) 0%,var(--frame-3) 45%,var(--frame-2) 100%);
+    box-shadow:0 3px 7px rgba(0,0,0,.55), inset 0 0 0 1px rgba(243,212,136,.35)}
+  .focus .icon::after{content:"";position:absolute;inset:2px;border-radius:6px;pointer-events:none;
+    box-shadow:inset 0 1px 0 rgba(243,212,136,.22), inset 0 -8px 14px rgba(0,0,0,.5)}
+  .focus .glyph{font-size:34px;line-height:1;filter:drop-shadow(0 1px 1px #000)}
+  .focus .plate{margin-top:7px;width:152px;min-height:30px;display:flex;align-items:center;justify-content:center;text-align:center;
+    padding:4px 8px;border-radius:4px;font-family:"Noto Serif SC",serif;font-weight:700;font-size:11px;line-height:1.22;
+    color:var(--ink);background:linear-gradient(180deg,var(--plate-2),var(--plate));
+    border:1px solid var(--frame-2);box-shadow:0 2px 4px rgba(0,0,0,.5), inset 0 1px 0 rgba(243,212,136,.08)}
+
+  /* chosen / trunk */
+  .focus.chosen .plate{color:var(--gold-bright)}
+  /* fork (★ key node) */
+  .focus.fork .icon::before{background:linear-gradient(145deg,var(--gold-bright),var(--frame-2),var(--gold-deep));
+    box-shadow:0 0 18px rgba(243,212,136,.5),0 3px 7px rgba(0,0,0,.6), inset 0 0 0 1px rgba(243,212,136,.6)}
+  .focus.fork .plate{color:var(--gold-bright);border-color:var(--gold-deep);
+    background:linear-gradient(180deg,#3a2e16,#1c1609)}
+  .focus.fork .star{position:absolute;top:-12px;right:-10px;font-size:17px;color:var(--gold-bright);
+    text-shadow:0 0 8px var(--gold);z-index:3}
+  .focus.now .icon::before{background:linear-gradient(145deg,#fff0c8,var(--gold),var(--gold-deep));
+    box-shadow:0 0 26px rgba(243,212,136,.7),0 3px 8px rgba(0,0,0,.6), inset 0 0 0 1px #fff0c8}
+  .focus.now .plate{color:#fff3d4}
+  .focus.now .nowtag{position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+    font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.18em;color:var(--bg-0);
+    background:var(--gold-bright);border-radius:3px;padding:1px 6px;font-weight:700;z-index:3}
+
+  /* ghost / pruned */
+  .focus.ghost .icon{background:linear-gradient(150deg,#221d2c,#14111c)}
+  .focus.ghost .icon::before{background:linear-gradient(145deg,var(--ghost-frame),var(--ghost-deep));
+    box-shadow:0 2px 5px rgba(0,0,0,.5), inset 0 0 0 1px rgba(159,147,184,.3)}
+  .focus.ghost .glyph{filter:grayscale(1) brightness(.92) drop-shadow(0 1px 1px #000);opacity:.72}
+  .focus.ghost .plate{color:var(--ghost);background:linear-gradient(180deg,#1d1a26,#141119);
+    border-color:var(--ghost-deep);border-style:dashed}
+  .focus.ghost{opacity:.93}
+  .focus.ghost .pruned{position:absolute;top:-11px;right:-9px;font-family:"IBM Plex Mono",monospace;
+    font-size:11px;color:#caa;background:#2a1d22;border:1px solid #5a3a3a;border-radius:50%;
+    width:19px;height:19px;display:flex;align-items:center;justify-content:center;z-index:3}
+
+  /* revived */
+  .focus.revived .icon{background:linear-gradient(150deg,#10302a,#0a1d19)}
+  .focus.revived .icon::before{background:linear-gradient(145deg,var(--revived),var(--revived-deep));
+    box-shadow:0 0 14px rgba(79,214,180,.35),0 2px 5px rgba(0,0,0,.5), inset 0 0 0 1px rgba(79,214,180,.5)}
+  .focus.revived .glyph{filter:drop-shadow(0 1px 1px #000) hue-rotate(8deg)}
+  .focus.revived .plate{color:var(--revived);background:linear-gradient(180deg,#10302a,#0a1c18);border-color:var(--revived-deep)}
+  .focus.revived .reborn{position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+    font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.1em;color:var(--bg-0);
+    background:var(--revived);border-radius:3px;padding:1px 6px;font-weight:700;z-index:3;white-space:nowrap}
+
+  .focus:hover .icon::before{filter:brightness(1.18)}
+  .focus:hover{z-index:5}
+
+  /* ===== TOOLTIP ===== */
+  #tip{position:fixed;z-index:80;max-width:340px;pointer-events:none;opacity:0;transform:translateY(4px);
+    transition:opacity .12s;background:linear-gradient(180deg,#241d12,#161009);
+    border:1px solid var(--frame-2);border-top:2px solid var(--gold);border-radius:7px;
+    box-shadow:0 12px 34px rgba(0,0,0,.7);padding:13px 15px;font-family:"Noto Serif SC",serif}
+  #tip.on{opacity:1;transform:translateY(0)}
+  #tip .tt-tag{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-deep)}
+  #tip h5{margin:3px 0 8px;font-family:"Cinzel","Noto Serif SC",serif;font-size:15.5px;color:var(--gold-bright);line-height:1.2}
+  #tip .row{font-size:12.5px;margin:6px 0;color:var(--ink-dim);line-height:1.5}
+  #tip .row .lbl{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.08em;
+    padding:1px 6px;border-radius:3px;margin-right:6px;vertical-align:1px}
+  #tip .lbl.sub{background:rgba(143,182,200,.16);color:#9fc3d2}
+  #tip .lbl.gh{background:rgba(159,147,184,.18);color:var(--ghost)}
+  #tip .lbl.ch{background:rgba(216,177,90,.18);color:var(--gold-bright)}
+  #tip .lbl.rv{background:rgba(79,214,180,.16);color:var(--revived)}
+  #tip .note{margin-top:9px;padding-top:8px;border-top:1px dashed var(--frame-3);font-size:12px;color:var(--ink);font-style:italic}
+  #tip code{font-family:"IBM Plex Mono",monospace;color:var(--gold);font-size:11.5px}
+
+  footer{border-top:1px solid var(--frame-3);margin-top:10px;padding:20px 0 56px;color:var(--ink-faint);
+    font-size:12px;font-family:"IBM Plex Mono",monospace;text-align:center;line-height:1.7}
+  footer b{color:var(--gold-deep)}
+
+  /* ===== YEAR REPORT · clickable rail + slide-in panel ===== */
+  .yrtab{cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s,background .12s}
+  .yrtab:hover{transform:translateY(-50%) translateX(3px);border-left-color:var(--gold-bright);
+    box-shadow:0 2px 12px rgba(216,177,90,.45)}
+  .yrtab.active{border-left-color:var(--gold-bright);background:linear-gradient(180deg,#3a2e16,#241a0c);
+    box-shadow:0 0 16px rgba(243,212,136,.5)}
+  .yrtab small{color:var(--gold-deep)}
+
+  #scrim{position:fixed;inset:0;background:rgba(8,6,3,.5);backdrop-filter:blur(2px);z-index:90;opacity:0;
+    pointer-events:none;transition:opacity .28s}
+  #scrim.on{opacity:1;pointer-events:auto}
+
+  #report{position:fixed;top:0;right:0;height:100vh;width:min(700px,95vw);z-index:95;
+    transform:translateX(103%);transition:transform .34s cubic-bezier(.22,.61,.36,1);
+    display:flex;flex-direction:column;background:linear-gradient(180deg,#221a11,#15110b);
+    border-left:2px solid var(--gold);box-shadow:-18px 0 54px rgba(0,0,0,.62)}
+  #report.on{transform:translateX(0)}
+  #report .rp-head{flex:0 0 auto;position:relative;padding:22px 26px 16px;
+    border-bottom:1px solid var(--frame-2);background:linear-gradient(180deg,#2a2114,#1a130b)}
+  #report .rp-era{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-deep)}
+  #report .rp-yr{font-family:"Cinzel","Noto Serif SC",serif;font-weight:900;font-size:42px;color:var(--gold-bright);
+    line-height:1;margin:3px 0 3px;text-shadow:0 2px 0 #000,0 0 20px rgba(216,177,90,.3)}
+  #report .rp-name{font-family:"Noto Serif SC",serif;font-weight:700;font-size:17px;color:var(--ink)}
+  #report .rp-thesis{margin-top:10px;font-size:13.5px;color:var(--gold);font-style:italic;line-height:1.58;
+    border-left:2px solid var(--gold-deep);padding-left:11px}
+  #report .rp-close{position:absolute;top:18px;right:20px;width:32px;height:32px;border-radius:50%;
+    border:1px solid var(--frame-2);background:#1a140b;color:var(--gold);font-size:17px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;line-height:1;transition:.15s}
+  #report .rp-close:hover{background:#2a2114;color:var(--gold-bright);border-color:var(--gold)}
+  #report .rp-nav{display:flex;gap:8px;margin-top:15px}
+  #report .rp-nav button{flex:1;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.05em;
+    background:#1a140b;border:1px solid var(--frame-3);color:var(--ink-dim);border-radius:5px;padding:6px 0;cursor:pointer;transition:.15s}
+  #report .rp-nav button:hover:not(:disabled){border-color:var(--gold-deep);color:var(--gold)}
+  #report .rp-nav button:disabled{opacity:.28;cursor:default}
+  #report .rp-body{flex:1 1 auto;overflow-y:auto;padding:20px 26px 64px;scrollbar-width:thin;
+    scrollbar-color:var(--frame-2) transparent}
+  #report .rp-body::-webkit-scrollbar{width:9px}
+  #report .rp-body::-webkit-scrollbar-thumb{background:var(--frame-2);border-radius:5px}
+  .rp-sec{margin:0 0 24px}
+  .rp-sec>h4{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;
+    display:flex;align-items:center;gap:8px;margin:0 0 11px;padding-bottom:6px;border-bottom:1px dashed var(--frame-3)}
+  .rp-sec>h4 .dot{width:10px;height:10px;border-radius:2px;flex:0 0 auto}
+  .rp-sec.s-sub>h4{color:#9fc3d2} .rp-sec.s-sub .dot{background:#9fc3d2}
+  .rp-sec.s-ch>h4{color:var(--gold-bright)} .rp-sec.s-ch .dot{background:linear-gradient(150deg,var(--frame-1),var(--frame-2));border:1px solid var(--gold-bright)}
+  .rp-sec.s-gh>h4{color:var(--ghost)} .rp-sec.s-gh .dot{background:repeating-linear-gradient(45deg,#2a2536 0 3px,#1c1826 3px 6px);border:1px solid var(--ghost-frame)}
+  .rp-sec.s-rv>h4{color:var(--revived)} .rp-sec.s-rv .dot{background:linear-gradient(150deg,#1c6e5c,#0e3a30);border:1px solid var(--revived)}
+  .rp-sec.s-note>h4{color:var(--gold-deep)} .rp-sec.s-note .dot{background:var(--gold-deep)}
+  .rp-sec>p{font-size:13.5px;line-height:1.74;color:var(--ink-dim);margin:0 0 10px}
+  .rp-item{margin:0 0 13px;padding:11px 14px;border-radius:6px;background:rgba(20,16,11,.55);
+    border:1px solid var(--frame-3);border-left:3px solid var(--frame-2)}
+  .rp-item.i-ch{border-left-color:var(--gold)}
+  .rp-item.i-gh{border-left-color:var(--ghost-frame);border-left-style:dashed}
+  .rp-item.i-rv{border-left-color:var(--revived)}
+  .rp-item h5{margin:0 0 5px;font-family:"Noto Serif SC",serif;font-size:14px;font-weight:700;color:var(--ink)}
+  .rp-item.i-ch h5{color:var(--gold-bright)} .rp-item.i-gh h5{color:var(--ghost)} .rp-item.i-rv h5{color:var(--revived)}
+  .rp-item p{font-size:12.8px;line-height:1.68;color:var(--ink-dim);margin:0}
+  .rp-item .arx{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--gold-deep);margin-top:6px;display:block}
+  .rp-refs{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-faint);line-height:1.95;
+    background:rgba(0,0,0,.25);border:1px solid var(--frame-3);border-radius:6px;padding:11px 13px}
+  .rp-refs b{color:var(--gold-deep)}
+  em.k{color:var(--gold);font-style:normal;font-family:"IBM Plex Mono",monospace;font-size:.92em}
+  .rp-eq{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--gold-bright);
+    background:rgba(0,0,0,.34);border:1px solid var(--frame-3);border-left:2px solid var(--gold-deep);
+    border-radius:5px;padding:7px 11px;margin:8px 0 2px;overflow-x:auto;white-space:pre-wrap;
+    line-height:1.55;letter-spacing:.01em}
+  .rp-eq b{color:var(--ink-faint);font-weight:400;font-size:10px;letter-spacing:.08em;display:block;margin-bottom:3px;text-transform:uppercase}
+  .rp-eq sub,.rp-eq sup{font-size:.68em;line-height:0;letter-spacing:0;color:var(--gold-bright)}
+  .rp-eq sub{vertical-align:-.28em} .rp-eq sup{vertical-align:.5em}
+  .rp-key{font-size:12.6px;line-height:1.62;color:var(--ink);margin:8px 0 0;padding-left:11px;border-left:2px solid var(--gold-deep)}
+  .rp-key b{color:var(--gold-bright);font-weight:700}
+  @media (max-width:560px){#report .rp-yr{font-size:34px}#report .rp-body{padding:16px 16px 50px}#report .rp-head{padding:18px 18px 14px}}
+
+  /* ===== PAGE TABS (HoI4 multi-page) ===== */
+  .pagetabs{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:14px auto 0;max-width:1120px}
+  .ptab{display:flex;align-items:center;gap:11px;cursor:pointer;text-align:left;
+    background:linear-gradient(180deg,#1f1810,#15100a);border:1px solid var(--frame-2);
+    border-bottom:none;border-radius:8px 8px 0 0;padding:10px 18px;min-width:248px;
+    color:var(--ink-dim);font-family:"Noto Serif SC",serif;transition:.16s;position:relative;top:3px}
+  .ptab:hover{border-color:var(--gold-deep);color:var(--ink)}
+  .ptab .pt-ic{font-size:23px;filter:drop-shadow(0 1px 1px #000)}
+  .ptab .pt-tx{display:flex;flex-direction:column;line-height:1.3}
+  .ptab .pt-tx b{font-family:"Cinzel","Noto Serif SC",serif;font-size:14px;letter-spacing:.05em;color:var(--ink)}
+  .ptab .pt-tx small{font-size:10px;color:var(--ink-faint);font-family:"IBM Plex Mono",monospace}
+  .ptab.active{background:linear-gradient(180deg,#3a2e16,#211808);border-color:var(--gold);
+    box-shadow:0 -3px 16px rgba(243,212,136,.3);top:0}
+  .ptab.active .pt-tx b{color:var(--gold-bright)} .ptab.active .pt-ic{filter:drop-shadow(0 0 7px var(--gold))}
+  .pagetabs+.scroller,.pagetabs{position:relative}
+  @media (max-width:600px){.ptab{min-width:0;flex:1 1 30%;padding:8px 9px;gap:7px}.ptab .pt-tx small{display:none}.ptab .pt-tx b{font-size:12px}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="banner">
+    <div class="kingdom">National Focus · Architecture Evolution 1936… 2015–2026</div>
+    <h1>THE ARCHITECTURE FOCUS TREE
+      <span class="cn">Every fork is a pruning · substrate → the road not taken → the road chosen</span></h1>
+    <p>The history of LLM architecture laid out as a national focus tree. <b style="color:var(--gold-bright)">The skeleton (attention routing) is almost a mandatory focus — it survives every fork.</b> What gets re-searched again and again is the trick / depth layer; most buried branches were not wrong, just early, missing one enabling substrate. The biggest contingency isn't even in the architecture — it's in that one bet on scaling + the verifier.</p>
+    <div class="rule"></div>
+  </header>
+
+  <div class="legend">
+    <div class="lg"><span class="sw gold"></span><span><b>Trunk focus</b> the mainline actually taken</span></div>
+    <div class="lg"><span class="sw star"></span><span><b>★ Key fork</b> the fork that decided direction</span></div>
+    <div class="lg"><span class="sw ghost"></span><span><b>Mutex branch</b> viable but pruned</span></div>
+    <div class="lg"><span class="sw rev"></span><span><b>Buried then revived</b> back once the substrate landed</span></div>
+  </div>
+  <p class="hint">Hover any focus for the "already exists / road not taken / human choice" three-column detail ·  ← → scroll horizontally</p>
+</div>
+
+<div class="wrap"><div class="pagetabs" id="pagetabs"></div></div>
+
+<div class="scroller">
+  <div class="canvas" id="canvas">
+    <svg class="wires" id="wires" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+</div>
+
+<div class="wrap">
+  <footer>
+    replay-the-tape · 2015–2026 · architecture evolution as a pruning search tree (focus-tree form)<br>
+    years mark representative first appearance / mainstreaming nodes · annotations are judgment, not exhaustive scholarship · <b>convergent skeleton + re-searchable depth layer + the real alpha in objective / data / verifier</b>
+  </footer>
+</div>
+
+<div id="tip"></div>
+
+<div id="scrim"></div>
+<aside id="report" aria-hidden="true">
+  <div class="rp-head">
+    <button class="rp-close" id="rpClose" title="Close (Esc)">✕</button>
+    <div class="rp-era" id="rpEra"></div>
+    <div class="rp-yr" id="rpYr"></div>
+    <div class="rp-name" id="rpName"></div>
+    <div class="rp-thesis" id="rpThesis"></div>
+    <div class="rp-nav">
+      <button id="rpPrev">← Prev year</button>
+      <button id="rpNext">Next year →</button>
+    </div>
+  </div>
+  <div class="rp-body" id="rpBody"></div>
+</aside>
+
+<script>
+(function(){
+  // ---------- layout constants ----------
+  var COL = { GL5:180, GL4:390, GL3:600, GL2:810, GL1:1020, T:1230, GR1:1440, GR2:1650, GR3:1860, GR4:2070, GR5:2280 };
+  var NODEW=158, BOXH=112, ROW=160, TOP=120;
+  var CANVAS_W=2400;
+  function yOf(year){ return TOP + (year-2015)*ROW; }
+
+  // ---------- node data ----------
+  // kind: chosen | fork | now | ghost | revived
+  // prereq: [ids] solid gold lines (parent above -> this)
+  // mutex:  [ids] mutually-exclusive sibling marker
+  // revive: {from:id} dashed teal thread (buried -> reborn)
+  var TREES = { structure:{nodes:[],threads:[]}, data:{nodes:[],threads:[]}, algorithm:{nodes:[],threads:[]} };
+  var PAGE='structure';
+  var N=[], extraThreads=[];
+  TREES.structure.nodes = [
+{id:'st15',year:2015,col:'T',kind:'chosen',g:'🔁',title:'LSTM seq2seq + bolt-on attention',prereq:[],tip:{tag:'2015 · node',sub:'RNN/LSTM encoder-decoder already dominates sequence modeling; long-range dependency carried by gated memory',gh:'',ch:'Bahdanau turns alignment into a differentiable "soft attention", a patch bolted onto the RNN',note:'Attention here is just an accessory; the trunk is still recurrence'}},
+{id:'s_ntm15',year:2015,col:'GL1',kind:'ghost',g:'📼',title:'Differentiable external memory (NTM/DNC)',prereq:['st15'],tip:{tag:'2015 · road not taken',sub:'',gh:'Give the network an addressable external memory tape, mimicking a Turing machine',ch:'',note:'Too hard to train; memory eventually absorbed by attention KV'}},
+{id:'s_ptr15',year:2015,col:'GL2',kind:'ghost',g:'👉',title:'Pointer networks',prereq:['st15'],tip:{tag:'2015 · road not taken',sub:'',gh:'Use attention weights to point directly at input positions as output',ch:'',note:'1506.03134; the idea was inherited by copy-attention'}},
+{id:'s_hwy15',year:2015,col:'GL3',kind:'ghost',g:'🛣️',title:'Highway gating',prereq:['st15'],tip:{tag:'2015 · road not taken',sub:'',gh:'Add a learnable transfer gate to feedforward layers so the signal can pass straight through',ch:'',note:'1505.00387; the gated precursor of residual connections'}},
+{id:'st16',year:2016,col:'T',kind:'chosen',g:'🏗️',title:'Deep LSTM + residual + LayerNorm',prereq:['st15'],tip:{tag:'2016 · node',sub:'GNMT stacks LSTM 8 layers deep; residual and LayerNorm make deep stacking trainable',gh:'',ch:'Residual + normalization becomes the infrastructure that lets you "stack deep"',note:'This foundation later moves over to the Transformer untouched'}},
+{id:'s_gelu16',year:2016,col:'GR1',kind:'chosen',g:'〰️',title:'GELU activation',prereq:['st16'],tip:{tag:'2016 · node',sub:'',gh:'',ch:'Weight the input by the Gaussian CDF to get a smooth, differentiable "soft-gated" activation',note:'1606.08415; becomes the default activation in BERT/GPT'}},
+{id:'s_conv16',year:2016,col:'GL1',kind:'ghost',g:'🌊',title:'Pure conv sequence (ByteNet/WaveNet)',prereq:['st16'],tip:{tag:'2016 · road not taken',sub:'',gh:'Replace recurrence with dilated causal convolutions: parallel, with exponentially growing receptive field',ch:'',note:'The conv route; surpassed by self-attention two years later'}},
+{id:'s_decatt16',year:2016,col:'GL2',kind:'ghost',g:'🔍',title:'Early self-attention (Decomposable)',prereq:['st16'],tip:{tag:'2016 · road not taken',sub:'',gh:'Align two pieces of text purely with attention, no RNN',ch:'',note:'1606.01933; an embryo of Transformer self-attention'}},
+{id:'s_glu16',year:2016,col:'GL3',kind:'ghost',g:'🚪',title:'GLU gated linear unit',prereq:['st16'],tip:{tag:'2016 · road not taken',sub:'',gh:'Use half the channels to gate the other half: a gated-conv language model',ch:'',note:'1612.08083; later revived as SwiGLU'}},
+{id:'st17',year:2017,col:'T',kind:'fork',g:'⚡',title:'The Transformer revolution',prereq:['st16'],mutex:['s_convs2s17'],tip:{tag:'2017 · ★ FORK',sub:'Residual + LayerNorm + attention accessory are all in place',gh:'Could have continued the incremental "conv + local attention" route',ch:'Attention is All You Need: strip out recurrence and convolution, keep only multi-head self-attention + positional encoding',note:'1706.03762; the watershed of architecture history'}},
+{id:'s_convs2s17',year:2017,col:'GL1',kind:'ghost',g:'🌊',title:'ConvS2S convolutional sequence',prereq:['st16'],mutex:['st17'],tip:{tag:'2017 · road not taken',sub:'',gh:'Gated conv + conv attention for translation, fully parallel',ch:'',note:'1705.03122; eclipsed by the Transformer the same year'}},
+{id:'s_struct17',year:2017,col:'GL2',kind:'ghost',g:'🧩',title:'Structured self-attention',prereq:['st16'],tip:{tag:'2017 · road not taken',sub:'',gh:'Use multi-hop self-attention to produce a sentence-embedding matrix',ch:'',note:'1703.03130; an independent discovery of self-attention'}},
+{id:'s_moe17',year:2017,col:'GR1',kind:'chosen',g:'🧠',title:'Sparsely-gated MoE layer',prereq:['st16'],tip:{tag:'2017 · node',sub:'',gh:'',ch:'Put thousands of experts in one layer; the gating network activates only a few per token',note:'1701.06538; the foundation of architectural conditional computation, mainstream six years later'}},
+{id:'st18',year:2018,col:'T',kind:'chosen',g:'🔀',title:'Two-sided Transformer (Enc / Dec)',prereq:['st17'],tip:{tag:'2018 · node',sub:'The Transformer becomes the new trunk',gh:'',ch:'Splits into two structural forms: BERT goes encoder-only bidirectional, GPT goes decoder-only causal',note:'Same building block, two ways to wire it'}},
+{id:'s_elmo18',year:2018,col:'GL1',kind:'ghost',g:'🔁',title:'Deep biLSTM (ELMo structure)',prereq:['st17'],tip:{tag:'2018 · road not taken',sub:'',gh:'Use deep bidirectional LSTMs to extract contextualized word vectors',ch:'',note:'The last highlight of recurrence, immediately replaced by the Transformer'}},
+{id:'st19',year:2019,col:'T',kind:'chosen',g:'➡️',title:'Decoder-only + Pre-Norm',prereq:['st18'],tip:{tag:'2019 · node',sub:'The decoder-only structure wins',gh:'',ch:'Move normalization before the sublayer (Pre-Norm) for stable depth; GPT-2 proves it can stack',note:'RMSNorm later drops the mean-subtraction term'}},
+{id:'s_t5_19',year:2019,col:'GL1',kind:'ghost',g:'🔄',title:'Encoder-decoder (T5 structure)',prereq:['st18'],tip:{tag:'2019 · road not taken',sub:'',gh:'Stick with the full enc-dec, everything is text-to-text',ch:'',note:'Marginalized by decoder-only in the generative race'}},
+{id:'s_ut19',year:2019,col:'GL2',kind:'ghost',g:'🔁',title:'Universal Transformer (depth recurrence)',prereq:['st18'],tip:{tag:'2019 · road not taken',sub:'',gh:'Apply the same layer weights recurrently, with adaptive halting',ch:'',note:'1807.03819; the depth-recurrence idea, not revived until 2025-26'}},
+{id:'s_txl19',year:2019,col:'GL3',kind:'ghost',g:'🪟',title:'Transformer-XL (segment recurrence)',prereq:['st18'],tip:{tag:'2019 · road not taken',sub:'',gh:'Cache the previous segment hidden states + relative position encoding to extend context',ch:'',note:'The relative-position idea inspired RoPE/ALiBi'}},
+{id:'s_dynconv19',year:2019,col:'GR1',kind:'revived',g:'🌊',title:'Dynamic / lightweight conv',prereq:['st19'],revive:{from:'s_convs2s17'},tip:{tag:'2019 · revived',sub:'',gh:'',ch:'',rv:'Challenge self-attention with input-dependent dynamic conv kernels, proving conv still has cards to play',note:'1901.10430; the conv route\'s last flicker'}},
+{id:'st20',year:2020,col:'T',kind:'fork',g:'❄️',title:'Transformer skeleton frozen + ViT',prereq:['st19'],tip:{tag:'2020 · ★ FORK',sub:'The Pre-Norm decoder is already the paradigm',gh:'Could have pivoted to all kinds of "efficient/approximate attention" to save the quadratic cost',ch:'Choose not to touch the main structure, only optimize components; ViT proves the same block conquers images',note:'Architecture enters the "don\'t fiddle, just scale" phase'}},
+{id:'s_linatt20',year:2020,col:'GL1',kind:'ghost',g:'📉',title:'Linear / efficient attention',prereq:['st19'],tip:{tag:'2020 · road not taken',sub:'',gh:'Use kernel tricks to factor softmax into linear form, dropping complexity to O(n)',ch:'',note:'2006.16236; a notch worse in accuracy, only scaled up five years later'}},
+{id:'s_reformer20',year:2020,col:'GL2',kind:'ghost',g:'🔗',title:'Reformer LSH attention',prereq:['st19'],tip:{tag:'2020 · road not taken',sub:'',gh:'Locality-sensitive hashing confines attention to buckets of nearby tokens',ch:'',note:'2001.04451; a landmark of approximate attention'}},
+{id:'s_swiglu20',year:2020,col:'GR1',kind:'revived',g:'🚪',title:'SwiGLU feedforward',prereq:['st20'],revive:{from:'s_glu16'},tip:{tag:'2020 · revived',sub:'',gh:'',ch:'',rv:'Move GLU gating into the FFN, using Swish as the gate; clearly beats the ReLU-MLP',note:'2002.05202; becomes standard in the modern skeleton'}},
+{id:'st21',year:2021,col:'T',kind:'chosen',g:'🧭',title:'RoPE + dense trunk',prereq:['st20'],tip:{tag:'2021 · node',sub:'Skeleton frozen, only components swapped',gh:'',ch:'Rotary position encoding writes relative position into the Q/K rotation, becoming the de facto standard',note:'2104.09864; extrapolation and relative position in one shot'}},
+{id:'s_switch21',year:2021,col:'GR1',kind:'revived',g:'🧠',title:'Switch / MoE structure',prereq:['st21'],revive:{from:'s_moe17'},tip:{tag:'2021 · revived',sub:'',gh:'',ch:'',rv:'Switch simplifies per-token routing to Top-1, pushing MoE to trillion parameters',note:'Sparse activation back on the table as an architectural option'}},
+{id:'s_s4_21',year:2021,col:'GL1',kind:'ghost',g:'🌀',title:'SSM / S4 state space',prereq:['st20'],tip:{tag:'2021 · road not taken',sub:'',gh:'Do sequences with structured state-space equations: long-range dependency with linear complexity',ch:'',note:'2111.00396; the direct ancestor of Mamba'}},
+{id:'s_alibi21',year:2021,col:'GL2',kind:'ghost',g:'📐',title:'ALiBi linear bias',prereq:['st20'],tip:{tag:'2021 · road not taken',sub:'',gh:'No positional embedding; just subtract a distance-linear penalty from the attention scores',ch:'',note:'2108.12409; lost out to RoPE'}},
+{id:'st22',year:2022,col:'T',kind:'fork',g:'🦴',title:'Modern skeleton finalized (RoPE+SwiGLU+RMSNorm)',prereq:['st21'],tip:{tag:'2022 · ★ FORK',sub:'Each component has been individually validated',gh:'Could have bet on sparse/approximate attention variants to reshape the trunk',ch:'The Chinchilla era: lock Pre-Norm decoder + RoPE + SwiGLU + RMSNorm into the standard skeleton',note:'The trunk barely changes for years after'}},
+{id:'s_flamingo22',year:2022,col:'GR1',kind:'chosen',g:'🦩',title:'Gated cross-attention (Flamingo)',prereq:['st22'],tip:{tag:'2022 · node',sub:'',gh:'',ch:'Insert gated cross-attention layers into a frozen language model to plug in visual features',note:'2204.14198; multimodality as an architectural plugin'}},
+{id:'s_sparse22',year:2022,col:'GL1',kind:'ghost',g:'🕳️',title:'Sparse / approximate attention variants',prereq:['st21'],tip:{tag:'2022 · road not taken',sub:'',gh:'All sorts of block-sparse, local + global hybrid attention compete for long context',ch:'',note:'Never beat carefully tuned full attention'}},
+{id:'st23',year:2023,col:'T',kind:'fork',g:'🧩',title:'GQA + MoE onto the trunk',prereq:['st22'],tip:{tag:'2023 · ★ FORK',sub:'Standard skeleton + compute bottlenecked by the KV cache',gh:'Could have replaced attention wholesale with pure SSM/RetNet',ch:'GQA lets multiple query heads share KV heads to save memory; Mixtral makes MoE open-source mainstream',note:'2305.13245; the skeleton starts getting tuned by the engineering ledger'}},
+{id:'s_mla23',year:2023,col:'GR1',kind:'chosen',g:'🗜️',title:'MLA multi-head latent attention (early)',prereq:['st23'],tip:{tag:'2023 · node',sub:'',gh:'',ch:'Compress KV into a low-rank latent vector, decompress on demand at inference, cutting the KV cache by 90%',note:'The DeepSeek-V2 route; decoupled RoPE is the key'}},
+{id:'s_hyena23',year:2023,col:'GL1',kind:'ghost',g:'🌀',title:'Hyena / RetNet',prereq:['st22'],tip:{tag:'2023 · road not taken',sub:'',gh:'Long convolution (Hyena) or retention (RetNet) aim to replace attention wholesale',ch:'',note:'2302.10866 / 2307.08621; locally successful, didn\'t shake the trunk'}},
+{id:'s_mamba23',year:2023,col:'GR2',kind:'revived',g:'🐍',title:'Mamba (selective SSM)',prereq:['st23'],revive:{from:'s_s4_21'},tip:{tag:'2023 · revived',sub:'',gh:'',ch:'',rv:'Add input-dependent selective gating + hardware-aware scan to SSM, matching the Transformer on language for the first time',note:'2312.00752; the SSM route erupts'}},
+{id:'st24',year:2024,col:'T',kind:'chosen',g:'🧬',title:'Transformer-MoE + MLA + a little SSM',prereq:['st23'],tip:{tag:'2024 · node',sub:'GQA/MLA + MoE become the default for large models',gh:'',ch:'Trunk = attention + MoE; mix in a few SSM layers for a hybrid (Jamba / Mamba-2)',note:'Pure attention starts yielding the odd layer slot'}},
+{id:'s_diff24',year:2024,col:'GL1',kind:'ghost',g:'➖',title:'Differential Transformer',prereq:['st23'],tip:{tag:'2024 · road not taken',sub:'',gh:'Subtract two groups of attention to cancel noise and amplify signal',ch:'',note:'2410.05258; a refinement, not a replacement'}},
+{id:'s_mod24',year:2024,col:'GL2',kind:'ghost',g:'🪜',title:'Mixture-of-Depths',prereq:['st23'],tip:{tag:'2024 · road not taken',sub:'',gh:'Let tokens dynamically skip some layers, doing sparsity in the depth dimension',ch:'',note:'2404.02258; the depth version of conditional computation'}},
+{id:'s_xlstm24',year:2024,col:'GR1',kind:'revived',g:'🔁',title:'xLSTM',prereq:['st24'],revive:{from:'s_elmo18'},tip:{tag:'2024 · revived',sub:'',gh:'',ch:'',rv:'Add exponential gating and matrix memory to the LSTM, bringing recurrence back into the race',note:'2405.04517; a modern revival of the RNN route'}},
+{id:'st25',year:2025,col:'T',kind:'fork',g:'🌐',title:'Transformer+MoE + depth-recurrence sprouting',prereq:['st24'],tip:{tag:'2025 · ★ FORK',sub:'The sparse-MoE skeleton matures, long-context cost looms',gh:'Could have bet entirely on pure-linear / pure-diffusion structures',ch:'Linear attention scales up for the first time as a hybrid; depth recurrence (HRM) and test-time memory begin sprouting',note:'A multi-line bet on "what comes after attention"'}},
+{id:'s_minimax25',year:2025,col:'GR1',kind:'chosen',g:'⚡',title:'Linear attention at scale (MiniMax-01)',prereq:['st25'],tip:{tag:'2025 · node',sub:'',gh:'',ch:'Lightning Attention 7:1 hybrid: one softmax layer per seven linear-attention layers, 456B/45.9B active',note:'2501.08313; linear attention truly scaled for the first time'}},
+{id:'s_moba25',year:2025,col:'GL1',kind:'ghost',g:'🧱',title:'MoBA block-attention hybrid',prereq:['st24'],tip:{tag:'2025 · road not taken',sub:'',gh:'Chop the context into blocks, the gate picks only a few blocks for attention',ch:'',note:'2502.13189; a middle road between full and linear attention'}},
+{id:'s_nsa25',year:2025,col:'GR2',kind:'revived',g:'🕳️',title:'NSA native sparse attention',prereq:['st25'],revive:{from:'s_sparse22'},tip:{tag:'2025 · revived',sub:'',gh:'',ch:'',rv:'Three branches — compress + select + sliding window — hardware-aligned and natively trainable; sparse attention finally not losing to full attention',note:'2502.11089'}},
+{id:'s_rwkv7_25',year:2025,col:'GR3',kind:'revived',g:'🦢',title:'RWKV-7 Goose',prereq:['st25'],revive:{from:'s_dynconv19'},tip:{tag:'2025 · revived',sub:'',gh:'',ch:'',rv:'Generalized delta rule + vector-valued gating; constant memory, constant inference — the RNN route evolves again',note:'2503.14456'}},
+{id:'s_llada25',year:2025,col:'GL2',kind:'ghost',g:'🌫️',title:'LLaDA diffusion language structure',prereq:['st24'],tip:{tag:'2025 · road not taken',sub:'',gh:'Use a masked diffusion process to predict masked tokens in parallel, dropping autoregression',ch:'',note:'2502.09992; diffusion LM scaled from scratch'}},
+{id:'s_titans25',year:2025,col:'GR4',kind:'revived',g:'📼',title:'Titans test-time memory module',prereq:['st25'],revive:{from:'s_ntm15'},tip:{tag:'2025 · revived',sub:'',gh:'',ch:'',rv:'A neural long-term memory updates its own weights during the forward pass; the differentiable-external-memory idea revived, scaled to 2M+ context',note:'2501.00663'}},
+{id:'st26',year:2026,col:'T',kind:'now',g:'🔭',title:'Depth recurrence + sparse/linear attention coexist',prereq:['st25'],tip:{tag:'2026 · ★ NOW',sub:'Sparse MoE + long context are now table stakes',gh:'',ch:'Three lines in parallel: HRM dual-timescale depth recurrence / DeepSeek-V4 sparse attention / Qwen3.5 linear-attention hybrid',note:'2605.20613; the biggest loosening of the trunk since the Transformer'}},
+{id:'s_dsa26',year:2026,col:'GR1',kind:'chosen',g:'🗜️',title:'DeepSeek-V4 sparse attention (DSA)',prereq:['st26'],tip:{tag:'2026 · node',sub:'',gh:'',ch:'Compressed sparse + re-compression + sliding window interleaved layer by layer; V4-Pro 1.6T/49B active, V4-Flash 284B/13B, 1M context',note:'2026-04; per-token FLOPs just 27% of V3.2'}},
+{id:'s_qwen35_26',year:2026,col:'GR2',kind:'chosen',g:'⚡',title:'Qwen3.5 linear attention (Gated DeltaNet)',prereq:['st26'],tip:{tag:'2026 · node',sub:'',gh:'',ch:'Gated DeltaNet alternates ~3:1 with full attention, fixed state with no growing KV; 397B/17B active',note:'2026-02; up to 19× faster decoding'}},
+{id:'s_m2_26',year:2026,col:'GL1',kind:'ghost',g:'↩️',title:'MiniMax-M2 reverts to full attention',prereq:['st25'],tip:{tag:'2026 · road not taken',sub:'',gh:'Engineering verdict that linear/sparse attention isn\'t truly production-ready, so the flagship reverts to full attention',ch:'',note:'A vote in reverse: the efficiency structure isn\'t settled yet'}},
+{id:'s_mercury26',year:2026,col:'GR3',kind:'revived',g:'🌫️',title:'Mercury commercial diffusion LLM',prereq:['st26'],revive:{from:'s_llada25'},tip:{tag:'2026 · revived',sub:'',gh:'',ch:'',rv:'The first commercial-scale diffusion LLM: Transformer parameterization + parallel multi-token decoding, thousands of tok/s on code tasks',note:'2506.17298'}},
+  ];
+  TREES.structure.threads = [];
+  TREES.data.nodes = [
+{id:'dt15',year:2015,col:'T',kind:'chosen',g:'📖',title:'Supervised parallel corpora + word vectors',prereq:[],tip:{tag:'2015 · origin',sub:'NMT uses human-aligned bilingual sentence pairs as supervision; word2vec/GloVe compress words into dense distributed vectors',gh:'The signal is entirely human-labeled "source → target" pairs.',ch:'Let the model learn from "paired correct answers" rather than from raw text on its own',note:'Data = parallel pairs + pretrained word embeddings.'}},
+{id:'d_mem15',year:2015,col:'GL1',kind:'ghost',g:'🗄️',title:'External memory as knowledge base',prereq:[],tip:{tag:'2015 · GHOST',sub:'Memory Networks/NTM store facts in addressable external storage, read at inference time',gh:'Treat knowledge as queryable data rather than packed into weights.',ch:'The mainstream chose to cram knowledge into parameters; external memory shelved.',note:'Revived a decade later as RAG/retrieval.'}},
+{id:'d_ptr15',year:2015,col:'GR1',kind:'ghost',g:'📋',title:'Copy / pointer mechanism',prereq:[],tip:{tag:'2015 · GHOST',sub:'Pointer Networks copy tokens directly from the input as the output signal',gh:'Make the data itself (the input string) a source of copyable labels.',ch:'Eclipsed by generative modeling, but inspired copy mechanisms and extractive tasks.',note:'An early solution for OOV and extractive summarization.'}},
+{id:'dt16',year:2016,col:'T',kind:'chosen',g:'🔡',title:'Subword units, BPE',prereq:['dt15'],tip:{tag:'2016 · key',sub:'Sennrich uses BPE to split words into frequent subwords: open vocabulary, OOV relief',gh:'Tokenization shifts from "whole-word lookup" to "data-driven merging".',ch:'BPE becomes the smallest signal unit fed to the model.',note:'Tokenization decides what the model "sees".'}},
+{id:'d_char16',year:2016,col:'GL1',kind:'ghost',g:'🔠',title:'Character / byte-level modeling',prereq:['dt15'],mutex:['dt16'],tip:{tag:'2016 · GHOST',sub:'Pure character/byte sequences avoid tokenization, but sequences get too long and training expensive',gh:'Let the model eat raw bytes directly, no segmentation at all.',ch:'Compute couldn\'t afford it then; BPE won as the compromise.',note:'Challenged again by BLT in 2024.'}},
+{id:'d_kv16',year:2016,col:'GR1',kind:'ghost',g:'🗝️',title:'Key-value memory for knowledge',prereq:['d_mem15'],tip:{tag:'2016 · GHOST',sub:'Key-Value Memory Networks store knowledge triples as retrievable key-value pairs',gh:'Structured knowledge as an external data source.',ch:'End-to-end weight compression was still mainstream.',note:'An embryo of the retrieval-augmentation idea.'}},
+{id:'dt17',year:2017,col:'T',kind:'chosen',g:'🔁',title:'BPE becomes standard + WMT supervision',prereq:['dt16'],tip:{tag:'2017 · consolidation',sub:'Subword BPE becomes the de facto standard; WMT parallel corpora are still the main supervision signal',gh:'Signal = human parallel pairs + subword segmentation.',ch:'Tokenization standardizes, energy shifts to "how to make more data".',note:'Paves the way for data augmentation.'}},
+{id:'d_bt17',year:2017,col:'GR1',kind:'chosen',g:'♻️',title:'Back-translation data augmentation',prereq:['dt17'],tip:{tag:'2017 · chosen',sub:'Sennrich back-translation: use monolingual target-language text to back-translate into pseudo parallel pairs',gh:'Use the model\'s own generated data to make up for scarce supervision.',ch:'Synthetic data works at scale for the first time, planting the "make-your-own-data" seed.',note:'One source of the synthetic-data paradigm.'}},
+{id:'d_byte17',year:2017,col:'GL1',kind:'ghost',g:'🔠',title:'Byte-level still suppressed',prereq:['d_char16'],tip:{tag:'2017 · GHOST',sub:'Byte-level models still can\'t beat BPE on quality and efficiency',gh:'Keep insisting on the tokenization-free route.',ch:'Shelved, waiting for compute and architecture to mature.',note:''}},
+{id:'dt18',year:2018,col:'T',kind:'fork',g:'📚',title:'Self-supervised pretraining objective revolution',prereq:['dt17'],mutex:['d_elmo18','d_dn18'],tip:{tag:'2018 · ★ FORK',sub:'BERT masked language modeling (MLM) and GPT causal language modeling (causal LM) arrive; the signal comes from massive unlabeled text itself',gh:'ELMo biLM objective; NSP sentence-pair objective; denoising/seq2seq objective.',ch:'Three-way fork: bidirectional cloze (MLM) vs autoregressive continuation (causal) vs denoising reconstruction (denoising).',note:'Supervision shifts from human-aligned pairs to "text self-supervision".'}},
+{id:'d_elmo18',year:2018,col:'GL1',kind:'ghost',g:'🔦',title:'ELMo bidirectional LM objective',prereq:['dt17'],tip:{tag:'2018 · GHOST',sub:'Two independent unidirectional LSTM-LMs concatenated to get contextualized word vectors',gh:'A shallow concatenated bidirectional signal, not deep joint masking.',ch:'Completely eclipsed by BERT\'s deep bidirectional MLM.',note:'The swan song of feature-extraction pretraining.'}},
+{id:'d_dn18',year:2018,col:'GL2',kind:'ghost',g:'🧩',title:'Denoising / NSP objective',prereq:['dt17'],tip:{tag:'2018 · GHOST',sub:'NSP next-sentence prediction + various denoising reconstruction objectives',gh:'Extra inter-sentence relation signal and noise-reconstruction signal.',ch:'NSP later proven nearly useless; denoising found another path in T5/BART.',note:'The denoising objective revives in 2019/2020.'}},
+{id:'dt19',year:2019,col:'T',kind:'chosen',g:'🌐',title:'Large-scale web corpora + causal LM',prereq:['dt18'],tip:{tag:'2019 · turning point',sub:'WebText / C4: clean open web pages into a giant pretraining corpus; GPT-2 proves pure causal LM can scale',gh:'Data shifts from curated corpora to "crawl-the-whole-web + filter".',ch:'Data volume and diversity become the prime driver.',note:'Corpus engineering becomes as important as modeling.'}},
+{id:'d_roberta19',year:2019,col:'GR1',kind:'chosen',g:'🍞',title:'RoBERTa data recipe',prereq:['dt19'],tip:{tag:'2019 · chosen',sub:'Dynamic masking, drop NSP, more data trained longer (1907.11692).',gh:'Proves BERT was undertrained; "feed more, longer" beats tweaking the objective.',ch:'Data recipe and training volume beat objective fanciness.',note:'Early evidence that data > clever objectives.'}},
+{id:'d_xlnet19',year:2019,col:'GL1',kind:'ghost',g:'🔀',title:'Permutation language modeling, XLNet',prereq:['dt18'],tip:{tag:'2019 · GHOST',sub:'XLNet uses permutation LM to get both bidirectionality and autoregression (1906.08237).',gh:'Construct a bidirectional autoregressive signal via token-order permutation.',ch:'Complex to implement, unstable gains, marginalized by the simpler causal/MLM.',note:''}},
+{id:'d_electra19',year:2019,col:'GL2',kind:'ghost',g:'⚡',title:'ELECTRA replaced-token detection (RTD)',prereq:['dt18'],tip:{tag:'2019 · GHOST',sub:'Discriminate whether each token was replaced by a generator (2003.10555), extremely sample-efficient',gh:'Replace masked reconstruction with a "replaced/real" binary signal.',ch:'Discriminative pretraining is cheaper but never became the mainstream generative paradigm.',note:'The RTD objective formula is in the report.'}},
+{id:'d_knn19',year:2019,col:'GR2',kind:'ghost',g:'🔎',title:'kNN-LM retrieval data',prereq:['dt19'],tip:{tag:'2019 · GHOST',sub:'kNN-LM (1911.00172) interpolates probabilities by retrieving training-set neighbors at inference',gh:'Treat the training data itself as a non-parametric memory to query.',ch:'Eclipsed at the time by pure parametric models, planting the seed of retrieval\'s revival.',note:'The interpolation formula is in the report.'}},
+{id:'dt20',year:2020,col:'T',kind:'fork',g:'📈',title:'Data scaling law + in-context',prereq:['dt19'],mutex:['d_pile20'],tip:{tag:'2020 · ★ FORK',sub:'Kaplan scaling law (2001.08361) gives the power law of loss vs data/params/compute; GPT-3 treats "examples" directly as in-prompt data',gh:'The data-optimal ratio could have been worked out earlier; the RETRO retrieval seed was already planted.',ch:'Choose to keep piling on params and compute; data volume not yet put in the optimal spot.',note:'in-context learning: data format as few-shot examples.'}},
+{id:'d_pile20',year:2020,col:'GR1',kind:'chosen',g:'🧹',title:'The Pile dedup / quality',prereq:['dt20'],tip:{tag:'2020 · chosen',sub:'The Pile stitches multi-source high-quality text into an 800GB corpus, emphasizing dedup and mixing ratios',gh:'Data quality and diversity systematically curated for the first time.',ch:'Corpus curation shifts from "bigger is better" to "recipe and dedup".',note:'Dedup markedly reduces memorization and improves generalization.'}},
+{id:'d_retro20',year:2020,col:'GL1',kind:'ghost',g:'🌱',title:'RETRO retrieval seed',prereq:['d_knn19'],tip:{tag:'2020 · GHOST',sub:'The retrieval-augmentation idea keeps brewing after kNN-LM, not yet scaled',gh:'Replace part of parametric memory with a trillion-scale retrieval store.',ch:'The mainstream still bets on pure parametric scaling; retrieval on hold.',note:'Landed properly in 2021 via RETRO/RAG.'}},
+{id:'d_revknn20',year:2020,col:'GR2',kind:'revived',g:'🔁',title:'Retrieval as a data source (revived)',prereq:['dt20'],revive:{from:'d_knn19'},tip:{tag:'2020 · ⟲ REVIVED',sub:'Non-parametric retrieval picked up again from the kNN-LM idea, as a knowledge-data channel',gh:'',ch:'',rv:'kNN-LM\'s "the training set is the memory" taken seriously again.',note:'Carries into 2021 RETRO/RAG.'}},
+{id:'dt21',year:2021,col:'T',kind:'chosen',g:'🧽',title:'Keep scaling + data dedup',prereq:['dt20'],tip:{tag:'2021 · push',sub:'Models keep growing; corpus dedup and quality filtering become standard procedure',gh:'Signal = bigger, cleaner web text.',ch:'Dedup/quality filtering proven to convert directly into performance.',note:'The data-cleaning pipeline industrializes.'}},
+{id:'d_retro21',year:2021,col:'GR1',kind:'chosen',g:'📚',title:'Retrieval-augmented RETRO / RAG',prereq:['d_revknn20'],tip:{tag:'2021 · chosen',sub:'RETRO (2112.04426) uses a 2T-token retrieval store; RAG (2005.11401) retrieves and concatenates for generation',gh:'Knowledge decoupled from parameters into an external database.',ch:'Retrieval separates "knowledge data" from "reasoning parameters".',note:'Knowledge becomes updatable and traceable.'}},
+{id:'d_code21',year:2021,col:'GL1',kind:'ghost',g:'💻',title:'Code / multilingual data',prereq:['dt21'],tip:{tag:'2021 · GHOST',sub:'Codex uses GitHub code, mC4 uses many languages to expand the data domain',gh:'Bring code and multiple languages into the pretraining signal.',ch:'A supporting role back then, later a key nutrient for reasoning and alignment.',note:'Code data later found to strengthen reasoning.'}},
+{id:'dt22',year:2022,col:'T',kind:'fork',g:'🐭',title:'Chinchilla data-optimal',prereq:['dt21'],mutex:['d_rlhf22','d_cot22'],tip:{tag:'2022 · ★ FORK',sub:'Chinchilla (2203.15556) proves most large models are undertrained: given compute, params and data should scale ≈ proportionally',gh:'Constitutional/RLAIF data (2212.08073); self-instruct synthetic data.',ch:'Three-way fork: data-optimal scaling vs preference data (RLHF) vs CoT data.',note:'L(N,D)=E+A/N^α+B/D^β, α≈β≈0.5.'}},
+{id:'d_rlhf22',year:2022,col:'GR1',kind:'chosen',g:'👍',title:'RLHF preference data',prereq:['dt22'],tip:{tag:'2022 · chosen',sub:'InstructGPT (2203.02155) collects human pairwise preferences over answers to define a reward model',gh:'Supervision shifts from "correct text" to "which one humans prefer".',ch:'Reward definition = Bradley-Terry preference; this is the data/objective layer.',note:'Preference-modeling formula in the report (the PPO mechanism is on the Algorithm page).'}},
+{id:'d_cot22',year:2022,col:'GR2',kind:'chosen',g:'🧠',title:'CoT reasoning data',prereq:['dt22'],tip:{tag:'2022 · chosen',sub:'Chain-of-Thought (2201.11903): make examples carry a "step-by-step reasoning" process as data',gh:'Write the reasoning process itself into the training/prompt data.',ch:'Reasoning chains become a learnable, distillable data asset.',note:'CoT-as-data is the source of later long-CoT.'}},
+{id:'d_flan22',year:2022,col:'GL1',kind:'chosen',g:'📋',title:'Instruction tuning, FLAN',prereq:['dt22'],tip:{tag:'2022 · chosen',sub:'FLAN unifies thousands of tasks into an "instruction + answer" format for multi-task finetuning',gh:'Use instruction templates to turn heterogeneous tasks into a unified supervision signal.',ch:'Instruction data teaches the model to "follow orders".',note:'The start of scaling instruction data.'}},
+{id:'d_rlaif22',year:2022,col:'GL2',kind:'ghost',g:'📜',title:'Constitutional / synthetic preference',prereq:['dt22'],tip:{tag:'2022 · GHOST',sub:'Constitutional AI (2212.08073) uses AI to self-critique against principles to generate preferences (RLAIF); self-instruct synthesizes instructions',gh:'Use the model to generate preference and instruction data, reducing human labeling.',ch:'A side branch back then, the main synthetic-data road in 2023+.',note:'AI feedback replaces human feedback.'}},
+{id:'dt23',year:2023,col:'T',kind:'chosen',g:'🎯',title:'Instruction + preference data (DPO)',prereq:['dt22'],tip:{tag:'2023 · mainline',sub:'Instruction tuning + preference data become standard; DPO (2305.18290) uses preference pairs directly as a classification objective',gh:'Preference data shifts from needing a reward model to being a direct supervision signal.',ch:'Alignment data becomes the core competitiveness of open-source models.',note:'DPO turns preferences into a simple log-ratio objective.'}},
+{id:'d_synth23',year:2023,col:'GR1',kind:'chosen',g:'🧪',title:'Synthetic / distillation data',prereq:['dt23'],tip:{tag:'2023 · chosen',sub:'Self-Instruct/Alpaca use GPT to make instructions; Orca distills the explanation chains of strong models',gh:'Use a strong model to mass-generate training data to feed weaker ones.',ch:'Synthetic data lets small teams also make alignment corpora.',note:'The full eruption of the back-translation idea.'}},
+{id:'d_phi23',year:2023,col:'GR2',kind:'chosen',g:'📕',title:'Quality first (phi textbooks)',prereq:['dt23'],tip:{tag:'2023 · chosen',sub:'The phi series uses "textbook-grade" high-quality synthetic data; small models also strong',gh:'Data quality can trade for parameter count and data volume.',ch:'"Textbooks are all you need": quality beats quantity.',note:'The quality curve challenges pure scaling.'}},
+{id:'d_long23',year:2023,col:'GL1',kind:'ghost',g:'📏',title:'Long-context / safety data',prereq:['dt23'],tip:{tag:'2023 · GHOST',sub:'Long-document concatenation data and red-team/safety annotation start accumulating',gh:'Make data specifically for ultra-long context and safety alignment.',ch:'A side dish back then, the main course in 2024.',note:''}},
+{id:'dt24',year:2024,col:'T',kind:'chosen',g:'🏭',title:'Large-scale synthetic + distillation data',prereq:['dt23'],tip:{tag:'2024 · mainline',sub:'Synthetic and distillation data become the pillar of pre/post-training; real web data hits its ceiling',gh:'Signal comes largely from model-produced data.',ch:'Data becomes "self-sufficient": strong models make data to train the next generation.',note:'The data flywheel forms.'}},
+{id:'d_mtp24',year:2024,col:'GR1',kind:'chosen',g:'⏭️',title:'Multi-token prediction (MTP)',prereq:['dt24'],tip:{tag:'2024 · chosen',sub:'DeepSeek-V3 (2412.19437) uses an MTP objective: predict several future tokens at each step',gh:'The training signal extends from "the next one" to "the next few".',ch:'A denser supervision signal + usable for speculative decoding.',note:'MTP objective formula in the report.'}},
+{id:'d_longctx24',year:2024,col:'GR2',kind:'chosen',g:'📐',title:'Long-context data',prereq:['dt24'],tip:{tag:'2024 · chosen',sub:'Specially curated long-document / multi-document concatenation and long-range dependency data support million-token context',gh:'Make data that "needs long-distance dependency" for the ultra-long window.',ch:'Context length becomes a data-engineering objective.',note:'Data decides whether long context is actually usable.'}},
+{id:'d_blt24',year:2024,col:'GL1',kind:'ghost',g:'🔠',title:'Byte tokenization-free, BLT',prereq:['d_byte17'],tip:{tag:'2024 · GHOST',sub:'BLT (2412.09871) dynamically cuts patches by byte entropy, matching tokenized models at scale for the first time',gh:'Drop BPE entirely, let the model eat raw bytes directly.',ch:'The byte route is finally viable, but ecosystem inertia still on BPE.',note:'A revival attempt of the character-level ghost.'}},
+{id:'d_coconut24',year:2024,col:'GL2',kind:'ghost',g:'🥥',title:'Continuous latent-space objective, Coconut',prereq:['dt24'],tip:{tag:'2024 · GHOST',sub:'Coconut (2412.06769) feeds hidden states back as "continuous thought", never decoding them into words',gh:'The reasoning signal leaves discrete tokens and enters continuous latent space.',ch:'Elegant but hard to scale; the mainstream still uses discrete CoT text.',note:'Latent-space reasoning vs text CoT.'}},
+{id:'dt25',year:2025,col:'T',kind:'fork',g:'✅',title:'RLVR verifiable rewards',prereq:['dt24'],mutex:['d_longcot25','d_s125'],tip:{tag:'2025 · ★ FORK',sub:'DeepSeek-R1 (2501.12948) defines rewards from auto-verifiable math/code answers (RLVR); the signal is objective, no human preference labels needed',gh:'Process-reward PRM data; pure human preference (eclipsed by RLVR).',ch:'Reward definition shifts from "what humans like" to "whether the answer is verifiably correct".',note:'RLVR = binary/rule-based verifiable reward (the GRPO mechanism is on the Algorithm page).'}},
+{id:'d_longcot25',year:2025,col:'GR1',kind:'chosen',g:'🧵',title:'long-CoT data + distillation',prereq:['dt25'],tip:{tag:'2025 · chosen',sub:'R1 produces ultra-long reasoning chains, then distills them into smaller models (R1→small)',gh:'Use the long reasoning chains from verifiable training as distillation data.',ch:'Strong reasoning can be compressed into small models; data is the bridge.',note:'RLVR makes data → distillation amplifies.'}},
+{id:'d_s125',year:2025,col:'GR2',kind:'chosen',g:'🪶',title:'Data minimalism, s1 / LIMO',prereq:['dt25'],tip:{tag:'2025 · chosen',sub:'s1 (2501.19393) gets strong reasoning with only 1000 curated samples + budget forcing; LIMO likewise',gh:'A handful of high-quality samples is enough to activate existing reasoning ability.',ch:'Post-training data "few but fine" beats "many but messy".',note:'Data-volume minimalism.'}},
+{id:'d_l2s25',year:2025,col:'GL1',kind:'chosen',g:'✂️',title:'long2short compression',prereq:['dt25'],tip:{tag:'2025 · chosen',sub:'Compress verbose reasoning chains into short, efficient training targets; save tokens without losing score',gh:'Replace "long and winding" chains with "short and correct" ones as data.',ch:'Reasoning data also cares about cost-effectiveness.',note:''}},
+{id:'d_prm25',year:2025,col:'GL2',kind:'ghost',g:'🪜',title:'Process-reward PRM data',prereq:['dt25'],tip:{tag:'2025 · GHOST',sub:'PRM scores every reasoning step, requiring expensive step-level annotation',gh:'Use step-level correctness signal instead of only the final answer.',ch:'High labeling cost, outdone by the cost-effectiveness of outcome-level RLVR.',note:'Pure preference rewards are likewise marginalized.'}},
+{id:'d_revret25',year:2025,col:'GR3',kind:'revived',g:'🔁',title:'Knowledge-retrieval decoupling (revived)',prereq:['dt25'],revive:{from:'d_retro21'},tip:{tag:'2025 · ⟲ REVIVED',sub:'Reasoning via RLVR, knowledge via retrieval: the two decouple again',gh:'',ch:'',rv:'RETRO/RAG\'s "externalized knowledge" regains importance in the reasoning era.',note:'Parameters handle reasoning, the database handles facts.'}},
+{id:'dt26',year:2026,col:'T',kind:'now',g:'🎬',title:'Task-completion objective + PrefixLM + distillation',prereq:['dt25'],tip:{tag:'2026 · NOW',sub:'The objective shifts to "is the task complete"; a PrefixLM mixed objective + distillation data dominate (HRM-Text report ablation: distillation +12.6)',gh:'Pure human preference data (marginalized by verifiable + distillation).',ch:'Signal = verifiable completion + strong-model distillation; human labels take a back seat.',note:'Now: data decides whether the agent can actually finish the task.'}},
+{id:'d_agent26',year:2026,col:'GR1',kind:'chosen',g:'🕹️',title:'Long-horizon agent data',prereq:['dt26'],tip:{tag:'2026 · chosen',sub:'Use hindsight relabeling to rewrite failed trajectories into "if the goal were X, then success" data',gh:'Recover supervision signal from interaction trajectories.',ch:'Agent data is mass-produced by hindsight relabeling.',note:'Trajectories are data.'}},
+{id:'d_kdecouple26',year:2026,col:'GR2',kind:'chosen',g:'📚',title:'Knowledge decoupling / retrieval',prereq:['d_revret25'],tip:{tag:'2026 · chosen',sub:'Following RETRO: knowledge in an external store, parameters focused on reasoning and tool use',gh:'Knowledge data is hot-updatable, reasoning ability is stable.',ch:'Retrieval becomes the standard supply for the knowledge layer.',note:'Knowledge and reasoning fully layered.'}},
+{id:'d_humanpref26',year:2026,col:'GL1',kind:'ghost',g:'👤',title:'Pure human preference data',prereq:['dt26'],tip:{tag:'2026 · GHOST',sub:'Pure human pairwise preferences are still used for style/safety, but no longer the main capability signal',gh:'Keep relying on large-scale human preference labeling to define rewards.',ch:'Marginalized by verifiable rewards + distillation, retreating to taste and safety.',note:'Human preference yields to objective verifiable signals.'}},
+  ];
+  TREES.data.threads = [];
+  TREES.algorithm.nodes = [
+{id:'at15',year:2015,col:'T',kind:'chosen',g:'⚙️',title:'Adam optimizer',prereq:[],tip:{tag:'2015 · foundation',sub:'First-order adaptive moment estimation (Kingma 1412.6980) becomes the default',gh:'Second-order/Hessian-free talked out of it by compute',ch:'Chose the cheap, robust first-order adaptive method',note:'BPTT is still the workhorse for sequence training'}},
+{id:'a_adagrad15',year:2015,col:'GL1',kind:'ghost',g:'📉',title:'Adagrad/RMSProp precursors',prereq:['at15'],tip:{tag:'2015 · old road',sub:'Scale the learning rate per coordinate',gh:'Absorbed by Adam\'s m̂/v̂ dual moments',ch:'Adam = momentum + RMSProp',note:'The idea lives on inside Adam'}},
+{id:'a_async15',year:2015,col:'GL2',kind:'ghost',g:'🖧',title:'Asynchronous parameter server',prereq:['at15'],tip:{tag:'2015 · old road',sub:'DistBelief-style asynchronous SGD',gh:'Stale gradients → the synchronous camp wins',ch:'Later shifted to synchronous data parallelism',note:'The communication paradigm gets rewritten'}},
+{id:'at16',year:2016,col:'T',kind:'chosen',g:'🔁',title:'Synchronous data parallelism',prereq:['at15'],tip:{tag:'2016 · foundation',sub:'Adam default + synchronous SGD all-reduce + BatchNorm',gh:'Asynchronous SGD fades',ch:'Deterministic gradients > throughput',note:'Data parallelism becomes the training skeleton'}},
+{id:'a_largebatch16',year:2016,col:'GL1',kind:'ghost',g:'📦',title:'Large-batch SGD',prereq:['at16'],tip:{tag:'2016 · old road',sub:'Scale up the batch for linear speedup',gh:'Generalization gap + hard tuning',ch:'Stay on medium batch + warmup for now',note:'Large batch must wait for LAMB/LR rules'}},
+{id:'at17',year:2017,col:'T',kind:'chosen',g:'🌡️',title:'LR warmup + mixed-precision sprouting',prereq:['at16'],tip:{tag:'2017 · foundation',sub:'Transformer training needs warmup; FP16 tested',gh:'Bare Adam charging in diverges',ch:'warmup → a smooth start',note:'Learning-rate scheduling becomes mandatory'}},
+{id:'a_moe17',year:2017,col:'GR1',kind:'chosen',g:'🚦',title:'Sparsely-gated MoE routing',prereq:['at17'],tip:{tag:'2017 · branch',sub:'Conditional computation + top-k gating (1701.06538)',gh:'Dense scaling means compute grows linearly',ch:'Sparse activation saves FLOPs',note:'The starting point of routing algorithms'}},
+{id:'a_secondorder17',year:2017,col:'GL1',kind:'ghost',g:'🧮',title:'Second-order optimization',prereq:['at17'],tip:{tag:'2017 · old road',sub:'K-FAC/Shampoo-style curvature approximation',gh:'Too expensive per step, hard to distribute',ch:'Keep eating Adam',note:'The curvature idea resurfaces eight years later via Muon'}},
+{id:'at18',year:2018,col:'T',kind:'chosen',g:'📈',title:'Data-parallel scale + LR scheduling',prereq:['at17'],tip:{tag:'2018 · foundation',sub:'Bigger clusters + cosine/linear decay',gh:'Pipeline parallelism not yet mainstream',ch:'Squeeze data parallelism dry first',note:'Builds pressure toward model parallelism'}},
+{id:'a_gpipe18',year:2018,col:'GL1',kind:'ghost',g:'🪜',title:'GPipe pipeline parallelism',prereq:['at18'],mutex:['a_lamb18'],tip:{tag:'2018 · old road',sub:'Layer splitting + micro-batch (1811.06965)',gh:'Pipeline bubbles + complex implementation',ch:'2019 bets on tensor parallelism first',note:'Later merged into 3D parallelism'}},
+{id:'a_lamb18',year:2018,col:'GR1',kind:'ghost',g:'📦',title:'LAMB large batch',prereq:['at18'],mutex:['a_gpipe18'],tip:{tag:'2018 · old road',sub:'Layerwise adaptive, BERT training with huge batches',gh:'Less general than AdamW',ch:'The mainline still goes Adam→AdamW',note:'A large-batch-specific tool'}},
+{id:'at19',year:2019,col:'T',kind:'fork',g:'🧱',title:'Megatron tensor parallelism',prereq:['at18'],mutex:['a_gpipe19'],tip:{tag:'2019 · ★ FORK',sub:'Intra-layer GEMM column/row splitting (1909.08053) + gradient checkpointing',gh:'The pipeline camp on hold',ch:'Split a single layer rather than the batch',note:'Opens the door to billion-parameter models'}},
+{id:'a_gpipe19',year:2019,col:'GL1',kind:'ghost',g:'🪜',title:'PipeDream/GPipe pipeline',prereq:['at18'],mutex:['at19'],tip:{tag:'2019 · not taken',sub:'Asynchronous pipeline + weight stashing',gh:'Bubbles and consistency headaches',ch:'Tensor parallelism is more direct',note:'Eventually absorbed by 3D parallelism'}},
+{id:'a_zeroseed19',year:2019,col:'GR1',kind:'ghost',g:'🧩',title:'ZeRO precursor',prereq:['at18'],tip:{tag:'2019 · foreshadowing',sub:'Optimizer-state redundancy becomes the memory hog',gh:'Storing the full copy on every device is wasteful',ch:'Brewing state sharding',note:'Erupts into ZeRO a year later'}},
+{id:'at20',year:2020,col:'T',kind:'fork',g:'🧊',title:'ZeRO/DeepSpeed + AdamW',prereq:['at19'],tip:{tag:'2020 · ★ FORK',sub:'Three-stage sharding of optimizer/gradient/parameter (1910.02054) + 3D parallelism + FP16',gh:'Reversible residuals for memory saving left out in the cold',ch:'Sharding redundancy > recomputing activations',note:'AdamW becomes standard'}},
+{id:'a_reformer20',year:2020,col:'GL1',kind:'ghost',g:'♻️',title:'Reformer reversible residuals',prereq:['at20'],tip:{tag:'2020 · old road',sub:'Reversible layers + LSH attention save activations',gh:'Limited accuracy/generality',ch:'The mainline saves memory via sharding + checkpointing',note:'Another fork for saving memory'}},
+{id:'a_gshard20',year:2020,col:'GR1',kind:'revived',g:'🚦',title:'GShard top-2 routing',prereq:['at20'],revive:{from:'a_moe17'},tip:{tag:'2020 · ↻ revived',sub:'top-2 gating + automatic sharding (2006.16668)',gh:'—',rv:'The 2017 MoE revives to the hundred-billion scale via automatic parallelism',note:'Routing + systems combine for the first time'}},
+{id:'at21',year:2021,col:'T',kind:'chosen',g:'🧩',title:'Megatron-DeepSpeed 3D parallelism',prereq:['at20'],tip:{tag:'2021 · systems',sub:'Tensor × pipeline × data assembled in three dimensions',gh:'A single parallel dimension is no longer enough',ch:'Three axes combined to squeeze the cluster dry',note:'The engineering baseline for trillion-scale training'}},
+{id:'a_switch21',year:2021,col:'GR1',kind:'chosen',g:'🔀',title:'Switch top-1 + load-balancing loss',prereq:['at21'],tip:{tag:'2021 · branch',sub:'top-1 routing + auxiliary balancing loss (2101.03961)',gh:'top-2 has heavier communication',ch:'Minimal top-1 trades for throughput',note:'L_aux becomes MoE standard (later dropped)'}},
+{id:'a_1bitadam21',year:2021,col:'GL1',kind:'ghost',g:'🗜️',title:'1-bit Adam / communication compression',prereq:['at21'],tip:{tag:'2021 · old road',sub:'Quantize gradients to compress all-reduce bandwidth',gh:'Narrow benefit scenarios, easy to lose precision',ch:'The mainline saves communication via topology + overlap',note:'A communication-compression side branch'}},
+{id:'at22',year:2022,col:'T',kind:'fork',g:'⚡',title:'FlashAttention + PPO/RLHF',prereq:['at21'],mutex:['a_specdec22'],tip:{tag:'2022 · ★ FORK',sub:'IO-aware kernel (2205.14135) + PPO alignment training (2203.02155)',gh:'Approximate sparse attention beaten by the exact kernel',ch:'Exact + IO-saving > approximate',note:'Kernels and RL take off the same year'}},
+{id:'a_specdec22',year:2022,col:'GR1',kind:'chosen',g:'🪄',title:'Speculative decoding',prereq:['at21'],mutex:['at22'],tip:{tag:'2022 · branch',sub:'Draft model drafts + large model verifies (2211.17192)',gh:'—',ch:'Use a small model to trade for large-model throughput',note:'Acceptance rate min(1,p/q) doesn\'t change the distribution'}},
+{id:'a_rlaif22',year:2022,col:'GL1',kind:'ghost',g:'🪞',title:'Constitutional self-critique',prereq:['at22'],tip:{tag:'2022 · old road',sub:'RLAIF: AI feedback replaces human labeling',gh:'Disputed reward source; the mainline uses human preference first',ch:'PPO + human feedback first',note:'Reward-definition details belong to the Data page'}},
+{id:'at23',year:2023,col:'T',kind:'chosen',g:'📑',title:'PagedAttention/vLLM',prereq:['at22'],tip:{tag:'2023 · serving',sub:'Paged KV cache + continuous batching (2309.06180) + GQA cache',gh:'Static batching wastes memory',ch:'Manage KV like virtual memory',note:'Inference throughput up several-fold'}},
+{id:'a_dpo23',year:2023,col:'GR1',kind:'chosen',g:'🎯',title:'DPO RL-free optimization',prereq:['at22'],mutex:['a_quant23'],tip:{tag:'2023 · branch',sub:'Reparameterize RLHF as a classification loss (2305.18290)',gh:'PPO training unstable, needs a reward model',ch:'A one-step supervised optimization replaces the RL loop',note:'Optimization mechanism simplified (reward definition see Data)'}},
+{id:'a_quant23',year:2023,col:'GR2',kind:'chosen',g:'🗜️',title:'GPTQ/AWQ + FlashAttn-2',prereq:['at22'],mutex:['a_dpo23'],tip:{tag:'2023 · branch',sub:'4-bit post-training quantization + second-gen kernel speedup',gh:'Full-precision deployment is costly',ch:'Near-lossless 4-bit onto consumer cards',note:'Quantization enters the practical zone'}},
+{id:'a_medusa23',year:2023,col:'GL1',kind:'ghost',g:'🐍',title:'Medusa/speculative variants',prereq:['at23'],tip:{tag:'2023 · old road',sub:'Multi-head parallel drafting, no draft model needed',gh:'Ecosystem lags standard speculative decoding',ch:'The mainline iterates along speculative decoding',note:'One of the acceleration side branches'}},
+{id:'at24',year:2024,col:'T',kind:'fork',g:'🧠',title:'test-time compute / search',prereq:['at23'],tip:{tag:'2024 · ★ FORK',sub:'o1: extend the chain of thought at inference + search to trade for accuracy',gh:'Pure training-time scaling has diminishing returns',ch:'Move compute from training to inference',note:'Opens the test-time scaling era'}},
+{id:'a_auxfree24',year:2024,col:'GR1',kind:'chosen',g:'🚦',title:'Auxiliary-loss-free MoE routing',prereq:['at24'],mutex:['a_fp8train24'],tip:{tag:'2024 · branch',sub:'A bias term tunes balance without polluting the gradient (DeepSeek-V3 2412.19437)',gh:'L_aux hurts model quality',ch:'Use a learnable bias instead of a balancing loss',note:'Drops Switch\'s auxiliary loss'}},
+{id:'a_fp8train24',year:2024,col:'GR2',kind:'chosen',g:'🔢',title:'FP8 training',prereq:['at24'],mutex:['a_auxfree24'],tip:{tag:'2024 · branch',sub:'GEMM goes FP8, sensitive ops keep high precision (V3 validated)',gh:'FP16 is already the cost limit',ch:'FP8 nailed down on a giant model for the first time',note:'Training precision drops another notch'}},
+{id:'a_bitnet24',year:2024,col:'GL1',kind:'ghost',g:'🪙',title:'BitNet 1.58b quantization',prereq:['at24'],tip:{tag:'2024 · old road',sub:'Ternary weights {−1,0,1} (2402.17764)',gh:'Ecosystem/precision not ready for a mainstream changeover',ch:'The mainline stops at FP8/4-bit',note:'The far vision of extreme quantization'}},
+{id:'a_mod24',year:2024,col:'GL2',kind:'ghost',g:'🕳️',title:'Mixture-of-Depths routing',prereq:['at24'],tip:{tag:'2024 · old road',sub:'Skip layers per token to save compute (2404.02258)',gh:'Benefit overlaps with MoE',ch:'Width routing (MoE) goes first',note:'A depth-routing side branch'}},
+{id:'a_ttt24',year:2024,col:'GL3',kind:'ghost',g:'🔂',title:'TTT inner-loop optimization',prereq:['at24'],tip:{tag:'2024 · old road',sub:'Treat hidden state as weights, gradient descent at inference (2407.04620)',gh:'Hasn\'t shaken standard training yet',ch:'The mainline uses test-time search, not inner training',note:'The inner loop W_t = W_{t−1} − η∇ℓ'}},
+{id:'at25',year:2025,col:'T',kind:'fork',g:'🏅',title:'GRPO without critic',prereq:['at24'],mutex:['a_dapo25'],tip:{tag:'2025 · ★ FORK',sub:'Group-relative advantage, drop the value network (R1 2501.12948)',gh:'PPO needs a separately trained critic',ch:'Group-sample mean as baseline saves half the models',note:'The new trunk of RLVR optimization (reward definition see Data)'}},
+{id:'a_dapo25',year:2025,col:'GR1',kind:'chosen',g:'🔧',title:'DAPO recipe',prereq:['at25'],tip:{tag:'2025 · branch',sub:'clip-higher + dynamic sampling + token-level loss (2503.14476)',gh:'GRPO entropy collapse, gradients diluted',ch:'Decouple upper/lower clipping + filter all-correct/all-wrong',note:'A stabilization patch for GRPO'}},
+{id:'a_muon25',year:2025,col:'GR2',kind:'revived',g:'🌀',title:'Muon optimizer transfusion',prereq:['at25'],revive:{from:'a_secondorder17'},tip:{tag:'2025 · ↻ revived',sub:'Newton–Schulz orthogonalized update (2502.16982)',gh:'—',rv:'The second-order/curvature idea returns in a lightweight orthogonalization form, challenging AdamW',note:'Matrix updates approximately orthogonal, more sample-efficient'}},
+{id:'a_s1_25',year:2025,col:'GL1',kind:'ghost',g:'⏱️',title:'s1 budget forcing',prereq:['at25'],tip:{tag:'2025 · old road',sub:'Force-extend/truncate the thinking budget (2501.19393)',gh:'Simple but weak controllability',ch:'The mainline learns to self-control length via RL',note:'The minimal version of test-time scaling'}},
+{id:'a_mcts25',year:2025,col:'GL2',kind:'ghost',g:'🌲',title:'MCTS/PRM value search',prereq:['at25'],tip:{tag:'2025 · old road',sub:'Process reward + tree search to guide reasoning',gh:'PRM hard to train, search overhead large',ch:'Pruned by pure RL + verifiable rewards',note:'Heavy value search falls out of favor'}},
+{id:'at26',year:2026,col:'T',kind:'now',g:'🛰️',title:'Long-horizon agent RL',prereq:['at25'],tip:{tag:'2026 · NOW',sub:'horizon reduction + hindsight credit assignment (2603.08754)',gh:'Under sparse delayed rewards, GRPO\'s credit assignment misfires',ch:'Use an LLM as a hindsight critic to fix step-level Q-values',note:'Deep credit assignment for multi-step agents'}},
+{id:'a_dsa26',year:2026,col:'GR1',kind:'chosen',g:'⚡',title:'Sparse-attention kernel',prereq:['at26'],mutex:['a_diffusion26'],tip:{tag:'2026 · branch',sub:'DeepSeek Sparse Attention: FP8 Lightning Indexer picks top-k (2026-04)',gh:'Full attention too expensive at million-token context',ch:'Indexer selects blocks + local window',note:'The long-context kernel evolves again'}},
+{id:'a_diffusion26',year:2026,col:'GR2',kind:'chosen',g:'🌊',title:'Diffusion parallel decoding',prereq:['at26'],mutex:['a_dsa26'],tip:{tag:'2026 · branch',sub:'Mercury diffusion LLM emits tokens in parallel (2506.17298, ~1000 tok/s)',gh:'Autoregression is serial token-by-token',ch:'Denoise many tokens in parallel at once',note:'A non-autoregressive inference route'}},
+{id:'a_hrm26',year:2026,col:'GR3',kind:'chosen',g:'🪜',title:'horizon curriculum warmup',prereq:['at26'],tip:{tag:'2026 · branch',sub:'Short→long horizon curriculum training (2605.02572)',gh:'Direct long-horizon training has noisy gradients',ch:'Shorten first, then lengthen the horizon',note:'A warm start for long-horizon RL'}},
+{id:'a_prefrlhf26',year:2026,col:'GL1',kind:'ghost',g:'🪦',title:'Pure-preference RLHF',prereq:['at26'],tip:{tag:'2026 · old road',sub:'PPO/DPO with only human-preference rewards',gh:'Eclipsed by RLVR/verifiable rewards',ch:'The optimization mainline shifts to verifiable + long-horizon credit',note:'The pure-preference paradigm takes a back seat'}},
+  ];
+  TREES.algorithm.threads = [];
+
+  // ---------- shared refs + helpers (built once) ----------
+  var canvas=document.getElementById('canvas');
+  var wires=document.getElementById('wires');
+  var tip=document.getElementById('tip');
+  var byId={}, revPaths=[];
+  canvas.style.width=CANVAS_W+'px';
+
+  // year rail (static across pages)
+  for(var yr=2015;yr<=2026;yr++){
+    var tab=document.createElement('div');
+    tab.className='yrtab';
+    tab.setAttribute('data-year',yr);
+    tab.style.top=(yOf(yr)+30)+'px';
+    tab.innerHTML=yr+'<small>▸ full-year report</small>';
+    canvas.appendChild(tab);
+  }
+
+  // geometry + svg helpers
+  function cx(n){ return COL[n.col]; }
+  function topY(n){ return yOf(n.year); }
+  function geo(n){
+    var x=cx(n), t=topY(n);
+    return {cx:x, top:t, bottom:t+BOXH, left:x-NODEW/2, right:x+NODEW/2,
+            iconTop:t, iconBot:t+78, plateBot:t+BOXH};
+  }
+  var SVGNS='http://www.w3.org/2000/svg';
+  function svg(tag,attrs){ var e=document.createElementNS(SVGNS,tag);
+    for(var k in attrs)e.setAttribute(k,attrs[k]); return e; }
+  function rowHTML(lbl,cls,txt){ return '<div class="row"><span class="lbl '+cls+'">'+lbl+'</span>'+txt+'</div>'; }
+  function buildTip(n){
+    var t=n.tip||{}; var hh='';
+    hh+='<div class="tt-tag">'+(t.tag||'')+'</div>';
+    hh+='<h5>'+n.title+'</h5>';
+    if(t.sub) hh+=rowHTML('already exists','sub',t.sub);
+    if(t.gh)  hh+=rowHTML('road not taken','gh',t.gh);
+    if(t.ch)  hh+=rowHTML('human choice','ch',t.ch);
+    if(t.rv)  hh+=rowHTML('revived','rv',t.rv);
+    if(t.note)hh+='<div class="note">'+t.note+'</div>';
+    return hh;
+  }
+  function threadPath(a,b){
+    var x1=a.cx, y1=a.bottom, x2=b.cx, y2=b.iconTop;
+    var dx=x2-x1, c1x=x1+dx*0.18, c1y=y1+90, c2x=x2-dx*0.18, c2y=y2-90;
+    return 'M '+x1+' '+y1+' C '+c1x+' '+c1y+' '+c2x+' '+c2y+' '+x2+' '+y2;
+  }
+  function addThread(fromId,toId){
+    if(!byId[fromId]||!byId[toId])return;
+    var a=geo(byId[fromId]), b=geo(byId[toId]), d=threadPath(a,b);
+    wires.appendChild(svg('path',{d:d,fill:'none',stroke:'#03110e','stroke-width':4,'stroke-opacity':.5}));
+    var pth=svg('path',{d:d,fill:'none',stroke:'#4fd6b4','stroke-width':2.2,'stroke-dasharray':'7 6','stroke-linecap':'round','stroke-opacity':.85});
+    wires.appendChild(pth); revPaths.push(pth);
+    wires.appendChild(svg('circle',{cx:a.cx,cy:a.bottom,r:3.4,fill:'#9f93b8','stroke':'#03110e','stroke-width':1}));
+    wires.appendChild(svg('circle',{cx:b.cx,cy:b.iconTop,r:4,fill:'#4fd6b4','stroke':'#03110e','stroke-width':1}));
+  }
+
+  // ---------- (re)build a page ----------
+  function buildTree(page){
+    PAGE=page;
+    var tree=TREES[page]||{nodes:[],threads:[]};
+    N=tree.nodes||[]; extraThreads=tree.threads||[];
+    byId={}; N.forEach(function(n){byId[n.id]=n;});
+    revPaths=[];
+    var olds=canvas.querySelectorAll('.focus');
+    for(var oi=0;oi<olds.length;oi++) olds[oi].parentNode.removeChild(olds[oi]);
+    wires.innerHTML='';
+    var maxY=0; N.forEach(function(n){ var y=yOf(n.year); if(y>maxY)maxY=y; });
+    var CANVAS_H=maxY+BOXH+50;
+    canvas.style.height=CANVAS_H+'px';
+    wires.setAttribute('width',CANVAS_W);
+    wires.setAttribute('height',CANVAS_H);
+    wires.setAttribute('viewBox','0 0 '+CANVAS_W+' '+CANVAS_H);
+    // prereq lines
+    N.forEach(function(n){
+      if(!n.prereq)return;
+      var c=geo(n);
+      n.prereq.forEach(function(pid){
+        if(!byId[pid])return;
+        var p=geo(byId[pid]), d;
+        if(Math.abs(p.cx-c.cx)<2){ d='M '+p.cx+' '+p.bottom+' L '+c.cx+' '+c.iconTop; }
+        else{ var my=p.bottom+(c.iconTop-p.bottom)*0.5;
+          d='M '+p.cx+' '+p.bottom+' L '+p.cx+' '+my+' L '+c.cx+' '+my+' L '+c.cx+' '+c.iconTop; }
+        wires.appendChild(svg('path',{d:d,fill:'none',stroke:'#000','stroke-width':5,'stroke-opacity':.45,'stroke-linejoin':'round','stroke-linecap':'round'}));
+        var col=(byId[pid].kind==='fork'||n.kind==='fork'||n.kind==='now')?'#e7c873':'#caa257';
+        wires.appendChild(svg('path',{d:d,fill:'none',stroke:col,'stroke-width':2.6,'stroke-linejoin':'round','stroke-linecap':'round','stroke-opacity':.92}));
+        wires.appendChild(svg('circle',{cx:c.cx,cy:c.iconTop-1,r:3.2,fill:col,stroke:'#1a140b','stroke-width':1}));
+      });
+    });
+    // mutex markers
+    N.forEach(function(n){
+      if(!n.mutex)return;
+      var a=geo(n);
+      n.mutex.forEach(function(mid){
+        if(!byId[mid])return;
+        var b=geo(byId[mid]);
+        var y=Math.min(a.iconTop,b.iconTop)+22;
+        var x1=Math.min(a.cx,b.cx), x2=Math.max(a.cx,b.cx);
+        var ex1=x1+NODEW/2-6, ex2=x2-NODEW/2+6, d='M '+ex1+' '+y+' L '+ex2+' '+y;
+        wires.appendChild(svg('path',{d:d,fill:'none',stroke:'#c98a5a','stroke-width':2,'stroke-dasharray':'1 5','stroke-linecap':'round','stroke-opacity':.85}));
+        wires.appendChild(svg('path',{d:'M '+ex1+' '+(y-4)+' L '+(ex1-7)+' '+y+' L '+ex1+' '+(y+4)+' Z',fill:'#c98a5a','fill-opacity':.9}));
+        wires.appendChild(svg('path',{d:'M '+ex2+' '+(y-4)+' L '+(ex2+7)+' '+y+' L '+ex2+' '+(y+4)+' Z',fill:'#c98a5a','fill-opacity':.9}));
+      });
+    });
+    // revive threads
+    N.forEach(function(n){ if(n.revive) addThread(n.revive.from, n.id); });
+    extraThreads.forEach(function(t){ addThread(t.from,t.to); });
+    // focus nodes
+    N.forEach(function(n){
+      var c=geo(n);
+      var el=document.createElement('div');
+      el.className='focus '+n.kind;
+      el.style.left=c.left+'px'; el.style.top=c.top+'px';
+      var badge='';
+      if(n.kind==='fork') badge='<span class="star">★</span>';
+      if(n.kind==='now') badge='<span class="nowtag">NOW</span>';
+      if(n.kind==='ghost') badge='<span class="pruned">✕</span>';
+      if(n.kind==='revived') badge='<span class="reborn">↻ revived</span>';
+      el.innerHTML='<div class="icon">'+badge+'<span class="glyph">'+n.g+'</span></div><div class="plate">'+n.title+'</div>';
+      el._tip=buildTip(n);
+      canvas.appendChild(el);
+    });
+    // animate revival threads
+    var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(!reduce){
+      revPaths.forEach(function(pp,i){
+        var len=pp.getTotalLength();
+        pp.style.strokeDasharray=len; pp.style.strokeDashoffset=len;
+        pp.getBoundingClientRect();
+        pp.style.transition='stroke-dashoffset 1.1s ease '+(0.15+i*0.18)+'s';
+        requestAnimationFrame(function(){ pp.style.strokeDashoffset='0'; });
+        setTimeout(function(){ pp.style.strokeDasharray='7 6'; pp.style.strokeDashoffset='0'; pp.style.transition='none'; }, 1500+i*180);
+      });
+    }
+  }
+
+  // ---------- tooltip (attached once) ----------
+  function show(e){ var f=e.target.closest('.focus'); if(!f)return; tip.innerHTML=f._tip; tip.classList.add('on'); move(e); }
+  function move(e){
+    var pad=16, w=tip.offsetWidth, hh=tip.offsetHeight;
+    var x=e.clientX+18, y=e.clientY+18;
+    if(x+w+pad>window.innerWidth) x=e.clientX-w-18;
+    if(y+hh+pad>window.innerHeight) y=window.innerHeight-hh-pad;
+    if(y<pad)y=pad;
+    tip.style.left=x+'px'; tip.style.top=y+'px';
+  }
+  function hide(){ tip.classList.remove('on'); }
+  canvas.addEventListener('mouseover',show);
+  canvas.addEventListener('mousemove',function(e){ if(tip.classList.contains('on'))move(e); });
+  canvas.addEventListener('mouseout',function(e){ var f=e.target.closest('.focus'); if(f)hide(); });
+  canvas.addEventListener('click',function(e){
+    var f=e.target.closest('.focus'); if(!f){ hide(); return; }
+    tip.innerHTML=f._tip; tip.classList.add('on');
+    var r=f.getBoundingClientRect(); move({clientX:r.left+r.width/2, clientY:r.top});
+  });
+
+  // ============================================================
+  //  YEAR REPORTS — technical-report depth, consistent with nodes
+  // ============================================================
+  var REPORTS = { structure: {
+'2015':{era:'The recurrent dynasty',name:'LSTM seq2seq and the attention accessory',thesis:'Recurrent networks rule sequences; attention here is just a differentiable alignment patch hung on the RNN.',
+  sub:'<p>RNN/LSTM encoder-decoder is already the trunk of sequence modeling, carrying long-range dependency with gated memory, but the fixed-length context vector is the bottleneck.</p>',
+  ch:[{t:'Bahdanau soft attention',d:'Let each decoding step do a <em class="k">differentiable weighted alignment</em> over encoder hidden states, easing the fixed-length bottleneck; but the trunk is still recurrence.',a:'1409.0473',eq:['<b>Alignment</b>α_{ij} = softmax(e_{ij}),  c_i = Σ_j α_{ij} h_j'],key:'Attention is born as an accessory to the RNN, not a standalone operator.'}],
+  gh:[{t:'Differentiable external memory (NTM/DNC)',d:'Give the network an addressable external memory tape, mimicking Turing-machine read/write.',a:'1410.5401',key:'The memory-as-external-module route, later internalized by attention KV.'},
+  {t:'Pointer networks',d:'Use attention weights to <em class="k">point directly at input positions</em> as output, solving combinatorial output.',a:'1506.03134',key:'The source of the copy-attention idea.'},
+  {t:'Highway gating',d:'Add a learnable transfer gate to feedforward layers so the signal passes "straight through" in deep layers.',a:'1505.00387',key:'The gated precursor of residual connections.'}],
+  refs:'<b>Bahdanau</b> 1409.0473 · <b>NTM</b> 1410.5401 · <b>Pointer</b> 1506.03134 · <b>Highway</b> 1505.00387'},
+'2016':{era:'Pouring the foundation',name:'Deep LSTM and stackable normalized residuals',thesis:'Residual + normalization make deep stacking trainable — this foundation will be handed to the Transformer untouched.',
+  sub:'<p>GNMT stacks LSTM to 8 layers, proving that with residuals and per-layer normalization, deep networks can be trained.</p>',
+  ch:[{t:'Deep LSTM + residual + LayerNorm',d:'Residual skip connections + LayerNorm solve the gradient problem of deep stacking, becoming the general infrastructure for "stacking deep".',a:'1609.08144',eq:['<b>LayerNorm</b>y = γ ⊙ (x − μ) / √(σ^2 + ε) + β'],key:'The real eve of the revolution is solving the deep-training problem.'},
+  {t:'GELU activation',d:'Weight the input by the Gaussian CDF for a <em class="k">soft-gated activation</em> smoother than ReLU.',a:'1606.08415',eq:['<b>GELU</b>GELU(x) = x · Φ(x) ≈ 0.5x(1 + tanh(√(2/π)(x + 0.044715x^3)))'],key:'Becomes the default activation of BERT/GPT.'}],
+  gh:[{t:'Pure conv sequence (ByteNet/WaveNet)',d:'Replace recurrence with dilated causal convolutions: parallel and exponentially growing receptive field.',a:'1609.03499',key:'The conv route, surpassed by self-attention two years later.'},
+  {t:'Early self-attention (Decomposable)',d:'Align two pieces of text purely with attention, no RNN at all.',a:'1606.01933',key:'An embryo of Transformer self-attention.'},
+  {t:'GLU gated linear unit',d:'Use half the channels to gate the other half: a gated-conv language model.',a:'1612.08083',eq:['<b>GLU</b>GLU(x) = (xW + b) ⊙ σ(xV + c)'],key:'Later revived as SwiGLU.'}],
+  refs:'<b>GNMT</b> 1609.08144 · <b>GELU</b> 1606.08415 · <b>WaveNet</b> 1609.03499 · <b>Decomposable</b> 1606.01933 · <b>GLU</b> 1612.08083'},
+'2017':{era:'★ The fork',name:'Transformer: keep only attention',thesis:'Strip out recurrence and convolution, promoting attention from accessory to the one core operator.',
+  sub:'<p>Residual, LayerNorm, and the attention accessory are all in place; all that\'s missing is someone bold enough to delete the recurrent trunk entirely.</p>',
+  ch:[{t:'Transformer',d:'Multi-head <em class="k">scaled dot-product attention</em> + positional encoding + position-wise FFN, fully parallel, long-range dependency reached in one hop.',a:'1706.03762',eq:['<b>Scaled Dot-Product</b>Attention(Q,K,V) = softmax(QKᵀ / √d_k) V','<b>Multi-Head</b>MultiHead = Concat(head_1,…,head_h) W^O'],key:'Attention is All You Need — the watershed of architecture history.'},
+  {t:'Sparsely-gated MoE layer',d:'Put thousands of experts in one layer; the gate activates only a few per token, realizing <em class="k">conditional computation</em>.',a:'1701.06538',eq:['<b>Top-k gating</b>G(x) = softmax(TopK(x W_g))'],key:'The foundation of architectural sparse activation, mainstream six years later.'}],
+  gh:[{t:'ConvS2S convolutional sequence',d:'Gated conv + conv attention for translation, fully parallel.',a:'1705.03122',key:'Eclipsed by the Transformer the same year.'},
+  {t:'Structured self-attention',d:'Use multi-hop self-attention to produce a sentence-embedding matrix.',a:'1703.03130',key:'An independent discovery of self-attention.'}],
+  note:'<p>At least three groups approached self-attention that year; the Transformer won by "deleting recurrence entirely".</p>',
+  refs:'<b>Transformer</b> 1706.03762 · <b>MoE</b> 1701.06538 · <b>ConvS2S</b> 1705.03122 · <b>Structured</b> 1703.03130'},
+'2018':{era:'The two-sided split',name:'Encoder bidirectional vs decoder causal',thesis:'The same Transformer blocks grow into two structural forms: BERT and GPT.',
+  sub:'<p>The Transformer becomes the new trunk; the question becomes: how to wire the blocks.</p>',
+  ch:[{t:'Two-sided Transformer structure',d:'BERT goes encoder-only <em class="k">bidirectional</em> self-attention; GPT goes decoder-only <em class="k">causal-masked</em> self-attention.',a:'1810.04805',eq:['<b>Causal mask</b>Attn = softmax((QKᵀ + M) / √d_k) V,  M_{ij} = −∞ (j > i)'],key:'The first structural split: see both directions, or only the past.'}],
+  gh:[{t:'Deep biLSTM (ELMo structure)',d:'Use deep bidirectional LSTMs to extract contextualized word vectors.',a:'1802.05365',key:'The last highlight of recurrence, immediately replaced by the Transformer.'}],
+  refs:'<b>BERT</b> 1810.04805 · <b>GPT</b> (OpenAI) · <b>ELMo</b> 1802.05365'},
+'2019':{era:'The decoder wins',name:'Decoder-only and Pre-Norm',thesis:'The decoder-only structure wins; front-loading normalization makes deep stacking truly stable.',
+  sub:'<p>GPT-2 proves the decoder-only can stack; training stability becomes the main battlefield of structural detail.</p>',
+  ch:[{t:'Decoder-only + Pre-Norm',d:'Move normalization <em class="k">before</em> the sublayer for more stable deep gradients; RMSNorm further drops the mean-subtraction term.',a:'1910.07467',eq:['<b>RMSNorm</b>y = x / √(mean(x^2) + ε) · g'],key:'Pre-Norm + RMSNorm become the stability bedrock of the modern skeleton.'}],
+  gh:[{t:'Encoder-decoder (T5 structure)',d:'Stick with the full enc-dec, everything is text-to-text.',a:'1910.10683',key:'Marginalized by decoder-only in the generative race.'},
+  {t:'Universal Transformer (depth recurrence)',d:'Apply the same layer weights <em class="k">recurrently</em>, with adaptive halting.',a:'1807.03819',key:'The depth-recurrence idea, not revived until 2025-26.'},
+  {t:'Transformer-XL (segment recurrence)',d:'Cache the previous segment hidden states + relative position encoding to extend context.',a:'1901.02860',key:'The relative-position idea inspired RoPE/ALiBi.'}],
+  rv:[{t:'Dynamic / lightweight conv',d:'Challenge self-attention with input-dependent dynamic conv kernels, proving conv still has cards to play.',a:'1901.10430',key:'The conv route\'s last flicker.'}],
+  refs:'<b>RMSNorm</b> 1910.07467 · <b>T5</b> 1910.10683 · <b>UT</b> 1807.03819 · <b>TXL</b> 1901.02860 · <b>DynamicConv</b> 1901.10430'},
+'2020':{era:'★ The fork',name:'Freeze the skeleton, just scale',thesis:'Choose not to touch the main structure, only optimize components and scale up; ViT proves the same block conquers images.',
+  sub:'<p>The Pre-Norm decoder is already the paradigm; the quadratic complexity becomes the biggest temptation.</p>',
+  ch:[{t:'ViT Vision Transformer',d:'Cut images into patches as tokens and apply the Transformer almost as-is — <em class="k">the same block across modalities</em>.',a:'2010.11929',key:'The architecture\'s generality is confirmed, the drive for structural innovation drops.'}],
+  gh:[{t:'Linear / efficient attention',d:'Use kernel tricks to factor softmax into linear form, dropping complexity to O(n).',a:'2006.16236',eq:['<b>Linear attention</b>Attn(Q,K,V) = φ(Q)(φ(K)ᵀ V) / (φ(Q) Σ φ(K)ᵀ)'],key:'A notch worse in accuracy, only scaled five years later.'},
+  {t:'Reformer LSH attention',d:'Locality-sensitive hashing confines attention to buckets of nearby tokens.',a:'2001.04451',key:'A landmark of approximate attention.'}],
+  rv:[{t:'SwiGLU feedforward',d:'Move GLU gating into the FFN, using Swish as the gate; clearly beats the ReLU-MLP.',a:'2002.05202',eq:['<b>SwiGLU</b>SwiGLU(x) = (Swish(xW) ⊙ xV) W_2,  Swish(z) = z · σ(z)'],key:'The GLU buried four years earlier becomes standard as SwiGLU.'}],
+  refs:'<b>ViT</b> 2010.11929 · <b>LinearAttn</b> 2006.16236 · <b>Reformer</b> 2001.04451 · <b>SwiGLU</b> 2002.05202'},
+'2021':{era:'Components finalized',name:'RoPE and the return of sparse activation',thesis:'Positional encoding converges to RoPE; MoE returns to the table as architectural sparse activation.',
+  sub:'<p>The skeleton is frozen; innovation shifts to "which component is most worth swapping".</p>',
+  ch:[{t:'RoPE rotary position encoding',d:'Write relative position into the <em class="k">rotation</em> of Q/K, encoding relative distance and aiding extrapolation.',a:'2104.09864',eq:['<b>RoPE</b>(R_m q)ᵀ(R_n k) = qᵀ R_{n−m} k'],key:'Becomes the de facto standard for positional encoding in modern LLMs.'}],
+  gh:[{t:'SSM / S4 state space',d:'Do sequences with structured state-space equations, getting long-range dependency and linear complexity together.',a:'2111.00396',eq:['<b>SSM</b>h_t = A h_{t−1} + B x_t,  y_t = C h_t'],key:'The direct ancestor of Mamba.'},
+  {t:'ALiBi linear bias',d:'No positional embedding; just subtract a distance-linear penalty from the attention scores.',a:'2108.12409',key:'Lost out to RoPE.'}],
+  rv:[{t:'Switch / MoE structure',d:'Simplify per-token routing to Top-1, pushing sparse MoE to the trillion-parameter scale.',a:'2101.03961',key:'The 2017 MoE returns to the table as an architectural option.'}],
+  refs:'<b>RoPE</b> 2104.09864 · <b>S4</b> 2111.00396 · <b>ALiBi</b> 2108.12409 · <b>Switch</b> 2101.03961'},
+'2022':{era:'★ The fork',name:'The modern skeleton locks in',thesis:'Lock Pre-Norm decoder + RoPE + SwiGLU + RMSNorm into the standard skeleton, barely changed for years after.',
+  sub:'<p>Each component has been individually validated, waiting only to be assembled into a skeleton everyone copies.</p>',
+  ch:[{t:'Modern skeleton finalized',d:'Decoder-only + RoPE + SwiGLU + RMSNorm + early GQA becomes the <em class="k">default blueprint</em> for every large model after.',a:'(the LLaMA route)',key:'Structural innovation yields to data and scaling.'},
+  {t:'Gated cross-attention (Flamingo)',d:'Insert <em class="k">gated cross-attention</em> layers into a frozen language model to plug in visual features; the gate inits to 0 so the original model is preserved.',a:'2204.14198',eq:['<b>Gating</b>y = x + tanh(α) · CrossAttn(x, v)'],key:'Multimodality as a pluggable architectural component.'}],
+  gh:[{t:'Sparse / approximate attention variants',d:'All sorts of block-sparse, local + global hybrid attention compete for long context.',a:'(multiple papers)',key:'Never beat carefully tuned full attention.'}],
+  refs:'<b>Flamingo</b> 2204.14198 · <b>Chinchilla</b> 2203.15556'},
+'2023':{era:'★ The fork',name:'Tune the trunk by the engineering ledger',thesis:'GQA saves KV memory and MoE goes mainstream; meanwhile several non-attention routes collectively assault the trunk.',
+  sub:'<p>The standard skeleton is set; the bottleneck shifts to the inference-time KV cache and the compute ledger.</p>',
+  ch:[{t:'GQA grouped-query attention',d:'Let multiple query heads <em class="k">share one group of KV heads</em>, interpolating between MHA and MQA to greatly save the KV cache.',a:'2305.13245',eq:['<b>GQA</b>g groups of KV,  1 ≤ g ≤ h (g=1 is MQA, g=h is MHA)'],key:'Becomes the de facto standard attention variant for open-source large models.'},
+  {t:'MLA multi-head latent attention (early)',d:'Compress KV into a <em class="k">low-rank latent vector</em>, decompress on demand at inference; decoupled RoPE resolves the conflict with compression.',a:'(DeepSeek-V2)',eq:['<b>MLA</b>c_t = x_t W_{DKV},  k_t = c_t W_{UK},  v_t = c_t W_{UV}'],key:'KV cache cut by ~90% without losing accuracy.'}],
+  gh:[{t:'Hyena / RetNet',d:'Long convolution (Hyena) or retention (RetNet) aim to replace attention wholesale.',a:'2302.10866 / 2307.08621',key:'Locally successful, didn\'t shake the trunk.'}],
+  rv:[{t:'Mamba (selective SSM)',d:'Add <em class="k">input-dependent selective gating</em> + hardware-aware scan to SSM, matching the Transformer on language for the first time.',a:'2312.00752',eq:['<b>Selective SSM</b>B_t, C_t, Δ_t = f(x_t);  h_t = Ā_t h_{t−1} + B̄_t x_t'],key:'The SSM route erupts; the 2021 S4 finally bears fruit.'}],
+  refs:'<b>GQA</b> 2305.13245 · <b>Hyena</b> 2302.10866 · <b>RetNet</b> 2307.08621 · <b>Mamba</b> 2312.00752 · <b>Mixtral</b> 2401.04088'},
+'2024':{era:'Hybridization',name:'Attention + MoE + a little SSM',thesis:'The trunk is still attention + MoE, but begins yielding the odd layer slot to SSM, trending toward hybrid.',
+  sub:'<p>GQA/MLA + MoE become the default config for large models; pure attention loosens for the first time.</p>',
+  ch:[{t:'Transformer-MoE + MLA + hybrid SSM',d:'<em class="k">Mix a few SSM layers</em> into an attention + MoE trunk (Jamba / Mamba-2), balancing quality and long-context throughput.',a:'2403.19887 / 2405.21060',key:'Hybrid architecture becomes a real option, not pure-attention monopoly.'}],
+  gh:[{t:'Differential Transformer',d:'<em class="k">Subtract</em> two groups of attention to cancel noise and amplify signal.',a:'2410.05258',eq:['<b>Diff Attn</b>DiffAttn = (softmax(Q_1 K_1ᵀ) − λ softmax(Q_2 K_2ᵀ)) V'],key:'A refinement, not a replacement of the trunk.'},
+  {t:'Mixture-of-Depths',d:'Let tokens dynamically <em class="k">skip some layers</em>, doing sparsity in the depth dimension.',a:'2404.02258',key:'The depth version of conditional computation.'}],
+  rv:[{t:'xLSTM',d:'Add exponential gating and matrix memory to the LSTM, bringing recurrence back into the race.',a:'2405.04517',key:'A modern revival of the RNN route.'}],
+  refs:'<b>Jamba</b> 2403.19887 · <b>Mamba-2</b> 2405.21060 · <b>DiffTransformer</b> 2410.05258 · <b>MoD</b> 2404.02258 · <b>xLSTM</b> 2405.04517'},
+'2025':{era:'★ The fork',name:'A multi-line bet on "after attention"',thesis:'Linear attention truly scales for the first time; depth recurrence and test-time memory sprout simultaneously.',
+  sub:'<p>The sparse-MoE skeleton matures, long-context cost looms, and efficiency structure becomes the main battlefield.</p>',
+  ch:[{t:'Linear attention at scale (MiniMax-01)',d:'Lightning Attention <em class="k">7:1 hybrid</em>: one softmax layer per seven linear-attention layers, 456B/45.9B active, 1M context from training.',a:'2501.08313',eq:['<b>Lightning</b>O = Q (KᵀV) (right-multiply first, O(n) complexity)'],key:'Linear attention stands firm at frontier scale for the first time.'}],
+  gh:[{t:'MoBA block-attention hybrid',d:'Chop the context into blocks; the gate picks only a few blocks for attention, a middle road between full and linear.',a:'2502.13189',key:'A compromise route, not yet mainstream.'},
+  {t:'LLaDA diffusion language structure',d:'Use a <em class="k">masked diffusion process</em> to predict masked tokens in parallel, dropping autoregression.',a:'2502.09992',eq:['<b>Masked diffusion</b>L ≤ E[ Σ_t (1/t) · CE(predict masked tokens) ]'],key:'Diffusion LM scaled from scratch.'}],
+  rv:[{t:'NSA native sparse attention',d:'Three branches — compress + select + sliding window — hardware-aligned and <em class="k">natively trainable</em>; sparse attention finally not losing to full attention.',a:'2502.11089',key:'The sparse attention buried in 2022 finally bears fruit.'},
+  {t:'RWKV-7 Goose',d:'Generalized delta rule + vector-valued gating; constant memory, constant inference.',a:'2503.14456',eq:['<b>Generalized delta</b>S_t = S_{t−1}(diag(w_t) − k_tᵀ k_t) + v_tᵀ k_t'],key:'Another evolution of the RNN/linear route.'},
+  {t:'Titans test-time memory module',d:'A neural long-term memory <em class="k">updates its own weights in the forward pass</em>, scaling to 2M+ context.',a:'2501.00663',key:'A revival of the 2015 differentiable-external-memory idea.'}],
+  refs:'<b>MiniMax-01</b> 2501.08313 · <b>MoBA</b> 2502.13189 · <b>NSA</b> 2502.11089 · <b>RWKV-7</b> 2503.14456 · <b>LLaDA</b> 2502.09992 · <b>Titans</b> 2501.00663'},
+'2026':{era:'★ Now',name:'A post-Transformer trunk of three coexisting lines',thesis:'Depth recurrence, sparse attention, and linear attention advance in parallel — the biggest loosening of the trunk since the Transformer.',
+  sub:'<p>Sparse MoE + long context are table stakes; structural innovation becomes a frontier differentiator again.</p>',
+  ch:[{t:'HRM-Text dual-timescale depth recurrence',d:'A high-level slow module (H) and a low-level fast module (L) <em class="k">iterate recurrently</em> over the same input, each containing gated attention + RoPE + SwiGLU, investing compute in depth rather than width.',a:'2605.20613',eq:['<b>Dual-timescale</b>recur H_cycles × (L_cycles + 1) steps,  additive state injection'],key:'Depth recurrence survived from the 2019 Universal Transformer all the way to trunk level.'},
+  {t:'DeepSeek-V4 sparse attention (DSA)',d:'Compressed sparse + re-compression + sliding window <em class="k">interleaved layer by layer</em>; V4-Pro 1.6T/49B active, V4-Flash 284B/13B, 1M context.',a:'(2026-04)',eq:['<b>Efficiency</b>1M-context per-token FLOPs ≈ 27% of V3.2, KV cache ≈ 10%'],key:'Sparse attention becomes the default at flagship scale.'},
+  {t:'Qwen3.5 linear attention (Gated DeltaNet)',d:'Gated DeltaNet alternates ~<em class="k">3:1</em> with full attention, fixed state with no growing KV; 397B/17B active, up to 19× faster decoding.',a:'(2026-02)',eq:['<b>Gated Delta</b>S_t = S_{t−1}(α_t I − β_t k_tᵀ k_t) + β_t v_tᵀ k_t'],key:'The linear-attention hybrid becomes the mainstream config for open-source flagships.'}],
+  gh:[{t:'MiniMax-M2 reverts to full attention',d:'An engineering verdict that linear/sparse attention isn\'t truly production-ready, so the flagship <em class="k">reverts to full attention</em>.',a:'(MiniMax engineering blog)',key:'A vote in reverse: the efficiency structure isn\'t settled yet.'}],
+  rv:[{t:'Mercury commercial diffusion LLM',d:'The first commercial-scale diffusion LLM, Transformer parameterization + <em class="k">parallel multi-token decoding</em>, thousands of tok/s on code tasks.',a:'2506.17298',key:'The 2025 LLaDA diffusion route goes commercial.'}],
+  note:'<p>The 2026 consensus: the Transformer\'s <em class="k">components</em> (RoPE/SwiGLU/RMSNorm/MoE) are now fixed, while the <em class="k">sequence-mixing operator</em> itself sees true plural competition for the first time.</p>',
+  refs:'<b>HRM-Text</b> 2605.20613 · <b>DeepSeek-V4</b> (2026-04) · <b>Qwen3.5</b> (2026-02) · <b>MiniMax-M2</b> (blog) · <b>Mercury</b> 2506.17298'},
+  },
+  data: {
+'2015':{era:'Origin',name:'Supervision signal and distributed word vectors',thesis:'Data = human parallel pairs + pretrained word embeddings',sub:'<p>This year\'s training signal comes almost entirely from humans: NMT relies on human-aligned bilingual sentence pairs, word vectors are learned from corpus co-occurrence statistics. <em class="k">What the data is</em> decides what the model can learn.</p>',ch:[{t:'Supervised parallel corpora (NMT)',d:'Use large numbers of human-aligned "source sentence → target sentence" pairs as the supervision signal; the model learns the paired mapping.',a:'Bahdanau 2014 / Sutskever 2014',eq:['<b>NMT objective</b>max Σ_t log p(y_t | y_{<t}, x)'],key:'The signal comes from human-labeled paired correct answers.'},{t:'Distributed word vectors',d:'word2vec (skip-gram) and GloVe compress words into dense vectors via context co-occurrence, as downstream pretrained features.',a:'Mikolov 2013 / Pennington 2014',eq:['<b>skip-gram</b>max Σ Σ_{−c≤j≤c} log p(w_{t+j} | w_t)'],key:'Word meaning can be learned from distributional statistics.'}],gh:[{t:'External memory as knowledge base',d:'Memory Networks/NTM store facts in addressable external storage, read at inference instead of packed into weights.',a:'Weston 2014 / Graves 2014',key:'Knowledge as queryable data, revived a decade later by RAG.'},{t:'Copy / pointer mechanism',d:'Pointer Networks copy tokens directly from the input as output, making the input string itself a label source.',a:'Vinyals 2015',key:'Eclipsed by generative modeling, inspired the copy mechanism.'}],refs:'Bahdanau 2014; Mikolov 2013; Pennington 2014; Weston 2014; Vinyals 2015'},
+'2016':{era:'Tokenization',name:'The victory of subword units',thesis:'The data-driven smallest signal unit',sub:'<p>What the model "sees" is neither characters nor words, but the subwords cut by the tokenizer. <em class="k">BPE</em> uses data-driven merge rules for an open vocabulary, becoming the standard unit fed to the model.</p>',ch:[{t:'Subword units, BPE',d:'Sennrich applies byte-pair encoding to NMT: repeatedly merge frequent adjacent symbol pairs into a subword vocabulary that covers rare words while compressing sequences.',a:'arXiv:1508.07909',eq:['<b>BPE</b>merge argmax_{(a,b)} count(a,b)'],key:'Tokenization shifts from lookup to data-driven merging.'}],gh:[{t:'Character / byte-level modeling',d:'Pure character or byte sequences avoid tokenization with a tiny vocabulary, but sequences get too long, making training expensive — couldn\'t beat BPE then.',a:'Kim 2015',key:'Challenged again by BLT in 2024.'},{t:'Key-value memory for knowledge',d:'Key-Value Memory Networks store structured knowledge as retrievable key-value pairs as an external data source.',a:'Miller 2016',key:'An embryo of retrieval augmentation.'}],refs:'Sennrich 1508.07909; Kim 2015; Miller 2016'},
+'2017':{era:'Consolidation',name:'Standardization and the sprouting of synthetic data',thesis:'Tokenization settles, energy shifts to making data',sub:'<p>Subword BPE becomes the de facto standard, WMT parallel corpora are still the main supervision. The real novelty is <em class="k">back-translation</em>: use the model itself to generate training data, and the synthetic-data paradigm sprouts.</p>',ch:[{t:'BPE becomes standard + WMT supervision',d:'Subword segmentation is widely adopted; human parallel pairs + subwords become the standard signal combo, energy shifts to "how to make more data".',a:'WMT 2017',key:'Tokenization standardization frees up the research focus.'}],gh:[{t:'Back-translation data augmentation',d:'Use monolingual target-language text back-translated by a reverse model into pseudo parallel pairs to make up scarce supervision — works at scale.',a:'Sennrich 1511.06709',key:'Use model-produced data to train itself: the source of synthetic data.'},{t:'Byte-level still suppressed',d:'Byte-level models still can\'t beat BPE on quality and efficiency, remaining shelved waiting for compute.',a:'—',key:'The tokenization-free route lies dormant.'}],refs:'Sennrich 1511.06709 (back-translation)'},
+'2018':{era:'★ Objective revolution',name:'The three-way fork of self-supervised pretraining',thesis:'Supervision shifts from human labels to text self-supervision',sub:'<p>A watershed year: the training signal no longer relies on human labeling but is self-made from massive unlabeled text. Three objective routes fork — BERT\'s <em class="k">masked language modeling</em>, GPT\'s <em class="k">causal language modeling</em>, and denoising reconstruction. This choice defines what every later large model "learns".</p>',ch:[{t:'MLM masked language modeling',d:'BERT randomly masks some tokens and lets the model bidirectionally reconstruct them from context; the signal comes from the text itself.',a:'arXiv:1810.04805',eq:['<b>MLM</b>L=−Σ_{i∈M} log p(x_i | x_{∖M})','<b>causal LM</b>L=−Σ_t log p(x_t | x_{<t})'],key:'Text is the label: self-supervision replaces human alignment.'}],gh:[{t:'ELMo bidirectional LM objective',d:'Two independent unidirectional LSTM-LMs concatenated for contextualized word vectors — shallow concatenation, not deep joint masking.',a:'Peters 1802.05365',key:'Eclipsed by BERT\'s deep bidirectional MLM.'},{t:'Denoising / NSP objective',d:'NSP next-sentence prediction plus various denoising reconstruction objectives, providing inter-sentence and noise-reconstruction signals.',a:'Devlin 2018',key:'NSP later proven useless; denoising revives in T5/BART.'}],note:'<p>The causal vs MLM debate runs throughout: generation goes causal, understanding goes MLM, denoising (T5) sits in between.</p>',refs:'Devlin 1810.04805; Radford GPT 2018; Peters 1802.05365'},
+'2019':{era:'Turning point',name:'Web corpora and the recipe debate',thesis:'Data volume and recipe beat clever objectives',sub:'<p>Corpora shift from curated to whole-web crawl-and-clean (WebText/C4); GPT-2 proves pure causal LM can scale. RoBERTa reveals: training <em class="k">the same objective longer on more data</em> is more effective than inventing fancy new objectives.</p>',ch:[{t:'Large-scale web corpora + causal LM',d:'WebText/C4 clean open web pages into a giant corpus; GPT-2 shows zero-shot ability with causal LM alone.',a:'Radford 2019 / Raffel 1910.10683',key:'Data volume and diversity become the prime driver.'},{t:'RoBERTa data recipe',d:'Dynamic masking, drop NSP, more data, longer training — proves BERT was badly undertrained.',a:'arXiv:1907.11692',key:'Early evidence that data recipe > clever objective.'}],gh:[{t:'Permutation language modeling, XLNet',d:'Via token-order permutation, get both bidirectional context and autoregressive likelihood.',a:'arXiv:1906.08237',eq:['<b>PLM</b>max E_{z∼Z} Σ_t log p(x_{z_t} | x_{z_{<t}})'],key:'Complex implementation, unstable gains, marginalized by causal/MLM.'},{t:'ELECTRA replaced-token detection (RTD)',d:'Discriminate whether each token was replaced by a small generator — far more sample-efficient than masked reconstruction.',a:'arXiv:2003.10555',eq:['<b>RTD</b>L=−Σ_t log D(x_t, real?)'],key:'Discriminative pretraining saves compute but never became the mainstream generative paradigm.'},{t:'kNN-LM retrieval data',d:'Retrieve training-set neighbors at inference and interpolate their distribution with the parametric LM probability.',a:'arXiv:1911.00172',eq:['<b>kNN-LM</b>p=λ·p_{kNN}+(1−λ)·p_{LM}'],key:'The training data itself is non-parametric memory, planting the retrieval seed.'}],refs:'Liu 1907.11692; Yang 1906.08237; Clark 2003.10555; Khandelwal 1911.00172'},
+'2020':{era:'★ scaling',name:'Data scaling law and context-as-data',thesis:'The power law points to where data sits; GPT-3 treats examples as data',sub:'<p>Kaplan gives the <em class="k">power law</em> of loss vs params/data/compute; GPT-3 places few-shot "examples" right in the prompt — in-context learning makes the data format an inference-time temporary supervision. Yet the data-optimal ratio is not yet put right.</p>',ch:[{t:'Data scaling law',d:'Test loss follows a smooth power law in params N, data D, compute C, extrapolatable to predict large-model performance.',a:'arXiv:2001.08361',eq:['<b>Kaplan</b>L(N) ≈ (N_c / N)^{α_N}'],key:'Performance can be predicted from data/compute scale.'},{t:'in-context as data format',d:'GPT-3 completes tasks with few-shot examples in the prompt, no weight update — the data format is few-shot supervision.',a:'arXiv:2005.14165',key:'In-context examples become inference-time data.'},{t:'The Pile dedup / quality',d:'Stitch multi-source high-quality text into an 800GB corpus, systematically emphasizing dedup and mix.',a:'Gao 2101.00027',key:'Corpora shift from "bigger is better" to a curation recipe.'}],gh:[{t:'data-optimal could have come earlier',d:'Kaplan over-weighted scaling params; data volume not put at the optimum, planting the Chinchilla correction.',a:'—',key:'The optimal data ratio delayed two years.'},{t:'RETRO retrieval seed',d:'The retrieval-augmentation idea keeps brewing after kNN-LM, not yet scaled.',a:'—',key:'Lands properly in 2021.'}],rv:[{t:'Retrieval as a data source',d:'kNN-LM\'s "the training set is the memory" taken seriously again, as a knowledge-data channel.',a:'1911.00172',key:'Non-parametric retrieval revived.'}],refs:'Kaplan 2001.08361; Brown 2005.14165; Gao 2101.00027'},
+'2021':{era:'Push',name:'Dedup industrializes and knowledge externalizes',thesis:'Clean the data, decouple knowledge from parameters',sub:'<p>Models keep scaling; corpus dedup and quality filtering become standard procedure and are proven to convert directly into performance. Meanwhile <em class="k">retrieval augmentation</em> (RETRO/RAG) decouples knowledge from parameters into an external database, making knowledge updatable and traceable.</p>',ch:[{t:'Keep scaling + data dedup',d:'Bigger, cleaner web text as signal; dedup markedly reduces memorization and improves generalization, and the cleaning pipeline industrializes.',a:'Lee 2107.06499',key:'Dedup converts directly into performance.'},{t:'Retrieval-augmented RETRO / RAG',d:'RETRO uses a 2T-token retrieval store to augment generation; RAG retrieves documents and concatenates them into generation, separating knowledge from parameters.',a:'arXiv:2112.04426 / 2005.11401',eq:['<b>RAG</b>p(y|x)=Σ_z p(z|x)·p(y|x,z)'],key:'Externalized knowledge, updatable and traceable.'}],gh:[{t:'Code / multilingual data',d:'Codex uses GitHub code, mC4 uses many languages to expand the data domain — a supporting role then.',a:'Chen 2107.03374',key:'Code data later found to strengthen reasoning.'}],refs:'Borgeaud 2112.04426; Lewis 2005.11401; Lee 2107.06499; Chen 2107.03374'},
+'2022':{era:'★ Chinchilla',name:'Data-optimal and the rise of alignment signals',thesis:'Params and data should scale proportionally; the signal turns to humans and reasoning',sub:'<p>Chinchilla proves most large models are badly undertrained: given compute, <em class="k">params and data should scale roughly proportionally</em>. Meanwhile three new signals rise — RLHF preference data defines "what humans like", CoT writes the reasoning process into data, FLAN unifies tasks with instructions.</p>',ch:[{t:'Chinchilla data-optimal',d:'Re-fit scaling under fixed compute, finding token count should scale roughly 1:1 with params; 70B/1.4T beats larger models.',a:'arXiv:2203.15556',eq:['<b>Chinchilla</b>L(N,D)=E+A/N^α+B/D^β, α≈β≈0.5'],key:'Data shortage was the main bottleneck at the time.'},{t:'RLHF preference data',d:'InstructGPT collects human pairwise preferences over answers to train a reward model — this is the reward "definition".',a:'arXiv:2203.02155',eq:['<b>Bradley-Terry</b>P(y_w≻y_l)=σ(r_w − r_l)'],key:'Reward = which one humans prefer (the mechanism is on the Algorithm page).'},{t:'CoT reasoning data',d:'Write a step-by-step reasoning process in the examples; the model then produces chains of thought at inference.',a:'arXiv:2201.11903',key:'The reasoning process becomes a learnable data asset.'},{t:'Instruction tuning, FLAN',d:'Unify thousands of tasks into an "instruction + answer" template for multi-task finetuning, eliciting zero-shot instruction following.',a:'Wei 2109.01652',key:'Instruction data teaches the model to obey.'}],gh:[{t:'Constitutional / synthetic preference',d:'Use AI to self-critique against written principles to generate preferences (RLAIF); self-instruct synthesizes instructions, reducing human labeling.',a:'arXiv:2212.08073',key:'AI feedback replaces human feedback, the main road in 2023.'}],note:'<p>Chinchilla corrects Kaplan: not bigger params, but data must keep up.</p>',refs:'Hoffmann 2203.15556; Ouyang 2203.02155; Wei 2201.11903; Bai 2212.08073'},
+'2023':{era:'Mainline',name:'Alignment data and the synthetic eruption',thesis:'Preferences directly supervise, synthetic data democratizes',sub:'<p>Instruction + preference data become standard; DPO turns preference pairs into a simple classification objective with no separate reward model. Meanwhile <em class="k">synthetic and distillation data</em> fully erupt: use strong models to mass-produce training data, and phi further proves "quality beats quantity".</p>',ch:[{t:'Instruction + preference data (DPO)',d:'DPO derives a loss that optimizes the policy directly from preference pairs, simplifying RLHF into a log-ratio classification.',a:'arXiv:2305.18290',eq:['<b>DPO</b>L=−log σ(β log π(y_w)/π_ref(y_w) − β log π(y_l)/π_ref(y_l))'],key:'Preferences shift from needing a reward model to direct supervision.'},{t:'Synthetic / distillation data',d:'Self-Instruct/Alpaca use GPT to make instructions; Orca distills the explanation chains of strong models into weak ones.',a:'Wang 2212.10560 / Mukherjee 2306.02707',key:'Synthetic data lets small teams also make alignment corpora.'},{t:'Quality first (phi textbooks)',d:'phi uses "textbook-grade" high-quality synthetic data; a 1.3B small model reaches strong performance.',a:'Gunasekar 2306.11644',key:'Quality can trade for params and data volume.'}],gh:[{t:'Long-context / safety data',d:'Long-document concatenation data and red-team/safety annotation start accumulating — a side dish then.',a:'—',key:'The main course in 2024.'}],refs:'Rafailov 2305.18290; Wang 2212.10560; Mukherjee 2306.02707; Gunasekar 2306.11644'},
+'2024':{era:'Data flywheel',name:'Synthetic-distillation pillar and new objectives',thesis:'Real data hits its ceiling; model-produced data becomes the pillar',sub:'<p>High-quality real web text hits its ceiling; synthetic and distillation data become the pre/post-training pillar, and the data flywheel forms. Training objectives also renew — <em class="k">multi-token prediction</em> gives denser signal; byte tokenization-free and continuous latent space are two shelved radical routes.</p>',ch:[{t:'Large-scale synthetic + distillation data',d:'Strong models mass-generate and distill data to feed the next generation; the signal comes largely from model-produced data.',a:'Multiple tech reports',key:'The self-sufficient data flywheel.'},{t:'Multi-token prediction (MTP)',d:'DeepSeek-V3 predicts several future tokens at each position, giving denser supervision and usable for speculative decoding.',a:'arXiv:2412.19437',eq:['<b>MTP</b>L=Σ_{k=1}^{D} Σ_t log p(x_{t+k} | x_{≤t})'],key:'The signal extends from "the next one" to "the next few".'},{t:'Long-context data',d:'Specially curated long-document / multi-document concatenation and long-range dependency data support million-token windows.',a:'Multiple reports',key:'Data decides whether long context is actually usable.'}],gh:[{t:'Byte tokenization-free, BLT',d:'Dynamically cut patches by byte entropy, matching tokenized models at scale for the first time, dropping BPE entirely.',a:'arXiv:2412.09871',key:'The byte route is viable but ecosystem inertia stays on BPE.'},{t:'Continuous latent-space objective, Coconut',d:'Feed hidden states back as "continuous thought", not decoding into words; reasoning leaves discrete tokens.',a:'arXiv:2412.06769',key:'Elegant but hard to scale; the mainstream still uses text CoT.'}],refs:'DeepSeek-V3 2412.19437; Pagnoni BLT 2412.09871; Hao Coconut 2412.06769'},
+'2025':{era:'★ RLVR',name:'Verifiable rewards and data minimalism',thesis:'Reward = verifiable answer, data few but fine',sub:'<p>The reward definition is rewritten: DeepSeek-R1 uses <em class="k">auto-verifiable answers</em> in math/code as the reward signal (RLVR) — objective, no human preference labels. The companion is long-CoT data + distillation amplification, and s1/LIMO\'s "few but fine" — a thousand samples can activate strong reasoning.</p>',ch:[{t:'RLVR verifiable rewards',d:'For math/code problems whose answers can be auto-checked, use that as the reward, bypassing subjective preference labeling.',a:'arXiv:2501.12948',eq:['<b>RLVR</b>r(x,y)=1 if verify(y)=correct, else 0'],key:'Reward shifts from "humans like" to "is the answer correct" (GRPO mechanism on the Algorithm page).'},{t:'long-CoT data + distillation',d:'R1 produces ultra-long reasoning chains, then distills them into small models (R1→small), compressing strong reasoning into few params.',a:'2501.12948',key:'Verifiable training makes data, distillation amplifies.'},{t:'Data minimalism s1 / LIMO',d:'s1 uses only 1000 curated samples + budget forcing to surpass o1-preview; LIMO likewise.',a:'arXiv:2501.19393',key:'A handful of high-quality samples can activate existing reasoning ability.'},{t:'long2short compression',d:'Compress verbose reasoning chains into short, efficient targets; save tokens without losing score.',a:'Kimi k1.5 2501.12599',key:'Reasoning data also cares about cost-effectiveness.'}],gh:[{t:'Process-reward PRM data',d:'Scoring every reasoning step needs expensive step-level annotation, outdone by the cost-effectiveness of outcome-level RLVR; pure preference is likewise marginalized.',a:'Lightman 2305.20050',key:'Step-level signal is costly, outcome-level wins.'}],rv:[{t:'Knowledge-retrieval decoupling',d:'Reasoning via RLVR, knowledge via retrieval — the two decouple again, RETRO/RAG ideas regain importance.',a:'cf. 2112.04426',key:'Parameters handle reasoning, the database handles facts.'}],refs:'DeepSeek-R1 2501.12948; Muennighoff s1 2501.19393; Kimi 2501.12599; Lightman 2305.20050'},
+'2026':{era:'NOW',name:'Task-completion objective and distillation is king',thesis:'Signal = verifiable completion + distillation, human labels take a back seat',sub:'<p>Now: the training objective turns to "is the task actually complete", a PrefixLM mixed objective and distillation data dominate (the HRM-Text report shows distillation gives about +12.6). <em class="k">Long-horizon agent data</em> is self-produced via hindsight relabeling, knowledge stays decoupled to retrieval; pure human preference is marginalized by verifiable rewards and distillation, retreating to taste and safety.</p>',ch:[{t:'Task-completion objective + PrefixLM + distillation',d:'Verifiable task completion as the core signal, with a PrefixLM mixed objective + strong-model distillation data dominant; ablation shows distillation contributes about +12.6.',a:'HRM-Text 2605.20613',key:'Data decides whether the agent can actually finish the task.'},{t:'Long-horizon agent data',d:'Use hindsight to rewrite failed trajectories into learnable "if the goal were X, then success" data, recovering supervision from interaction.',a:'cf. the HER idea',key:'Trajectories are data, mass-produced by hindsight relabeling.'},{t:'Knowledge decoupling / retrieval',d:'Following RETRO: knowledge in an external store that hot-updates, parameters focused on reasoning and tool use, retrieval the standard supply for the knowledge layer.',a:'cf. 2112.04426',key:'Knowledge and reasoning fully layered.'}],gh:[{t:'Pure human preference data',d:'Pure human pairwise preferences are still used for style and safety but no longer the main capability signal, marginalized by verifiable rewards + distillation.',a:'cf. 2203.02155',key:'Human preference yields to objective verifiable signals.'}],note:'<p>Three pillars settle: verifiable rewards (capability), distillation (transfer), retrieval (knowledge).</p>',refs:'HRM-Text 2605.20613; cf. InstructGPT 2203.02155; RETRO 2112.04426'},
+  },
+  algorithm: {
+'2015':{era:'Foundation',name:'The first-order adaptive epoch',thesis:'Use the cheapest first-order optimizer to make training "tunable".',sub:'<p>The decisive factor in deep-network training isn\'t curvature but a <em class="k">scalable first-order method</em>. Adam combines momentum with per-coordinate scaling, becoming the default opening move for the next decade; sequence models backprop through time via BPTT.</p>',ch:[{t:'Adam optimizer',d:'Estimate first moment m and second moment v of the gradient, update after bias correction. Cheap, robust, nearly tuning-free — quickly the default.',a:'arXiv:1412.6980',eq:['<b>Adam</b>θ ← θ − η · m̂ / (√v̂ + ε)','<b>Correction</b>m̂ = m_t / (1 − β_1^t),  v̂ = v_t / (1 − β_2^t)'],key:'First-order adaptive moments = the most cost-effective default optimizer.'}],gh:[{t:'Second-order / Hessian-free',d:'Using curvature (Newton/conjugate gradient) should converge faster, but the per-step cost is high and hard to distribute — talked out of it by compute.',key:'Curvature too expensive, first-order wins first.'},{t:'Adagrad / RMSProp precursors',d:'Early per-coordinate learning-rate scaling whose core idea is absorbed directly by Adam\'s v̂.',key:'The precursor idea lives inside Adam.'}],refs:'Kingma & Ba 2014 (Adam)'},
+'2016':{era:'Foundation',name:'Synchronous data parallelism',thesis:'Deterministic gradients take priority over throughput; data parallelism becomes the training skeleton.',sub:'<p>In the multi-machine paradigm debate, <em class="k">synchronous all-reduce</em> beats the asynchronous parameter server: deterministic gradients make convergence reproducible. BatchNorm further stabilizes deep training.</p>',ch:[{t:'Synchronous data-parallel SGD',d:'Each device computes gradients then all-reduces the average, equivalent to enlarging the batch; Adam is still the default optimizer.',eq:['<b>AllReduce</b>g = (1/N) Σ_i g_i'],key:'Synchronous aggregation trades for determinism and reproducibility.'},{t:'BatchNorm stabilizes training',d:'Normalize activations to ease internal covariate shift, allowing larger learning rates.',key:'Normalization makes deep layers trainable.'}],gh:[{t:'Large-batch SGD',d:'Scale up the batch for linear speedup, but the generalization gap and tuning difficulty stall it, waiting for mature LR rules.',key:'The fruit of large batch is picked two years later.'},{t:'Asynchronous SGD',d:'Parameter-server async updates give high throughput, but stale gradients hurt convergence and it fades.',key:'Stale gradients drag down the async camp.'}],refs:'Ioffe & Szegedy 2015 (BN)'},
+'2017':{era:'Foundation',name:'Two lines: scheduling and sparsity',thesis:'A bare optimizer charging in diverges — warmup steps up; compute grows linearly — sparse routing enters.',sub:'<p>The Transformer exposes extreme sensitivity to learning rate: without <em class="k">warmup</em> it diverges. The same year, sparsely-gated MoE proposes conditional computation, planting the hidden "routing algorithm" thread that runs through the whole tree.</p>',ch:[{t:'LR warmup + mixed-precision sprouting',d:'Linearly warm up the learning rate over the first steps then decay, stabilizing the Transformer start; FP16 tested to save memory and speed up.',eq:['<b>warmup</b>η_t = η_max · min(t/t_w, 1)'],key:'A smooth start comes from scheduling, not luck.'}],gh:[{t:'Sparsely-gated MoE routing (branch)',d:'The gating network selects top-k experts per token, activating only a small part of the parameters; compute doesn\'t grow linearly with capacity.',a:'arXiv:1701.06538',eq:['<b>Gating</b>y = Σ_{i∈topk} G(x)_i · E_i(x)'],key:'Conditional computation = the starting point of decoupling params from compute.'},{t:'Second-order optimization',d:'K-FAC/Shampoo-style curvature approximation is still too expensive and hard to distribute; the mainline keeps eating Adam — the idea resurfaces eight years later via Muon.',key:'The curvature idea lies in ambush, biding its time.'}],refs:'Shazeer et al. 2017 (Sparsely-Gated MoE); Vaswani et al. 2017'},
+'2018':{era:'Foundation',name:'Squeeze data parallelism dry',thesis:'Use data parallelism to its limit first, then build pressure for model parallelism.',sub:'<p>Clusters keep growing; <em class="k">data parallelism + LR scheduling</em> is still the main force. But models too big for one device loom, while pipeline and large-batch tools wait at the fork.</p>',ch:[{t:'Data-parallel scale + LR scheduling',d:'Bigger clusters with cosine/linear decay; squeeze the existing paradigm to the limit to build motivation for model parallelism.',eq:['<b>cosine</b>η_t = ½η_max(1 + cos(πt/T))'],key:'Squeeze the simple solution dry first, then switch to the complex one.'}],gh:[{t:'GPipe pipeline parallelism',d:'Split the model by layers + micro-batch to fill the pipeline, but bubbles and complexity keep it a side branch.',a:'arXiv:1811.06965',key:'Pipeline has bubbles; 2019 bets on tensor parallelism first.'},{t:'LAMB large batch',d:'Layerwise adaptation lets BERT run huge batches, but it\'s less general than AdamW and becomes a specialized tool.',key:'Large-batch-specific, not the mainline optimizer.'}],refs:'Huang et al. 2018 (GPipe); You et al. 2019 (LAMB)'},
+'2019':{era:'★ Model parallelism',name:'Cut open a single layer',thesis:'When the model won\'t fit on one card, slice each layer\'s matmul along rows and columns.',sub:'<p>★ A turning-point year. Megatron chooses <em class="k">tensor (intra-layer) parallelism</em>: split each layer\'s GEMM across cards along columns/rows, rather than splitting the batch or layers. With gradient checkpointing and mixed precision, the door to billion-parameter models opens. The pipeline camp and the ZeRO precursor wait on either side.</p>',ch:[{t:'Megatron tensor parallelism',d:'Column-split (then row-split) linear layers across cards; each computes a segment forward, then all-reduce in backward — communication stays controllable.',a:'arXiv:1909.08053',eq:['<b>Column-split GEMM</b>Y = [X A_1, X A_2],  A = [A_1 | A_2]','<b>Row-split</b>Z = Y_1 B_1 + Y_2 B_2 (all-reduce)'],key:'Split a single layer rather than the batch, supporting billion-parameter scale.'}],gh:[{t:'PipeDream / GPipe pipeline',d:'Async pipeline + weight stashing boost throughput, but bubbles and version consistency are tricky; the mainline picks the more direct tensor parallelism.',key:'Tensor parallelism is more direct, pipeline discussed later.'},{t:'ZeRO precursor',d:'Optimizer state stored redundantly in full on every card becomes the memory hog; the idea to shard it is brewing, erupting a year later.',key:'Redundant state is the next breakthrough.'}],note:'<p>Tensor parallelism, pipeline parallelism, and state sharding fork here, gradually merging into 3D parallelism from the next year.</p>',refs:'Shoeybi et al. 2019 (Megatron-LM)'},
+'2020':{era:'★ Save memory = save money',name:'The sharding epoch',thesis:'Rather than store the full copy per card, shard the optimizer state/gradient/parameter to pieces.',sub:'<p>★ A turning-point year. ZeRO shards training state in three stages, cutting per-card memory almost linearly; AdamW becomes the standard optimizer; FP16 spreads. The same year GShard revives the 2017 MoE to the hundred-billion scale via automatic sharding — <em class="k">routing + systems</em> combine for the first time.</p>',ch:[{t:'ZeRO / DeepSpeed',d:'Shard optimizer state (P_os), gradients (P_g), parameters (P_p) across cards in turn, trading communication for memory, cutting usage almost linearly.',a:'arXiv:1910.02054',eq:['<b>ZeRO</b>per-card memory ≈ (4Ψ + K·Ψ) / N','<b>AdamW</b>θ ← θ − η(m̂/(√v̂+ε) + λθ)'],key:'Sharding redundant state > recomputing activations.'}],gh:[{t:'Reformer reversible residuals',d:'Reversible layers avoid storing activations + LSH approximate attention saves memory, but accuracy/generality is limited; the mainline uses sharding + checkpointing.',key:'The other fork for saving memory left out in the cold.'}],rv:[{t:'GShard top-2 routing ↻',d:'top-2 gating + compiler automatic sharding pulls the 2017 sparse MoE to hundred-billion params, trainable across thousands of cores.',a:'arXiv:2006.16668',eq:['<b>top-2</b>g = softmax(top2(W_g x))'],key:'Automatic parallelism makes sparse routing truly scalable.'}],refs:'Rajbhandari et al. 2020 (ZeRO); Lepikhin et al. 2020 (GShard); Loshchilov & Hutter 2019 (AdamW)'},
+'2021':{era:'Systems integration',name:'3D parallelism',thesis:'A single parallel dimension isn\'t enough; twist tensor × pipeline × data into one rope.',sub:'<p>The engineering mainline <em class="k">3D-assembles</em> the three parallelisms into the trillion-training baseline. On a branch, Switch pushes MoE to the extreme with top-1 routing + an auxiliary balancing loss — that L_aux is later dropped in 2024.</p>',ch:[{t:'Megatron-DeepSpeed 3D parallelism',d:'Tensor parallelism splits within layers, pipeline splits across layers, data parallelism splits the batch — three axes combined to squeeze a big cluster dry.',key:'Three-axis combo = the engineering baseline for trillion-scale training.'},{t:'Switch top-1 + load-balancing loss',d:'Route each token to just 1 expert to save communication; the auxiliary loss forces balanced expert load to prevent hot-expert congestion.',a:'arXiv:2101.03961',eq:['<b>Balancing loss</b>L_aux = α · N · Σ_i f_i · P_i'],key:'top-1 trades for throughput, L_aux prevents collapse (later abandoned).'}],gh:[{t:'1-bit Adam / communication compression',d:'Quantize gradients to compress all-reduce bandwidth, but narrow scenarios and easy precision loss; the mainline saves communication via topology and compute-communication overlap.',key:'Communication compression is a narrow-scenario side branch.'}],refs:'Fedus et al. 2021 (Switch Transformer)'},
+'2022':{era:'★ Kernels and RL',name:'Twin engines: fast and aligned',thesis:'The same year, kernels make attention fast and RL makes models "obedient".',sub:'<p>★ A turning-point year. FlashAttention uses <em class="k">IO-aware</em> tiled online softmax to cut HBM traffic from O(N²) toward O(N); exact attention even beats the approximate sparse route. Meanwhile PPO/RLHF makes alignment a trainable objective, and speculative decoding lets a small model "draft" for the big one.</p>',ch:[{t:'FlashAttention',d:'Tile Q/K/V into SRAM, accumulate incrementally with online softmax, and recompute in backward, avoiding materializing the N×N attention matrix.',a:'arXiv:2205.14135',eq:['<b>Online softmax</b>m_new = max(m, m̃),  ℓ ← e^{m−m_new}ℓ + e^{m̃−m_new}ℓ̃','<b>IO</b>HBM access O(N²d²/M), not the naive O(N²)'],key:'IO-aware exact attention: fast and memory-saving.'},{t:'PPO / RLHF training',d:'Score with a reward model; PPO constrains policy updates with a clipped ratio and holds distance to the reference with KL, stabilizing alignment training.',a:'arXiv:2203.02155',eq:['<b>PPO</b>L = E[min(ρ Â, clip(ρ, 1−ε, 1+ε) Â)] − β·KL','<b>Ratio</b>ρ = π_θ(a|s) / π_old(a|s)'],key:'Clip + KL = the stable policy-optimization mechanism (reward definition see Data).'}],gh:[{t:'efficient-attn kernel',d:'Various approximate/sparse attentions tried to save compute, but the exact FlashAttention is both fast and accurate and beats them.',key:'Exact + IO-saving beats approximate.'},{t:'Constitutional self-critique (RLAIF)',d:'Use AI feedback to replace human labeling for alignment; the mainline uses human preference first — reward-source details belong to the Data page.',key:'A reward-source debate, the optimization mechanism unchanged.'}],note:'<p>Speculative decoding (branch) drafts with a draft model and accepts at min(1, p/q) with the target model, speeding up without changing the output distribution.</p>',refs:'Dao et al. 2022 (FlashAttention); Ouyang et al. 2022 (InstructGPT/PPO); Leviathan et al. 2022 (Speculative Decoding)'},
+'2023':{era:'Serving and lightweighting',name:'Make inference cheap',thesis:'Beyond training, serving and quantization decide whether a model can actually be used.',sub:'<p>The focus shifts to <em class="k">inference serving</em>: PagedAttention manages the KV cache like an OS manages virtual memory, and with continuous batching and GQA, throughput rises several-fold. On branches, DPO simplifies alignment without RL, and GPTQ/AWQ compress models to 4-bit.</p>',ch:[{t:'PagedAttention / vLLM',d:'Cut the KV cache into fixed-size pages allocated on demand, eliminating fragmentation; continuous batching dynamically packs requests, and GQA shares KV heads to save cache.',a:'arXiv:2309.06180',eq:['<b>Paged KV</b>cache utilization ≈ 100% (no internal/external fragmentation)'],key:'Manage KV like virtual memory, inference throughput up several-fold.'},{t:'DPO RL-free optimization',d:'Reparameterize RLHF\'s optimal-policy closed-form solution, optimizing directly on preference pairs with a classification loss, bypassing the reward model and PPO loop.',a:'arXiv:2305.18290',eq:['<b>DPO</b>L = −log σ(β log (π_θ(y_w)/π_ref(y_w)) − β log (π_θ(y_l)/π_ref(y_l)))'],key:'Compress the RL loop into one step of supervised optimization (reward definition see Data).'},{t:'GPTQ / AWQ + FlashAttn-2',d:'Post-training layerwise quantization to 4-bit, near-lossless; FlashAttention-2 improves parallelism and work partitioning to speed up further.',key:'4-bit onto consumer cards, the second-gen kernel accelerates again.'}],gh:[{t:'Medusa / speculative variants',d:'Use multiple decoding heads to draft in parallel without a separate draft model, but the ecosystem lags standard speculative decoding, kept as an acceleration side branch.',key:'Multi-head drafting is an acceleration side branch.'}],refs:'Kwon et al. 2023 (PagedAttention/vLLM); Rafailov et al. 2023 (DPO); Frantar et al. 2022 (GPTQ)'},
+'2024':{era:'★ Move compute to inference',name:'The test-time epoch',thesis:'Training-time scaling has diminishing returns, so move compute from training to inference.',sub:'<p>★ A turning-point year. o1 proves that lengthening the chain of thought + search at <em class="k">inference</em> keeps trading for accuracy, opening test-time scaling. On the systems side, DeepSeek-V3 drops L_aux with auxiliary-loss-free routing and nails down FP8 training on a giant model for the first time; BitNet, Mixture-of-Depths, and TTT each explore their own forks.</p>',ch:[{t:'test-time compute / search',d:'Generate longer chains of thought or parallel-sample + search at inference, trading extra inference compute for accuracy rather than piling on training.',key:'Compute shifts from training to inference, opening test-time scaling.'},{t:'Auxiliary-loss-free MoE routing',d:'Maintain a learnable bias per expert to tune its selection frequency for balance; the bias affects only selection, not the gradient, avoiding L_aux quality damage.',a:'arXiv:2412.19437',eq:['<b>L_aux-free routing</b>select topk(s_i + b_i), gating weights still use s_i'],key:'Use a bias instead of a balancing loss, dropping Switch\'s L_aux.'},{t:'FP8 training',d:'Use FP8 for GEMM and keep high precision for sensitive ops, nailing down FP8 feasibility and stability at giant scale for the first time.',a:'arXiv:2412.19437',key:'Training precision drops a notch, cost falls with it.'}],gh:[{t:'BitNet 1.58b quantization',d:'Quantize weights to ternary {−1, 0, +1}, theoretically the ultimate compute saving, but precision/ecosystem not ready for a mainstream changeover.',a:'arXiv:2402.17764',eq:['<b>absmean ternary</b>W̃ = round_clip(W / (mean|W| + ε), −1, 1)'],key:'The far vision of extreme quantization, not yet on the mainline.'},{t:'Mixture-of-Depths routing',d:'Decide per token whether to skip some layers, doing conditional computation in the "depth direction", but its benefit overlaps with MoE.',a:'arXiv:2404.02258',key:'Depth routing\'s benefit overlaps with width routing.'},{t:'TTT inner-loop optimization',d:'Treat the hidden state as a small model\'s weights and gradient-descent on each input segment at inference, adapting to the current sequence.',a:'arXiv:2407.04620',eq:['<b>Inner loop</b>W_t = W_{t−1} − η ∇ℓ(W_{t−1}; x_t)'],key:'Online training at inference; the mainline uses search instead for now.'}],refs:'OpenAI o1 (2024); DeepSeek-V3 (2412.19437); BitNet b1.58 (2402.17764)'},
+'2025':{era:'★ RLVR optimization',name:'Drop the critic',thesis:'In the verifiable-reward era, the optimizer must both drop the value network and replace AdamW.',sub:'<p>★ A turning-point year. R1 uses <em class="k">GRPO</em> to replace PPO\'s critic with group-relative advantage, saving half the models; DAPO gives a stabilization recipe; Muon brings the eight-year-dormant second-order/curvature idea back in a lightweight orthogonalization form, challenging AdamW. s1 and MCTS/PRM heavy value search fall out of favor and get pruned.</p>',ch:[{t:'GRPO without critic',d:'Sample a group of answers for the same prompt, normalize with the group\'s reward mean/variance as the advantage, removing the separate value network.',a:'arXiv:2501.12948',eq:['<b>GRPO</b>Â_i = (r_i − mean(r)) / std(r)','<b>Objective</b>L = E[min(ρ Â, clip(ρ, 1−ε, 1+ε) Â)] − β·KL'],key:'Group-relative advantage replaces the critic (reward definition see Data).'},{t:'DAPO recipe',d:'clip-higher loosens the upper clip on positive advantage to prevent entropy collapse, dynamic sampling filters all-correct/all-wrong samples, token-level loss, and over-length penalty stabilize long-chain RL.',a:'arXiv:2503.14476',eq:['<b>clip-higher</b>clip(ρ, 1−ε_low, 1+ε_high),  ε_high > ε_low'],key:'Decoupled clipping + dynamic sampling = the stabilization patch for GRPO.'}],gh:[{t:'s1 budget forcing',d:'Force-extend/shorten the thinking budget by inserting "Wait" or truncating — simple but weakly controllable; the mainline learns to self-control length via RL.',a:'arXiv:2501.19393',key:'Minimal test-time scaling, insufficient controllability.'},{t:'MCTS / PRM value search',d:'Use a process-reward model + tree search to guide reasoning, but PRM is hard to train and search overhead large, pruned by pure RL + verifiable rewards.',key:'Heavy value search falls out of favor and gets pruned.'}],rv:[{t:'Muon optimizer ↻',d:'Approximately orthogonalize the momentum matrix via Newton–Schulz iteration before updating, so weights don\'t collapse along a few principal directions — more sample-efficient.',a:'arXiv:2502.16982',eq:['<b>Newton–Schulz</b>X ← a·X + b·XXᵀX + c·(XXᵀ)²X','<b>Update</b>W ← W − η · orthogonalize(M)'],key:'The second-order/curvature idea returns as lightweight orthogonalization, challenging AdamW.'}],refs:'DeepSeek-R1 (2501.12948); DAPO (2503.14476); Muon (2502.16982)'},
+'2026':{era:'NOW · long-horizon and parallel',name:'Deep credit assignment',thesis:'As agents run longer, the key to optimization becomes "assigning credit to the right step".',sub:'<p>The current line. The bottleneck of multi-step agent RL is <em class="k">credit assignment under sparse delayed rewards</em>: GRPO\'s step-level Q-value estimate misfires. The mainline uses horizon reduction + hindsight credit assignment, letting an LLM serve as a hindsight critic to correct step-level values. On the inference side, sparse-attention kernels and diffusion parallel decoding simultaneously lower long-context and throughput cost; pure-preference RLHF is eclipsed by verifiable rewards.</p>',ch:[{t:'Long-horizon agent RL',d:'Reason in hindsight over multi-step trajectories: if an action\'s probability rises conditioned on "known success", amplify its credit, else suppress it, correcting step-level Q-values under sparse rewards.',a:'arXiv:2603.08754',eq:['<b>hindsight ratio</b>w = π(a | s, success) / π(a | s)'],key:'Use an LLM as a hindsight critic for deep credit assignment.'},{t:'Sparse-attention kernel',d:'The Lightning Indexer scores with FP8/FP4 ReLU to pick top-k compressed blocks per query, doing full attention only over selected blocks + a local window, making million-token context affordable.',a:'DeepSeek Sparse Attention (2026-04)',eq:['<b>DSA</b>attend(topk_indexer(q, K)) ∪ local_window'],key:'Indexer selects blocks + local window, lowering long-context cost again.'},{t:'Diffusion parallel decoding',d:'Mercury uses a diffusion-style LLM to denoise multiple tokens in parallel at once rather than autoregressive token-by-token, reaching the ~1000 tok/s range.',a:'arXiv:2506.17298',key:'Non-autoregressive parallel token emission, throughput up an order of magnitude.'}],gh:[{t:'Pure-preference RLHF',d:'PPO/DPO with only human-preference rewards, eclipsed by RLVR/verifiable rewards + long-horizon credit, takes a back seat.',key:'The pure-preference paradigm takes a back seat.'}],note:'<p>horizon-curriculum warmup (2605.02572) trains short before long, giving long-horizon RL a warm start and easing the gradient noise of direct long-horizon training.</p>',refs:'Hindsight Credit Assignment (2603.08754); DeepSeek Sparse Attention (2026); Mercury (2506.17298)'},
+  } };
+
+  // ---------- report renderer ----------
+  // turn _{...}/^{...} and _x/^x notation into real sub/superscripts;
+  // keep the leading <b>label</b> untouched so it stays a plain caption.
+  var GK='A-Za-z0-9α-ωΑ-Ω';
+  function fmtMath(s){
+    // escape literal < > & so math operators (j > i, x_{<t}) never become HTML tags
+    s=s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // braced sub/superscripts, looped to resolve nested braces (x_{z_{<t}})
+    for(var i=0;i<3;i++){
+      s=s.replace(/\^\{([^{}]*)\}/g,'<sup>$1</sup>')
+         .replace(/_\{([^{}]*)\}/g,'<sub>$1</sub>');
+    }
+    // bare single-token sub/superscripts
+    s=s.replace(new RegExp('\\^(['+GK+']+)','g'),'<sup>$1</sup>')
+       .replace(new RegExp('_(['+GK+']+)','g'),'<sub>$1</sub>');
+    return s;
+  }
+  function fmtEq(e){
+    var m=e.match(/^(<b>[^]*?<\/b>)([^]*)$/);
+    if(m) return m[1]+fmtMath(m[2]);
+    return fmtMath(e);
+  }
+  function rpItems(arr,icls){
+    return arr.map(function(o){
+      var a=o.a?'<span class="arx">'+o.a+'</span>':'';
+      var eq=(o.eq&&o.eq.length)?o.eq.map(function(e){return '<div class="rp-eq">'+fmtEq(e)+'</div>';}).join(''):'';
+      var key=o.key?'<div class="rp-key"><b>Core thesis ·</b> '+o.key+'</div>':'';
+      return '<div class="rp-item '+icls+'"><h5>'+o.t+'</h5><p>'+o.d+'</p>'+eq+key+a+'</div>';
+    }).join('');
+  }
+  function rpSec(cls,label,html){
+    return '<div class="rp-sec '+cls+'"><h4><span class="dot"></span>'+label+'</h4>'+html+'</div>';
+  }
+  function renderReport(y){
+    var pg=REPORTS[PAGE]||{}; var r=pg[y]; if(!r)return;
+    document.getElementById('rpEra').textContent=r.era;
+    document.getElementById('rpYr').textContent=y;
+    document.getElementById('rpName').textContent=r.name;
+    document.getElementById('rpThesis').innerHTML=r.thesis;
+    var b='';
+    if(r.sub) b+=rpSec('s-sub','Substrate · already exists',r.sub);
+    if(r.ch&&r.ch.length) b+=rpSec('s-ch','Trunk · human choice',rpItems(r.ch,'i-ch'));
+    if(r.gh&&r.gh.length) b+=rpSec('s-gh','Road not taken · pruned',rpItems(r.gh,'i-gh'));
+    if(r.rv&&r.rv.length) b+=rpSec('s-rv','Revived · back once the substrate landed',rpItems(r.rv,'i-rv'));
+    if(r.note) b+=rpSec('s-note','Technical note',r.note);
+    if(r.refs) b+=rpSec('s-note','References · arXiv',' <div class="rp-refs">'+r.refs+'</div>');
+    var body=document.getElementById('rpBody');
+    body.innerHTML=b; body.scrollTop=0;
+  }
+
+  // ---------- open / close / navigate ----------
+  var curYear=null;
+  var scrim=document.getElementById('scrim');
+  var report=document.getElementById('report');
+  function setActiveTab(y){
+    var tabs=canvas.querySelectorAll('.yrtab');
+    for(var i=0;i<tabs.length;i++){
+      tabs[i].classList.toggle('active', (+tabs[i].getAttribute('data-year'))===y);
+    }
+  }
+  function openReport(y){
+    y=+y; if(!REPORTS[PAGE]||!REPORTS[PAGE][y])return;
+    curYear=y; renderReport(y);
+    document.getElementById('rpPrev').disabled=(y<=2015);
+    document.getElementById('rpNext').disabled=(y>=2026);
+    report.classList.add('on'); scrim.classList.add('on');
+    report.setAttribute('aria-hidden','false');
+    setActiveTab(y);
+  }
+  function closeReport(){
+    report.classList.remove('on'); scrim.classList.remove('on');
+    report.setAttribute('aria-hidden','true');
+    setActiveTab(-1); curYear=null;
+  }
+  canvas.addEventListener('click',function(e){
+    var tab=e.target.closest('.yrtab');
+    if(tab) openReport(tab.getAttribute('data-year'));
+  });
+  document.getElementById('rpClose').addEventListener('click',closeReport);
+  scrim.addEventListener('click',closeReport);
+  document.getElementById('rpPrev').addEventListener('click',function(){ if(curYear>2015)openReport(curYear-1); });
+  document.getElementById('rpNext').addEventListener('click',function(){ if(curYear<2026)openReport(curYear+1); });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){ closeReport(); return; }
+    if(report.classList.contains('on')){
+      if(e.key==='ArrowLeft'&&curYear>2015) openReport(curYear-1);
+      else if(e.key==='ArrowRight'&&curYear<2026) openReport(curYear+1);
+    }
+  });
+
+  // ---------- page tabs (HoI4 multi-page) ----------
+  var pageMeta=[['structure','STRUCTURE','🏛️','Network operators · attention / SSM / MoE / norm / position encoding'],
+                ['data','DATA','📜','Objectives and signals · pretraining / RLHF·RLVR / CoT / retrieval / tokenization / scaling'],
+                ['algorithm','ALGORITHM','⚙️','Optimization and systems · optimizers / parallelism / RL mechanisms / kernels / quantization / test-time']];
+  var ptbar=document.getElementById('pagetabs');
+  function setPage(pg){
+    if(!TREES[pg])return;
+    buildTree(pg);
+    var btns=ptbar.querySelectorAll('.ptab');
+    for(var i=0;i<btns.length;i++) btns[i].classList.toggle('active', btns[i].getAttribute('data-page')===pg);
+    if(report.classList.contains('on')){
+      if(REPORTS[pg]&&REPORTS[pg][curYear]){ renderReport(curYear); setActiveTab(curYear); }
+      else closeReport();
+    }
+  }
+  pageMeta.forEach(function(m){
+    var b=document.createElement('button');
+    b.className='ptab'; b.setAttribute('data-page',m[0]);
+    b.innerHTML='<span class="pt-ic">'+m[2]+'</span><span class="pt-tx"><b>'+m[1]+'</b><small>'+m[3]+'</small></span>';
+    b.addEventListener('click',function(){ setPage(m[0]); });
+    ptbar.appendChild(b);
+  });
+  setPage('structure');
+})();
+</script>
+</body>
+</html>
