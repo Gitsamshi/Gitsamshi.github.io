@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Architecture Deep-Dive 2023–2026 · Structure (zoom)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#0e1014; --gold:#d8b15a; --gold-bright:#f3d488; --gold-deep:#9a7327;
+    --frame-1:#caa257; --frame-2:#5b5232; --frame-3:#2a2a20;
+    --ink:#ece3cf; --ink-dim:#a9a48f; --ink-faint:#6f6a57;
+    --plate:#15171d; --plate-2:#1c1f27;
+    --chosen:#f3d488; --fork:#ffd27a; --ghost:#8f93a6; --ghost-deep:#3a3d4c; --revive:#4fd6b4;
+    /* lane accents */
+    --l-attention:#e0a44a; --l-ssm_linear:#5aa9e6; --l-moe:#c98ad6; --l-hybrid:#7fd1a8;
+    --l-norm_pe:#d6b36a; --l-depth_recur:#e0773d; --l-diffusion_nar:#9f93e6; --l-multimodal:#6fc3c9;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--ink);font-family:"IBM Plex Mono","Noto Serif SC",monospace;line-height:1.5;
+    background:
+      radial-gradient(1200px 700px at 70% -10%, #2a2113 0%, transparent 55%),
+      radial-gradient(900px 600px at 10% 110%, #15202e 0%, transparent 60%),
+      linear-gradient(180deg,#12141a,#0a0c10 75%);}
+  .wrap{max-width:1500px;margin:0 auto;padding:0 18px}
+
+  header.banner{padding:30px 0 8px;text-align:center}
+  .banner .kicker{font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold-deep)}
+  .banner h1{font-family:"Cinzel",serif;font-weight:900;font-size:clamp(22px,4vw,40px);margin:.16em 0 .1em;
+    color:var(--gold-bright);letter-spacing:.03em;text-shadow:0 2px 0 #000,0 0 22px rgba(216,177,90,.25)}
+  .banner p{max-width:860px;margin:.4em auto 0;color:var(--ink-dim);font-size:13px}
+  .banner a.back{color:var(--gold);font-size:12px;text-decoration:none}
+  .rule{height:2px;max-width:520px;margin:14px auto 0;background:linear-gradient(90deg,transparent,var(--gold-deep),var(--gold),var(--gold-deep),transparent)}
+
+  .legend{display:flex;flex-wrap:wrap;gap:8px 14px;justify-content:center;margin:16px auto 4px;max-width:1180px}
+  .lg{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--ink-dim)}
+  .lg .sw{width:13px;height:13px;border-radius:3px;border:1.5px solid}
+  .sw.chosen{background:linear-gradient(150deg,#3a2e16,#1c1609);border-color:var(--gold-bright)}
+  .sw.fork{background:radial-gradient(circle,#ffe6ad,#7c5e26);border-color:var(--gold-bright)}
+  .sw.ghost{background:repeating-linear-gradient(45deg,#26283200,#26283200 3px,#20222b 3px,#20222b 6px);background-color:#191b22;border-color:var(--ghost-deep);border-style:dashed}
+  .sw.revive{background:linear-gradient(150deg,#10302a,#0a1d19);border-color:var(--revive)}
+  .hint{text-align:center;color:var(--ink-faint);font-size:11.5px;margin:6px 0 0}
+
+  /* lane filter chips */
+  .lanes{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:10px auto 0;max-width:1180px}
+  .lane-chip{font-size:11px;letter-spacing:.03em;cursor:pointer;border:1px solid var(--frame-2);background:#14161d;
+    color:var(--ink-dim);border-radius:20px;padding:4px 11px;transition:.14s;display:flex;align-items:center;gap:6px}
+  .lane-chip .dot{width:9px;height:9px;border-radius:50%}
+  .lane-chip.off{opacity:.34;filter:grayscale(.6)}
+
+  /* zoom stage */
+  .stage{overflow:auto;padding:10px 0 70px;-webkit-overflow-scrolling:touch}
+  .board{position:relative;margin:0 auto;transform-origin:top center;
+    transition:transform .7s cubic-bezier(.22,.61,.36,1),opacity .5s}
+  .board.zoomin{animation:zoomIn .8s cubic-bezier(.22,.61,.36,1)}
+  @keyframes zoomIn{0%{transform:scale(.18);opacity:.0}55%{opacity:1}100%{transform:scale(1);opacity:1}}
+  svg.wires{position:absolute;left:0;top:0;pointer-events:none;z-index:1}
+
+  .lane-head{position:absolute;top:0;transform:translateX(-50%);text-align:center;z-index:3}
+  .lane-head .nm{font-family:"Cinzel",serif;font-weight:700;font-size:13px;letter-spacing:.04em;white-space:nowrap}
+  .lane-head .cn{font-size:9px;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase}
+  .lane-band{position:absolute;top:54px;border-radius:12px;z-index:0;opacity:.06}
+
+  .yrtab{position:absolute;left:0;transform:translateY(-50%);z-index:3;font-family:"Cinzel",serif;font-weight:700;
+    font-size:17px;color:var(--gold);background:linear-gradient(180deg,#211a10,#13110b);border:1px solid var(--frame-2);
+    border-left:3px solid var(--gold);border-radius:4px;padding:3px 11px;letter-spacing:.05em}
+  .yrtab small{display:block;font-family:"IBM Plex Mono",monospace;font-weight:400;font-size:8.5px;color:var(--ink-faint);letter-spacing:.12em}
+
+  .node{position:absolute;z-index:2;width:178px;border-radius:7px;padding:8px 10px 9px;cursor:pointer;
+    background:linear-gradient(180deg,var(--plate-2),var(--plate));border:1px solid var(--frame-2);border-left-width:3px;
+    box-shadow:0 2px 6px rgba(0,0,0,.5);transition:transform .12s,box-shadow .12s,opacity .2s}
+  .node:hover{transform:translateY(-2px);box-shadow:0 7px 20px rgba(0,0,0,.6);z-index:7}
+  .node .ttl{font-size:11.5px;font-weight:600;color:var(--ink);line-height:1.25;font-family:"Noto Serif SC","IBM Plex Mono",serif}
+  .node .arx{font-family:"IBM Plex Mono",monospace;font-size:9px;color:var(--gold-deep);margin-top:5px;letter-spacing:.02em}
+  .node .tag{position:absolute;top:-8px;right:8px;font-size:8px;letter-spacing:.1em;text-transform:uppercase;
+    border-radius:3px;padding:0 5px;font-weight:700}
+  .node.chosen{border-left-color:var(--gold)} .node.chosen .ttl{color:var(--gold-bright)}
+  .node.chosen .tag{background:var(--gold-bright);color:#1a140b}
+  .node.fork{border-color:var(--gold);border-left-color:var(--gold-bright);box-shadow:0 0 14px rgba(243,212,136,.3),0 2px 6px rgba(0,0,0,.5)}
+  .node.fork .tag{background:#ffe6ad;color:#1a140b} .node.fork .ttl{color:#ffe6ad}
+  .node.ghost{border-style:dashed;border-color:var(--ghost-deep);opacity:.72} .node.ghost .ttl{color:var(--ghost)}
+  .node.ghost .tag{background:var(--ghost);color:#14161d}
+  .node.revive{border-left-color:var(--revive)} .node.revive .ttl{color:var(--revive)}
+  .node.revive .tag{background:var(--revive);color:#04130f}
+  .node.dim{opacity:.12;filter:grayscale(.7)}
+  .node .rvf{margin-top:5px;font-size:9px;color:var(--revive);letter-spacing:.02em}
+  .node .lane-pill{display:inline-block;font-size:8px;letter-spacing:.04em;text-transform:uppercase;
+    padding:0 5px;border-radius:3px;margin-top:6px;color:#0e1014;font-weight:700}
+
+  /* tooltip */
+  #tip{position:fixed;z-index:80;max-width:360px;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .12s;
+    background:linear-gradient(180deg,#1b1d25,#101218);border:1px solid var(--frame-2);border-top:2px solid var(--gold);
+    border-radius:7px;box-shadow:0 12px 34px rgba(0,0,0,.7);padding:12px 14px}
+  #tip.on{opacity:1;transform:translateY(0)}
+  #tip .tt-tag{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-deep)}
+  #tip h5{margin:3px 0 7px;font-family:"Cinzel",serif;font-size:15px;color:var(--gold-bright);line-height:1.2}
+  #tip .row{font-size:12px;margin:5px 0;color:var(--ink-dim);line-height:1.5}
+  #tip .row .lbl{display:inline-block;font-size:9px;letter-spacing:.08em;padding:1px 6px;border-radius:3px;margin-right:5px;vertical-align:1px}
+  #tip .lbl.w{background:rgba(216,177,90,.16);color:var(--gold-bright)}
+  #tip .lbl.y{background:rgba(90,169,230,.16);color:#8fc3ea}
+  #tip .lbl.r{background:rgba(79,214,180,.16);color:var(--revive)}
+  #tip .eq{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--gold-bright);background:rgba(0,0,0,.34);
+    border:1px solid var(--frame-3);border-left:2px solid var(--gold-deep);border-radius:5px;padding:6px 9px;margin:7px 0 2px;white-space:pre-wrap;overflow-x:auto}
+  #tip .arxl{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--gold-deep);margin-top:7px;display:block}
+
+  footer{border-top:1px solid var(--frame-3);margin-top:8px;padding:16px 0 46px;color:var(--ink-faint);font-size:11px;text-align:center;line-height:1.7}
+  footer b{color:var(--gold-deep)} footer a{color:var(--gold)}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="banner">
+    <div class="kicker">zoom · structure deep-dive</div>
+    <h1>ARCHITECTURE 2023–2026 · THE DENSE MAP</h1>
+    <p>A zoomed-in, comprehensive view of the <b>sequence-mixing operator</b> race: 78 real architectures across attention · SSM/linear · MoE · hybrid · norm/PE · depth-recurrence · diffusion. Columns are <b>lanes</b> (which kind of operator), rows are years. Every card links a real arXiv id.</p>
+    <p><a class="back" href="architecture-focus-tree.html">← back to the focus tree (zoom out)</a></p>
+    <div class="rule"></div>
+  </header>
+  <div class="legend">
+    <span class="lg"><span class="sw chosen"></span>adopted mainline</span>
+    <span class="lg"><span class="sw fork"></span>★ pivotal fork</span>
+    <span class="lg"><span class="sw ghost"></span>viable but niche / road not taken</span>
+    <span class="lg"><span class="sw revive"></span>revived once substrate landed</span>
+  </div>
+  <div class="lanes" id="laneChips"></div>
+  <p class="hint">Hover a card for mechanism · trade-off · formula · Click a lane chip to filter · dashed teal = revives an older idea</p>
+</div>
+
+<div class="stage" id="stage">
+  <div class="board" id="board"><svg class="wires" id="wires" xmlns="http://www.w3.org/2000/svg"></svg></div>
+</div>
+
+<div class="wrap"><footer>
+  architecture deep-dive · 2023–2026 · structure only · companion to the <a href="architecture-focus-tree.html">focus tree</a><br>
+  <b>arXiv ids are real and date-checked (YYMM = posting month); lane/kind labels are judgment, not exhaustive scholarship</b>
+</footer></div>
+<div id="tip"></div>
+<script>
+(function(){
+  var NODES=[{"id":"2023_gqa","y":2023,"t":"GQA (Grouped-Query Attention)","k":"chosen","lane":"attention","a":"2305.13245","w":"Shares one key/value head across a group of query heads, interpolating between multi-head and multi-query attention to shrink the KV cache.","why":"Cut KV-cache memory and decode bandwidth at near-MHA quality, becoming the default attention in Llama 2/3, Mistral, and most modern LLMs.","eq":"n_kv_heads = n_q_heads / g, 1 <= g <= n_q_heads","rv":"","pr":[]},{"id":"2023_llama2","y":2023,"t":"Llama 2 (decoder recipe)","k":"chosen","lane":"attention","a":"2307.09288","w":"Consolidates the open decoder-only recipe: pre-norm RMSNorm, RoPE, SwiGLU feedforward, and GQA on the 70B variant for a 4K-context backbone.","why":"Set the de facto open-weights architecture template that countless downstream models forked and fine-tuned.","eq":"","rv":"","pr":["2023_gqa"]},{"id":"2023_mistral7b","y":2023,"t":"Mistral 7B (SWA + GQA)","k":"chosen","lane":"attention","a":"2310.06825","w":"Packages grouped-query attention with sliding-window attention so each layer attends only to a local window while stacked depth grows the effective receptive field.","why":"Made long-context decoding cheap with bounded per-layer attention and a rolling KV cache, popularizing the local-global recipe for open LLMs.","eq":"attn(i) over [i-w, i]; effective span ~ w * n_layers","rv":"","pr":["2023_gqa"]},{"id":"2023_streamingllm","y":2023,"t":"StreamingLLM (Attention Sinks)","k":"chosen","lane":"attention","a":"2309.17453","w":"Keeps a few initial 'attention sink' tokens plus a rolling KV window so a finite-window model stays stable over effectively infinite streams.","why":"Showed massive attention mass collects on the first tokens, and that retaining them prevents collapse during sliding-window generation.","eq":"","rv":"","pr":["2023_mistral7b"]},{"id":"2023_retnet","y":2023,"t":"RetNet (Retentive Network)","k":"ghost","lane":"ssm_linear","a":"2307.08621","w":"Replaces softmax attention with a multi-scale retention operator that has equivalent parallel, recurrent, and chunkwise forms.","why":"Offered O(1)-memory recurrent inference with parallel training, framing the 'impossible triangle' the linear-attention/SSM line chased.","eq":"Retention(X) = (Q K^T . D) V, D_{nm} = gamma^{n-m}","rv":"","pr":[]},{"id":"2023_rwkv","y":2023,"t":"RWKV (Receptance Weighted Key Value)","k":"revived","lane":"ssm_linear","a":"2305.13048","w":"Reformulates the RNN as a linear-attention token mixer with WKV time-decay, trainable in parallel yet inferring recurrently in linear time.","why":"Revived RNNs for the Transformer era with constant-memory inference, a parallel track to RetNet and state-space models.","eq":"wkv_t = sum_i exp(-(t-1-i)w + k_i) v_i / sum_i exp(...)","rv":"1990s RNN / LSTM recurrence","pr":[]},{"id":"2023_hyena","y":2023,"t":"Hyena Hierarchy","k":"fork","lane":"ssm_linear","a":"2302.10866","w":"Replaces attention with interleaved implicit long convolutions and data-controlled multiplicative gating for a subquadratic global token mixer.","why":"Reached attention quality at sub-quadratic cost and seeded HyenaDNA, StripedHyena, and Monarch Mixer, though recall gaps remained.","eq":"y = x1 . (h * (x2 . (h * x3)))","rv":"","pr":[]},{"id":"2023_mamba","y":2023,"t":"Mamba (Selective State Space)","k":"chosen","lane":"ssm_linear","a":"2312.00752","w":"Adds input-dependent (selective) SSM parameters with a hardware-aware parallel scan, letting the state gate what to keep or forget.","why":"First attention-free model to match Transformers in language modeling at linear cost, becoming the trunk of the SSM-vs-attention era.","eq":"h_t = A_bar h_{t-1} + B_bar x_t; B,C,Delta = f(x_t)","rv":"","pr":["2023_hyena"]},{"id":"2023_gla","y":2023,"t":"Gated Linear Attention (GLA)","k":"chosen","lane":"ssm_linear","a":"2312.06635","w":"Adds a data-dependent gating/decay to linear attention with a hardware-efficient chunkwise algorithm, framing it as an RNN with matrix-valued state.","why":"Closed quality gaps of plain linear attention and underpinned FlashLinearAttention and later gated-recurrent hybrids.","eq":"S_t = diag(alpha_t) S_{t-1} + k_t^T v_t; o_t = q_t S_t","rv":"","pr":["2023_retnet"]},{"id":"2023_monarch_mixer","y":2023,"t":"Monarch Mixer (M2)","k":"ghost","lane":"ssm_linear","a":"2310.12109","w":"Mixes along both sequence and model dimensions using structured Monarch (butterfly/FFT-like) matrices instead of attention and dense MLPs.","why":"Sub-quadratic in both axes and pure GEMM-friendly, but the structured-matrix route stayed niche versus selective SSMs.","eq":"","rv":"FFT / butterfly factorization of structured matrices","pr":["2023_hyena"]},{"id":"2023_position_interpolation","y":2023,"t":"Position Interpolation (PI)","k":"fork","lane":"norm_pe","a":"2306.15595","w":"Linearly down-scales RoPE position indices to fit the pretrained range, enabling context extension by interpolation instead of extrapolation.","why":"Foundational RoPE-scaling trick needing minimal fine-tuning, the base that NTK-aware scaling, YaRN, and LongRoPE all build on.","eq":"f'(x, m) = f(x, m * L_train / L_target)","rv":"","pr":[]},{"id":"2023_yarn","y":2023,"t":"YaRN (RoPE Extension)","k":"chosen","lane":"norm_pe","a":"2309.00071","w":"Extends RoPE windows via frequency-dependent NTK-aware interpolation plus an attention-temperature scaling, sparing high frequencies.","why":"Achieved long-context extension with far less fine-tuning than PI, widely adopted for RoPE long-context models.","eq":"scale per-dim by wavelength; logits * 1/t","rv":"","pr":["2023_position_interpolation"]},{"id":"2023_pose","y":2023,"t":"PoSE (Positional Skip-wise Training)","k":"ghost","lane":"norm_pe","a":"2309.10400","w":"Simulates long positions inside a fixed short training window by manipulating skip-wise position indices, decoupling train length from target context.","why":"Made context extension cheap to train (e.g. to 128K from a 2K window), a structural trick orthogonal to the RoPE-rescaling family.","eq":"","rv":"","pr":["2023_position_interpolation"]},{"id":"2023_nope","y":2023,"t":"NoPE (No Positional Encoding)","k":"ghost","lane":"norm_pe","a":"2305.19466","w":"Shows a decoder-only Transformer with no explicit positional encoding learns position implicitly via the causal mask and can length-generalize better.","why":"Challenged the necessity of RoPE/ALiBi for extrapolation, reframing position as an emergent property of causal attention.","eq":"","rv":"","pr":[]},{"id":"2023_soft_moe","y":2023,"t":"Soft MoE","k":"ghost","lane":"moe","a":"2308.00951","w":"Replaces discrete expert routing with a fully differentiable soft assignment, passing weighted combinations of all tokens to each expert slot.","why":"Removed token-dropping and load-balance instability of sparse MoE, but the all-token mixing is awkward for causal autoregressive decoders.","eq":"slot_i = softmax(X Phi)_i^T X","rv":"","pr":[]},{"id":"2023_mixtral","y":2023,"t":"Mixtral 8x7B (Sparse MoE)","k":"chosen","lane":"moe","a":"2023-12","w":"Replaces each Mistral feedforward block with 8 experts and a top-2 router, activating ~13B of 47B parameters per token.","why":"First widely deployed open sparse-MoE LLM, proving expert routing on the SWA+GQA backbone for high quality at low active FLOPs.","eq":"y = sum_{i in top2} softmax(x W_g)_i E_i(x)","rv":"","pr":["2023_mistral7b"]},{"id":"2023_sparse_universal_transformer","y":2023,"t":"Sparse Universal Transformer","k":"ghost","lane":"depth_recur","a":"2310.07096","w":"Makes the weight-shared, depth-recurrent Universal Transformer scalable by adding MoE feedforward and a stick-breaking dynamic halting mechanism.","why":"Showed parameter-tied recurrent depth can scale with sparsity, a road-not-taken alternative to ever-deeper stacks.","eq":"","rv":"2018 Universal Transformer / adaptive computation time","pr":["2023_soft_moe"]},{"id":"2023_megabyte","y":2023,"t":"MEGABYTE (Multiscale Patches)","k":"ghost","lane":"hybrid","a":"2305.07185","w":"A two-level decoder that groups bytes into patches, with a large global model between patches and a small local model within each patch.","why":"Enabled tokenizer-free million-byte modeling with sub-quadratic cost, prefiguring later hierarchical byte/patch architectures.","eq":"","rv":"","pr":[]},{"id":"2023_striped_hyena","y":2023,"t":"StripedHyena","k":"revived","lane":"hybrid","a":"2023-12","w":"Interleaves gated Hyena long-convolution blocks with grouped-query attention layers in a single decoder stack.","why":"First open hybrid competitive with strong Transformers at 7B, demonstrating attention + convolution layer striping for long context.","eq":"","rv":"","pr":["2023_hyena","2023_gqa"]},{"id":"2023_sedd","y":2023,"t":"SEDD (Score Entropy Discrete Diffusion)","k":"ghost","lane":"diffusion_nar","a":"2310.16834","w":"A discrete diffusion language model trained by estimating ratios of the data distribution via a score-entropy loss, generating tokens non-autoregressively.","why":"Beat prior diffusion LMs by 25-75% perplexity and rivaled GPT-2, the most credible non-autoregressive challenger of the year.","eq":"","rv":"","pr":[]},{"id":"2024_deepseekmoe","y":2024,"t":"DeepSeekMoE (Fine-grained + Shared Experts)","k":"chosen","lane":"moe","a":"2401.06066","w":"Splits each MoE layer into many fine-grained experts plus a few always-on shared experts, decoupling specialization from routing granularity.","why":"Improved expert specialization and stability at fixed active FLOPs, becoming the MoE backbone for DeepSeek-V2/V3 and a template for fine-grained MoE.","eq":"y = sum_shared E_s(x) + sum_{i in topK} g_i E_i(x)","rv":"","pr":[]},{"id":"2024_jamba","y":2024,"t":"Jamba (Transformer-Mamba-MoE Hybrid)","k":"chosen","lane":"hybrid","a":"2403.19887","w":"Interleaves blocks of Mamba SSM layers and Transformer attention layers, adding MoE feedforwards, in a single large-scale decoder stack.","why":"First production-scale SSM-attention-MoE hybrid, giving Transformer-class quality with much smaller KV cache and high long-context throughput.","eq":"","rv":"","pr":[]},{"id":"2024_mod","y":2024,"t":"Mixture-of-Depths (MoD)","k":"ghost","lane":"depth_recur","a":"2404.02258","w":"Adds a per-layer router with a top-k token budget so only selected tokens enter the block while the rest skip via the residual, capping per-layer compute.","why":"Let transformers dynamically allocate FLOPs along the sequence and depth, but the static budget and routing complexity kept it from displacing dense stacks.","eq":"token processed if router(x) in top-k; else x passes through","rv":"","pr":[]},{"id":"2024_rwkv6_finch","y":2024,"t":"Eagle/Finch (RWKV-5/6)","k":"chosen","lane":"ssm_linear","a":"2404.05892","w":"Upgrades RWKV with multi-headed matrix-valued states (Eagle) and data-dependent dynamic recurrence/decay (Finch) for a more expressive linear-time mixer.","why":"Closed quality gaps with attention while keeping constant-memory RNN inference, advancing the attention-free RWKV line.","eq":"S_t = diag(w_t) S_{t-1} + k_t^T v_t (data-dependent w_t)","rv":"","pr":[]},{"id":"2024_deepseek_v2_mla","y":2024,"t":"DeepSeek-V2 (Multi-head Latent Attention)","k":"chosen","lane":"attention","a":"2405.04434","w":"Replaces per-head KV with a low-rank latent KV vector that is up-projected per head at attention time, shrinking the KV cache to a single compressed latent.","why":"Cut KV-cache memory ~93% with decoupled-RoPE compatibility, making long-context MoE inference cheap and seeding the MLA line through V3.","eq":"c_kv = W_dkv h; k,v = W_uk c_kv, W_uv c_kv","rv":"","pr":["2024_deepseekmoe"]},{"id":"2024_xlstm","y":2024,"t":"xLSTM (Extended LSTM)","k":"revived","lane":"ssm_linear","a":"2405.04517","w":"Modernizes the LSTM with exponential gating plus two variants: sLSTM (scalar memory, new mixing) and mLSTM (matrix memory, fully parallelizable).","why":"Showed the gated-RNN lineage can scale and rival Transformers/SSMs, reviving LSTM ideas on a parallelizable matrix-memory substrate.","eq":"C_t = f_t C_{t-1} + i_t k_t v_t^T (matrix memory)","rv":"1990s LSTM (constant error carousel / gating)","pr":[]},{"id":"2024_yoco","y":2024,"t":"YOCO (You Only Cache Once)","k":"ghost","lane":"attention","a":"2405.05254","w":"A decoder-decoder split: a self-decoder builds a single global KV cache that a stacked cross-decoder reuses via cross-attention, so KV is cached only once.","why":"Made KV memory roughly constant in depth while keeping global attention, a road-not-taken layout for cheap long-context decoding.","eq":"","rv":"","pr":[]},{"id":"2024_zamba","y":2024,"t":"Zamba (Mamba + Shared Attention)","k":"ghost","lane":"hybrid","a":"2405.16712","w":"Uses a Mamba backbone with a single global attention+MLP block whose parameters are shared and reapplied every few Mamba layers.","why":"Got attention's recall benefits at minimal extra parameter cost, a compact 7B hybrid showing weight-shared attention can augment an SSM trunk.","eq":"","rv":"","pr":[]},{"id":"2024_mamba2","y":2024,"t":"Mamba-2 (State Space Duality)","k":"chosen","lane":"ssm_linear","a":"2405.21060","w":"Recasts selective SSMs and attention as one structured state-space duality, using a scalar-times-identity state transition for a fast chunkwise matmul algorithm.","why":"Made SSMs 2-8x faster and hardware-friendly while unifying them with linear attention, becoming the trunk for later SSM hybrids and delta-rule variants.","eq":"Y = (L . (Q K^T)) V with L from scalar SSM decay","rv":"","pr":[]},{"id":"2024_samba","y":2024,"t":"Samba (Mamba + Sliding-Window Attention)","k":"chosen","lane":"hybrid","a":"2406.07522","w":"Layer-wise alternates Mamba SSM blocks with sliding-window attention, compressing history into recurrent state while keeping precise local recall.","why":"A simple hybrid recipe that extrapolates to unlimited context with linear-time prefill and high throughput, widely cited as the SSM+SWA pattern.","eq":"","rv":"","pr":[]},{"id":"2024_mdlm","y":2024,"t":"MDLM (Masked Diffusion LM)","k":"ghost","lane":"diffusion_nar","a":"2406.07524","w":"Trains a discrete masked-diffusion language model with a simplified Rao-Blackwellized objective that reduces to a mixture of masked-LM cross-entropies.","why":"Made masked discrete diffusion competitive in perplexity with efficient parallel/semi-AR sampling, keeping the non-autoregressive track alive.","eq":"","rv":"2021 D3PM discrete diffusion / masked LM","pr":[]},{"id":"2024_qwen2","y":2024,"t":"Qwen2 (GQA + Dual Chunk Attention)","k":"chosen","lane":"attention","a":"2407.10671","w":"A dense and MoE decoder family using grouped-query attention with RoPE, plus Dual Chunk Attention and YaRN scaling for long-context inference.","why":"Showed a clean GQA+RoPE backbone with training-free context extension can reach frontier open quality across dense and sparse sizes.","eq":"","rv":"","pr":[]},{"id":"2024_llama3","y":2024,"t":"Llama 3 (Dense GQA at 405B)","k":"chosen","lane":"attention","a":"2407.21783","w":"Scales a standard dense decoder with grouped-query attention, RoPE, and a 128K-token vocabulary to 405B parameters and 128K context.","why":"Demonstrated a plain GQA Transformer, scaled carefully, still matches MoE/frontier models, anchoring the dense-attention mainline.","eq":"","rv":"","pr":[]},{"id":"2024_gemma2","y":2024,"t":"Gemma 2 (Local-Global + Soft-Capping)","k":"chosen","lane":"attention","a":"2408.00118","w":"Interleaves sliding-window local and full-global attention layers, adds logit soft-capping and pre/post-RMSNorm sandwiching around each sub-block.","why":"Packaged several stabilizing structural tweaks for small open models, popularizing the alternating local/global attention recipe.","eq":"logits = c * tanh(logits / c) (soft-cap)","rv":"","pr":[]},{"id":"2024_ngpt","y":2024,"t":"nGPT (Normalized Transformer)","k":"ghost","lane":"norm_pe","a":"2410.01131","w":"Constrains all embeddings, weights, and hidden states to unit norm so the residual stream lives on a hypersphere, with each layer doing a normalized displacement.","why":"Reported large training speedups and removed explicit LayerNorm, reframing optimization as movement on a sphere, though adoption stayed experimental.","eq":"h <- Norm(h + alpha (Norm(f(h)) - h))","rv":"","pr":[]},{"id":"2024_diff_transformer","y":2024,"t":"Differential Transformer (Diff Attention)","k":"fork","lane":"attention","a":"2410.05258","w":"Computes attention as the difference of two separate softmax maps scaled by a learned lambda, subtracting common-mode attention noise.","why":"Sharpened focus on relevant context and cut hallucination/long-context retrieval errors, a structural tweak to the attention operator itself.","eq":"DiffAttn = (softmax(Q1 K1^T) - lambda softmax(Q2 K2^T)) V","rv":"","pr":[]},{"id":"2024_hymba","y":2024,"t":"Hymba (Parallel Hybrid Heads)","k":"ghost","lane":"hybrid","a":"2411.13676","w":"Runs attention heads and Mamba SSM heads in parallel within the same layer, fusing high-resolution recall with efficient state summarization, plus learnable meta tokens.","why":"Showed intra-layer parallel fusion (not just layer interleaving) for small models with shared/sliding KV cache, an alternative hybrid topology.","eq":"","rv":"","pr":["2024_mamba2"]},{"id":"2024_gated_deltanet","y":2024,"t":"Gated DeltaNet","k":"chosen","lane":"ssm_linear","a":"2412.06464","w":"Combines the delta-rule associative-memory update with a data-dependent decay gate, giving targeted writes plus rapid forgetting in a linear-time recurrence.","why":"Beat Mamba2 and plain DeltaNet on recall and length tasks, becoming the linear-attention recipe adopted in later hybrid LLMs.","eq":"S_t = alpha_t (I - beta_t k_t k_t^T) S_{t-1} + beta_t k_t v_t^T","rv":"","pr":["2024_mamba2"]},{"id":"2024_blt","y":2024,"t":"Byte Latent Transformer (BLT)","k":"fork","lane":"hybrid","a":"2412.09871","w":"A tokenizer-free architecture that groups raw bytes into dynamically sized patches by next-byte entropy, with local byte encoders/decoders around a global latent transformer.","why":"First byte-level model to match tokenizer-based LLMs at scale, allocating compute by data complexity and removing the fixed vocabulary.","eq":"","rv":"","pr":[]},{"id":"2024_deepseek_v3","y":2024,"t":"DeepSeek-V3 (MLA + DeepSeekMoE + MTP)","k":"chosen","lane":"moe","a":"2412.19437","w":"A 671B/37B-active MoE combining Multi-head Latent Attention, fine-grained DeepSeekMoE with an auxiliary-loss-free bias-based router, and a multi-token-prediction head.","why":"Showed frontier quality at low active FLOPs by integrating the MLA+MoE stack with MTP as an architectural depth head, the reference modern open MoE.","eq":"route bias b_i updated to balance load; predict t+1..t+D","rv":"","pr":["2024_deepseek_v2_mla","2024_deepseekmoe"]},{"id":"2025_titans","y":2025,"t":"Titans (test-time neural memory)","k":"fork","lane":"ssm_linear","a":"2501.00663","w":"Adds a deep neural long-term memory module whose weights are updated by gradient at inference time, read/written alongside short-window attention.","why":"Reframes the recurrent state as an online-learned MLP, pushing test-time memorization beyond fixed-size linear-RNN states.","eq":"M_t = M_{t-1} - θ ∇ℓ(M_{t-1}; x_t) (surprise update)","rv":"","pr":[]},{"id":"2025_minimax_01","y":2025,"t":"MiniMax-01 (Lightning Attention)","k":"fork","lane":"ssm_linear","a":"2501.08313","w":"Production 456B MoE that uses linear lightning-attention layers interleaved with periodic softmax-attention layers (7:1) for million-token context.","why":"First very-large-scale proof that linear attention can carry most layers if a few full-attention layers preserve recall.","eq":"","rv":"","pr":[]},{"id":"2025_llada","y":2025,"t":"LLaDA (Large Language Diffusion)","k":"revived","lane":"diffusion_nar","a":"2502.09992","w":"Trains an 8B masked-diffusion Transformer that generates text by iteratively denoising masked tokens instead of left-to-right autoregression.","why":"Shows a non-autoregressive diffusion LM can match comparable AR models at scale, reopening the parallel-decoding lane.","eq":"","rv":"2021-2022 discrete/masked diffusion (D3PM, SEDD)","pr":[]},{"id":"2025_nsa","y":2025,"t":"Native Sparse Attention (NSA)","k":"chosen","lane":"attention","a":"2502.11089","w":"Hierarchical attention that combines coarse token compression, fine token selection, and a sliding window, all natively trainable and hardware-aligned.","why":"Makes sparse attention trainable end-to-end (not just an inference trick), cutting long-context cost while keeping full-attention quality.","eq":"","rv":"","pr":[]},{"id":"2025_moba","y":2025,"t":"MoBA (Mixture of Block Attention)","k":"fork","lane":"attention","a":"2502.13189","w":"Applies MoE-style top-k routing to attention, letting each query attend only to a learned subset of key-value blocks.","why":"Lets the model decide where to attend without fixed sparsity patterns, switching smoothly between full and sparse attention.","eq":"","rv":"","pr":[]},{"id":"2025_fox","y":2025,"t":"Forgetting Transformer (FoX)","k":"ghost","lane":"attention","a":"2503.02130","w":"Inserts a data-dependent forget gate into softmax attention by down-weighting unnormalized scores, giving attention a recurrent-style decay.","why":"Imports the forget gate from linear RNNs into full attention, improving long-context behavior as a drop-in change.","eq":"a_ij = softmax(q_i·k_j + Σ_{j<t≤i} log f_t)","rv":"","pr":[]},{"id":"2025_block_diffusion","y":2025,"t":"Block Diffusion (BD3-LM)","k":"fork","lane":"diffusion_nar","a":"2503.09573","w":"Decomposes a sequence into blocks generated autoregressively, with discrete diffusion denoising inside each block.","why":"Interpolates between AR and diffusion to allow KV caching and variable-length output, fixing diffusion LMs' fixed-length limit.","eq":"","rv":"","pr":["2025_llada"]},{"id":"2025_rwkv7","y":2025,"t":"RWKV-7 \"Goose\"","k":"revived","lane":"ssm_linear","a":"2503.14456","w":"Generalizes the delta rule with vector-valued gating and in-context learning rates plus a relaxed value-replacement update in an attention-free RNN.","why":"Lets a linear-time RNN track state and recognize all regular languages, exceeding the expressivity of TC0-bounded attention.","eq":"S_t = S_{t-1}(diag(w_t) - κ_t^T(a_t⊙κ_t)) + v_t^T k_t","rv":"1990s linear RNNs / RWKV-4-6","pr":[]},{"id":"2025_gemma3","y":2025,"t":"Gemma 3","k":"chosen","lane":"attention","a":"2503.19786","w":"Open multimodal models using a 5:1 ratio of local sliding-window to global attention layers, QK-norm, and shorter RoPE on local layers.","why":"Pushes the local/global interleave further to slash KV-cache for 128K context while keeping a vanilla attention backbone.","eq":"","rv":"","pr":[]},{"id":"2025_mta","y":2025,"t":"Multi-Token Attention (MTA)","k":"ghost","lane":"attention","a":"2504.00927","w":"Convolves over multiple adjacent queries and keys (and across heads) so attention weights depend on groups of tokens, not single q·k pairs.","why":"Lets attention condition on multi-token patterns for sharper retrieval, but adds convolution cost and stays niche.","eq":"","rv":"","pr":[]},{"id":"2025_llama4","y":2025,"t":"Llama 4 (iRoPE, MoE)","k":"chosen","lane":"moe","a":"2025-04","w":"Native-multimodal MoE family that interleaves RoPE local-attention layers with NoPE global-attention layers (iRoPE) plus temperature-scaled inference.","why":"Combines MoE sparsity with position-encoding-free global layers to chase very long context in an open flagship.","eq":"","rv":"","pr":[]},{"id":"2025_qwen3","y":2025,"t":"Qwen3","k":"chosen","lane":"attention","a":"2505.09388","w":"Dense and MoE decoder-only family with GQA, QK-norm, SwiGLU, RoPE, and removal of QKV bias, spanning 0.6B-235B.","why":"Consolidates the 2025 consensus attention recipe and adds QK-norm for stability across a broad scale ladder.","eq":"","rv":"","pr":[]},{"id":"2025_log_linear_attn","y":2025,"t":"Log-Linear Attention","k":"ghost","lane":"ssm_linear","a":"2506.04761","w":"Replaces the single fixed-size recurrent state with a Fenwick-tree hierarchy of states that grows logarithmically with sequence length.","why":"Trades a tiny log-factor of compute/memory for multi-scale recall that pure linear attention and SSMs lack.","eq":"cost ~ O(T log T), state ~ O(log T)","rv":"","pr":[]},{"id":"2025_hrm","y":2025,"t":"Hierarchical Reasoning Model (HRM)","k":"fork","lane":"depth_recur","a":"2506.21734","w":"Two coupled recurrent modules (slow high-level planner, fast low-level worker) iterate latent computation in a single forward pass without CoT supervision.","why":"A tiny recurrent-depth architecture that does multi-step reasoning in latent space rather than via token-level chain-of-thought.","eq":"","rv":"2018 Universal Transformer / recurrent depth","pr":[]},{"id":"2025_kimi_k2","y":2025,"t":"Kimi K2","k":"chosen","lane":"moe","a":"2507.20534","w":"1T-parameter, 32B-active MoE with very high expert sparsity (384 experts, 8 active) and MLA attention, stabilized by QK-clip.","why":"Pushes MoE sparsity ratios to an extreme while keeping training stable, defining an open trillion-scale agentic model.","eq":"","rv":"","pr":[]},{"id":"2025_glm45","y":2025,"t":"GLM-4.5","k":"chosen","lane":"moe","a":"2508.06471","w":"355B/32B-active MoE that favors more layers (depth) with a slimmer width, MLA-style attention, and a multi-token-prediction head.","why":"Argues depth over width for reasoning-oriented MoE while keeping the now-standard latent-attention + MTP stack.","eq":"","rv":"","pr":[]},{"id":"2025_qwen3_next","y":2025,"t":"Qwen3-Next (Gated DeltaNet hybrid)","k":"chosen","lane":"hybrid","a":"2025-09","w":"80B/3B-active model that interleaves ~75% Gated DeltaNet linear-attention layers with ~25% gated full-attention layers in a high-sparsity MoE.","why":"First flagship to put gated-delta linear attention at production scale, validating linear-heavy hybrids for cheap long context.","eq":"","rv":"2024 Gated DeltaNet (2412.06464) / delta rule","pr":[]},{"id":"2025_kimi_linear","y":2025,"t":"Kimi Linear (KDA + MLA)","k":"fork","lane":"hybrid","a":"2510.26692","w":"Layerwise hybrid mixing Kimi Delta Attention (fine-grained channelwise-gated delta rule via diagonal-plus-low-rank transitions) with periodic MLA layers.","why":"Shows a delta-rule linear core can beat full MLA on quality while cutting KV-cache up to 75% and boosting long-context throughput.","eq":"","rv":"2024 Gated DeltaNet / DeltaNet delta rule","pr":[]},{"id":"2025_minimax_m2","y":2025,"t":"MiniMax-M2 (return to full attention)","k":"revived","lane":"attention","a":"2025-10","w":"A 230B/10B-active MoE that deliberately drops MiniMax-01's lightning/linear attention and reverts to plain full softmax attention.","why":"A notable 'road not taken' reversal: at industrial complexity, efficient attention's gains did not yet beat full attention.","eq":"","rv":"","pr":["2025_minimax_01"]},{"id":"2025_deepseek_v32","y":2025,"t":"DeepSeek-V3.2 (Sparse Attention, DSA)","k":"chosen","lane":"attention","a":"2512.02556","w":"Adds DeepSeek Sparse Attention: a lightning indexer scores all past keys per query, then attention runs only over the top-k selected keys on top of MLA.","why":"Productizes native-sparse-attention ideas into a frontier MLA model, cutting long-context attention cost while holding quality.","eq":"selct = TopK_k( indexer(q_t, K) ); attend over selected K,V","rv":"","pr":["2025_nsa"]},{"id":"2026_deepseek_v4","y":2026,"t":"DeepSeek-V4 (DSA + hybrid local/long-range attention)","k":"chosen","lane":"attention","a":"2026-04","w":"MoE flagship that drops MLA for a hybrid design: a Lightning-Indexer top-k DeepSeek Sparse Attention path for long range plus a small sliding window for local context.","why":"Pushes attention compute/KV cache far below V3 (~27% single-token FLOPs, ~10% KV) so million-token agentic context is servable, at the cost of a learned indexer and approximate (sparse) recall.","eq":"out = softmax(q K_S^T) V_S, S = topk(indexer(q,K)) ∪ window(128)","rv":"2019 sparse attention (Sparse Transformer/Reformer top-k)","pr":[]},{"id":"2026_mhc_hyperconnections","y":2026,"t":"Manifold-Constrained Hyper-Connections (mHC)","k":"fork","lane":"norm_pe","a":"2026-04","w":"Replaces the single residual stream with learnable multi-stream hyper-connections constrained to a manifold, generalizing the add-and-norm skip path inside DeepSeek-V4 blocks.","why":"Aims to fix residual-stream bottlenecks and stabilize very deep sparse stacks, trading the simplicity of plain residuals for extra routing weights between depth streams.","eq":"","rv":"2015 residual connections / 2016 DenseNet-style multi-stream skips","pr":["2026_deepseek_v4"]},{"id":"2026_flashmem_v4_lsa","y":2026,"t":"FlashMemory-V4 Lookahead Sparse Attention (LSA)","k":"ghost","lane":"attention","a":"2606.09079","w":"Inference paradigm on the DeepSeek-V4 backbone where a Neural Memory Indexer proactively predicts future context demand and keeps only query-critical KV chunks resident in GPU memory.","why":"Turns sparse attention from passive top-k selection into predictive KV retention for ultra-long context, but adds a speculative indexer that can mispredict; a report rather than a mainline release.","eq":"","rv":"","pr":["2026_deepseek_v4"]},{"id":"2026_glm5_dsa","y":2026,"t":"GLM-5 (DSA via continued pre-training)","k":"chosen","lane":"attention","a":"2602.15763","w":"Large sparse-MoE model that adopts DeepSeek Sparse Attention with a Lightning Indexer (validated against efficient-attention variant ablations) for long-context agentic engineering.","why":"Confirms DSA-style learned sparse attention as a portable mainline operator across labs, ported into an existing MoE via continued pre-training rather than from-scratch design.","eq":"","rv":"2019 sparse attention","pr":[]},{"id":"2026_glm52_indexshare","y":2026,"t":"GLM-5.2 IndexShare","k":"chosen","lane":"attention","a":"2026-06","w":"Reuses one sparse-attention indexer across every group of four sparse-attention layers instead of recomputing a separate index per layer.","why":"Cuts per-token FLOPs ~2.9x at 1M context by amortizing the indexer, trading some per-layer selection freedom for big long-horizon throughput gains.","eq":"","rv":"","pr":["2026_glm5_dsa"]},{"id":"2026_hisa_hierarchical_indexing","y":2026,"t":"HISA (Hierarchical Indexed Sparse Attention)","k":"ghost","lane":"attention","a":"2603.28458","w":"Drop-in replacement for the DSA indexer that turns the flat per-token scan into a two-stage procedure: a block-level coarse filter prunes regions, then fine token selection runs within survivors.","why":"Attacks the indexer itself as the new bottleneck of fine-grained sparse attention, trading exact flat scoring for a hierarchical approximation that scales the selection step.","eq":"","rv":"","pr":["2026_glm5_dsa"]},{"id":"2026_minimax_m2_full_attention","y":2026,"t":"MiniMax-M2 (revert to full attention)","k":"revived","lane":"attention","a":"2605.26494","w":"Sparse MoE (229.9B total, 9.8B active) that deliberately drops M1's Lightning linear attention and ships plain full softmax attention.","why":"A pointed counter-trend: argues efficient/linear attention is not yet production-ready at industrial scale (breaks on multi-hop reasoning), so dense full attention stays the safer default despite quadratic cost.","eq":"","rv":"2017 full softmax attention","pr":[]},{"id":"2026_qwen35_omni","y":2026,"t":"Qwen3.5-Omni (Hybrid-Attention MoE)","k":"chosen","lane":"hybrid","a":"2604.15804","w":"Omnimodal Thinker-Talker MoE whose backbone interleaves Gated DeltaNet linear-attention layers with periodic full softmax attention (~3:1) for efficient long-sequence inference.","why":"Gets linear-time long context with periodic full-attention recall across text/audio/vision; the linear:full ratio is the key tradeoff between throughput and exact recall.","eq":"S_t = (diag(a_t) - b_t k_t k_t^T) S_{t-1} + b_t k_t v_t^T","rv":"1990s delta-rule fast weights","pr":[]},{"id":"2026_nats_l_token_hybrid","y":2026,"t":"NAtS-L (token-level hybrid attention)","k":"ghost","lane":"hybrid","a":"2602.03681","w":"Searches per-token over whether each position is handled by Gated DeltaNet or softmax attention within the same layer, yielding an adaptive token-level mixture instead of a fixed layer-wise interleave.","why":"Pushes hybrid design from layer granularity down to token granularity so softmax layers stop being the efficiency bottleneck, but the routing search adds complexity and is a research recipe, not a shipped model.","eq":"","rv":"","pr":["2026_qwen35_omni"]},{"id":"2026_universal_yoco","y":2026,"t":"Universal YOCO (YOCO-U)","k":"fork","lane":"hybrid","a":"2604.01220","w":"Combines the YOCO decoder-decoder (one global KV cache, linear pre-fill) with partial recursive computation so depth is scaled by looping a sub-block rather than adding KV-bearing layers.","why":"Decouples representational depth from KV-cache growth, letting test-time compute scale without the memory blowup of naive looped transformers.","eq":"","rv":"2024 YOCO / 2018 Universal Transformer recursion","pr":[]},{"id":"2026_gated_deltanet_2","y":2026,"t":"Gated DeltaNet-2 (decoupled erase/write)","k":"chosen","lane":"ssm_linear","a":"2605.22791","w":"Linear-attention token mixer that splits the single delta-rule gate into separate channel-wise erase (key-side) and write (value-side) gates over the recurrent state.","why":"Lets the model forget old associations aggressively while writing new ones conservatively, improving long-context associative recall over scalar-gated DeltaNet/Mamba at fixed state size.","eq":"S_t = (diag(e_t) - b_t k_t k_t^T) S_{t-1} + diag(w_t) v_t k_t^T","rv":"2024 Gated DeltaNet","pr":[]},{"id":"2026_kda_doubly_fine_grained","y":2026,"t":"Doubly Fine-Grained Gated Delta Networks","k":"fork","lane":"ssm_linear","a":"2604.19021","w":"Extends Gated DeltaNet / Kimi Delta Attention with channel-wise and finer temporal control over the delta-rule forget/update gates instead of a single scalar gate.","why":"Improves long-context associative recall of linear attention by giving the recurrent state more selective forgetting, at the cost of more gating parameters per channel.","eq":"","rv":"2025 Kimi Delta Attention / 2024 Gated DeltaNet","pr":[]},{"id":"2026_mamba3","y":2026,"t":"Mamba-3 (inference-first SSM)","k":"chosen","lane":"ssm_linear","a":"2603.15569","w":"Redesigns the selective state-space model around classical SSM theory with a trapezoidal discretization, a complex-valued state update for richer state tracking, and a MIMO formulation tuned for fast decoding.","why":"Matches strong LLM perplexity at roughly half the decoding cost and beats Gated DeltaNet at 1.5B scale, re-centering SSM design on inference rather than training throughput.","eq":"","rv":"2024 Mamba-2 / classical state-space discretization","pr":[]},{"id":"2026_halo_hypenet","y":2026,"t":"HALO / HypeNet (distill Transformers to hybrid RNN)","k":"revived","lane":"ssm_linear","a":"2601.22156","w":"Converts pretrained Qwen3-series Transformers into hybrid softmax-attention + recurrent (RNN) stacks (HypeNet) via distillation rather than pretraining the hybrid from scratch.","why":"Makes the strong-but-expensive hybrid-linear architecture reachable by reusing existing checkpoints, trading a from-scratch guarantee for cheap long-context efficiency gains.","eq":"","rv":"2020 linearizing-attention / Performer-style kernelization","pr":[]},{"id":"2026_hrm_text","y":2026,"t":"HRM-Text (dual-timescale depth recurrence)","k":"fork","lane":"depth_recur","a":"2605.20613","w":"Replaces a deep stack with two shared Transformer modules (slow high-level, fast low-level) that iterate over the same embeddings for H_cycles x (L_cycles+1) steps with additive state injection, stabilized by MagicNorm.","why":"Gives effectively unbounded compute depth at a fixed ~1B parameter budget, but ablations suggest much of the gain comes from the instruction-only objective/distillation rather than recurrence itself.","eq":"z_L, z_H updated for H_cycles x (L_cycles+1) steps; inject z_L + z_H","rv":"2018 Universal Transformer / looped weight-shared layers","pr":[]},{"id":"2026_recurrent_transformer_depth","y":2026,"t":"Recurrent Transformer (effective depth, cheap decode)","k":"ghost","lane":"depth_recur","a":"2604.21215","w":"Endows each layer with recurrent memory so a parameter-matched model reaches greater effective depth with fewer physical layers while keeping standard autoregressive decoding cost.","why":"Shows recurrence can trade depth for width to cut KV-cache footprint and inference latency, evidence that looped/recurrent depth is an efficiency lever, not just a reasoning trick.","eq":"","rv":"2019 Universal Transformer / ACT","pr":[]},{"id":"2026_gemma4","y":2026,"t":"Gemma 4 (interleaved local/global, encoder-free multimodal)","k":"chosen","lane":"attention","a":"2026-04","w":"Open model family interleaving sliding-window local and full global attention, shipping a 26B MoE plus dense variants, and (in the 12B) folding vision/audio directly into the LLM backbone without separate encoders.","why":"Keeps most layers cheap (windowed) while a few global layers carry long-range info, and the encoder-free path simplifies multimodal stacks; window size still bounds direct long-range reach.","eq":"","rv":"2020 sliding-window/local attention (Longformer)","pr":[]},{"id":"2026_mercury2","y":2026,"t":"Mercury 2 (reasoning diffusion LLM)","k":"fork","lane":"diffusion_nar","a":"2026-02","w":"Commercial Transformer-parameterized diffusion LLM that generates by parallel iterative refinement of whole blocks, converging over a few denoising steps instead of left-to-right decoding.","why":"Targets >5x faster generation (~1000 tok/s) for reasoning/agent loops where sequential decoding latency compounds, trading autoregressive simplicity for bidirectional, multi-step refinement.","eq":"","rv":"2021 discrete/masked diffusion for text","pr":[]}];
+
+  // ---------- lanes ----------
+  var LANES=[
+    ['attention','Attention','full · GQA · MLA · sparse'],
+    ['ssm_linear','SSM / Linear','Mamba · RWKV · DeltaNet'],
+    ['moe','MoE','sparse experts'],
+    ['hybrid','Hybrid','attn ⊕ SSM/conv'],
+    ['norm_pe','Norm / PosEnc','RMSNorm · RoPE · scaling'],
+    ['depth_recur','Depth-Recurrence','looped / HRM'],
+    ['diffusion_nar','Diffusion / NAR','non-autoregressive']
+  ];
+  var laneIdx={}; LANES.forEach(function(l,i){laneIdx[l[0]]=i;});
+  var laneOn={}; LANES.forEach(function(l){laneOn[l[0]]=true;});
+  function laneColor(l){ return getComputedStyle(document.documentElement).getPropertyValue('--l-'+l).trim()||'#caa257'; }
+
+  // ---------- layout constants ----------
+  var YEARS=[2023,2024,2025,2026];
+  var LANE_W=210, NODE_W=178, ROWH=120, TOPPAD=72, LEFTPAD=86, SUBROW=128;
+  // within a lane+year, multiple nodes stack vertically in sub-rows.
+  var byId={}; NODES.forEach(function(n){byId[n.id]=n;});
+
+  var board=document.getElementById('board'), wires=document.getElementById('wires'), tip=document.getElementById('tip'), stage=document.getElementById('stage');
+  var SVGNS='http://www.w3.org/2000/svg';
+  function svg(t,a){var e=document.createElementNS(SVGNS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+  function esc(s){return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+  // compute positions: x by lane (only visible lanes), y by year + sub-row within (year,lane)
+  var POS={}; // id -> {x,y}
+  function layout(){
+    var visLanes=LANES.filter(function(l){return laneOn[l[0]];});
+    var laneX={}; visLanes.forEach(function(l,i){ laneX[l[0]]=LEFTPAD+90+i*LANE_W+LANE_W/2; });
+    // year base y: each year gets a tall block sized to the max stack across lanes
+    // first, bucket nodes
+    var bucket={}; // year|lane -> [nodes]
+    NODES.forEach(function(n){ if(!laneOn[n.lane])return; var k=n.y+'|'+n.lane; (bucket[k]=bucket[k]||[]).push(n); });
+    // sort each bucket by arxiv month then title
+    for(var k in bucket){ bucket[k].sort(function(a,b){ return String(a.a).localeCompare(String(b.a)); }); }
+    // year heights
+    var yearBaseY={}, cursor=TOPPAD; var yearRows={};
+    YEARS.forEach(function(y){
+      var maxStack=1;
+      visLanes.forEach(function(l){ var b=bucket[y+'|'+l[0]]; if(b&&b.length>maxStack)maxStack=b.length; });
+      yearRows[y]=maxStack;
+      yearBaseY[y]=cursor;
+      cursor += maxStack*SUBROW + 46;
+    });
+    POS={};
+    NODES.forEach(function(n){ if(!laneOn[n.lane])return;
+      var b=bucket[n.y+'|'+n.lane]; var idx=b.indexOf(n);
+      POS[n.id]={ x:laneX[n.lane], y:yearBaseY[n.y]+idx*SUBROW, lane:n.lane };
+    });
+    return {visLanes:visLanes,laneX:laneX,yearBaseY:yearBaseY,yearRows:yearRows,totalH:cursor+30,
+            totalW:LEFTPAD+90+visLanes.length*LANE_W+30};
+  }
+
+  function build(){
+    var L=layout();
+    board.style.width=L.totalW+'px'; board.style.height=L.totalH+'px';
+    wires.setAttribute('width',L.totalW); wires.setAttribute('height',L.totalH); wires.setAttribute('viewBox','0 0 '+L.totalW+' '+L.totalH);
+    wires.innerHTML='';
+    // clear
+    board.querySelectorAll('.node,.yrtab,.lane-head,.lane-band').forEach(function(e){e.remove();});
+
+    // lane bands + heads
+    L.visLanes.forEach(function(l){
+      var x=L.laneX[l[0]]; var col=laneColor(l[0]);
+      var band=document.createElement('div'); band.className='lane-band';
+      band.style.left=(x-LANE_W/2+8)+'px'; band.style.width=(LANE_W-16)+'px';
+      band.style.height=(L.totalH-60)+'px'; band.style.background=col; board.appendChild(band);
+      var hd=document.createElement('div'); hd.className='lane-head'; hd.style.left=x+'px';
+      hd.innerHTML='<div class="nm" style="color:'+col+'">'+esc(l[1])+'</div><div class="cn">'+esc(l[2])+'</div>';
+      board.appendChild(hd);
+    });
+    // year rails
+    YEARS.forEach(function(y){
+      var t=document.createElement('div'); t.className='yrtab';
+      t.style.top=(L.yearBaseY[y]+ (L.yearRows[y]*SUBROW)/2 - 6)+'px'; t.style.left='0px';
+      t.innerHTML=y+'<small>'+(NODES.filter(function(n){return n.y===y&&laneOn[n.lane];}).length)+' nodes</small>';
+      board.appendChild(t);
+    });
+
+    // edges: within-lane chronological (faint), prereq (gold), revive (teal dashed cross-lane)
+    // chronological: connect consecutive nodes in same lane across the whole board
+    L.visLanes.forEach(function(l){
+      var seq=NODES.filter(function(n){return n.lane===l[0]&&laneOn[n.lane];}).sort(function(a,b){return (a.y-b.y)|| String(a.a).localeCompare(String(b.a));});
+      for(var i=0;i<seq.length-1;i++){ edge(seq[i],seq[i+1],'chrono',laneColor(l[0])); }
+    });
+    // prereq edges (within year, gold)
+    NODES.forEach(function(n){ if(!laneOn[n.lane])return; (n.pr||[]).forEach(function(p){ if(byId[p]&&laneOn[byId[p].lane]) edge(byId[p],n,'prereq'); }); });
+    // revive threads: from a guessed source lane node -> this node (teal). We only have text, so draw a marker dot.
+
+    // nodes
+    NODES.forEach(function(n){ if(!laneOn[n.lane])return;
+      var p=POS[n.id]; if(!p)return;
+      var el=document.createElement('div'); el.className='node '+n.k; el.style.left=(p.x-NODE_W/2)+'px'; el.style.top=p.y+'px';
+      el.style.borderLeftColor=laneColor(n.lane);
+      var tag=n.k==='fork'?'★ fork':n.k==='revive'?'↻ revived':n.k==='ghost'?'niche':'mainline';
+      var rv=n.rv?('<div class="rvf">↻ '+esc(n.rv)+'</div>'):'';
+      el.innerHTML='<span class="tag">'+tag+'</span><div class="ttl">'+esc(n.t)+'</div>'+rv+'<div class="arx">'+esc(n.a)+'</div>';
+      el._n=n; board.appendChild(el);
+    });
+  }
+
+  function edge(a,b,type,col){
+    var pa=POS[a.id], pb=POS[b.id]; if(!pa||!pb)return;
+    var x1=pa.x,y1=pa.y+ (44), x2=pb.x,y2=pb.y; // from card mid-bottom-ish to next card top
+    // route: down then across
+    var d='M '+x1+' '+(pa.y+ 56)+' C '+x1+' '+(pa.y+98)+' '+x2+' '+(pb.y-42)+' '+x2+' '+pb.y;
+    if(type==='chrono'){
+      wires.appendChild(svg('path',{d:d,fill:'none',stroke:col||'#caa257','stroke-width':1.3,'stroke-opacity':.28,'stroke-linecap':'round'}));
+    } else if(type==='prereq'){
+      wires.appendChild(svg('path',{d:d,fill:'none',stroke:'#000','stroke-width':3.4,'stroke-opacity':.35}));
+      wires.appendChild(svg('path',{d:d,fill:'none',stroke:'#caa257','stroke-width':2,'stroke-opacity':.9,'stroke-linecap':'round'}));
+      wires.appendChild(svg('circle',{cx:x2,cy:pb.y,r:3,fill:'#caa257'}));
+    }
+  }
+
+  // ---------- tooltip ----------
+  function ttHTML(n){
+    var laneName=(LANES[laneIdx[n.lane]]||['',n.lane])[1];
+    var h='<div class="tt-tag">'+esc(n.y)+' · '+esc(laneName)+' · '+esc(n.k)+'</div><h5>'+esc(n.t)+'</h5>';
+    if(n.w) h+='<div class="row"><span class="lbl w">what</span>'+esc(n.w)+'</div>';
+    if(n.why) h+='<div class="row"><span class="lbl y">why</span>'+esc(n.why)+'</div>';
+    if(n.rv) h+='<div class="row"><span class="lbl r">revives</span>'+esc(n.rv)+'</div>';
+    if(n.eq) h+='<div class="eq">'+esc(n.eq)+'</div>';
+    var isId=/^\d{4}\.\d{4,5}$/.test(n.a);
+    h+='<span class="arxl">'+(isId?'arXiv:':'')+esc(n.a)+'</span>';
+    return h;
+  }
+  function move(e){var pad=16,w=tip.offsetWidth,hh=tip.offsetHeight,x=e.clientX+18,y=e.clientY+18;
+    if(x+w+pad>innerWidth)x=e.clientX-w-18; if(y+hh+pad>innerHeight)y=innerHeight-hh-pad; if(y<pad)y=pad;
+    tip.style.left=x+'px';tip.style.top=y+'px';}
+  board.addEventListener('mouseover',function(e){var el=e.target.closest('.node');if(!el)return;tip.innerHTML=ttHTML(el._n);tip.classList.add('on');move(e);});
+  board.addEventListener('mousemove',function(e){if(tip.classList.contains('on'))move(e);});
+  board.addEventListener('mouseout',function(e){if(e.target.closest('.node'))tip.classList.remove('on');});
+  board.addEventListener('click',function(e){var el=e.target.closest('.node');if(!el){tip.classList.remove('on');return;}tip.innerHTML=ttHTML(el._n);tip.classList.add('on');var r=el.getBoundingClientRect();move({clientX:r.left+r.width/2,clientY:r.top});});
+
+  // ---------- lane chips ----------
+  var chipbar=document.getElementById('laneChips');
+  LANES.forEach(function(l){
+    var c=document.createElement('div'); c.className='lane-chip'; c.setAttribute('data-lane',l[0]);
+    var cnt=NODES.filter(function(n){return n.lane===l[0];}).length;
+    c.innerHTML='<span class="dot" style="background:'+laneColor(l[0])+'"></span>'+esc(l[1])+' ·'+cnt;
+    c.addEventListener('click',function(){ laneOn[l[0]]=!laneOn[l[0]]; c.classList.toggle('off',!laneOn[l[0]]); build(); });
+    chipbar.appendChild(c);
+  });
+
+  // ---------- init + zoom-in ----------
+  build();
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!reduce && (location.hash==='#zoom' || !location.hash)){
+    board.classList.add('zoomin');
+    setTimeout(function(){ board.classList.remove('zoomin'); }, 900);
+  }
+})();
+</script>
+</body>
+</html>
