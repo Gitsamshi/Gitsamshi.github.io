@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The RL Diff Map · a corpus of moves, not papers · 1992–2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --rock:#14110b; --rock2:#1b1610; --slab:#1f1810; --bone:#e8dcc2; --ink:#d6cbab;
+    --ink2:#cabfa3; --muted:#9a8f78; --faint:#6e6450; --etch:#382e20; --etchhi:#574731;
+    --ochre:#cf9f54; --ochre-bright:#f0cf86; --verified:#5f9c8b; --inferred:#8a7857;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--rock);color:#d6cbab;
+    font-family:"EB Garamond",Georgia,serif;-webkit-font-smoothing:antialiased}
+  body{background:
+    radial-gradient(120% 70% at 50% -8%, #2a20140d 0%, transparent 55%),
+    radial-gradient(140% 120% at 50% 120%, #0c0a06 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"),
+    var(--rock)}
+  a{color:var(--ochre-bright);text-decoration:none}
+  a:hover{color:#fff;text-decoration:underline}
+
+  .strip{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;
+    padding:9px 16px;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.26em;
+    text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--etch);
+    background:linear-gradient(#1b150e,#14110b)}
+  .strip b{color:var(--ochre)} .strip .dot{color:#4a4234}
+
+  header{max-width:1080px;margin:0 auto;padding:36px 24px 6px;text-align:center}
+  h1{font-family:"Cinzel",serif;font-weight:700;margin:0;line-height:1.04;
+    font-size:clamp(26px,5vw,46px);letter-spacing:.04em;color:transparent;
+    background:linear-gradient(#f6e7c0,#cf9f54 58%,#9a7636);-webkit-background-clip:text;background-clip:text}
+  .kicker{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--muted);margin:15px 0 0}
+  .thesis{max-width:860px;margin:16px auto 0;font-size:17px;line-height:1.62;color:#cdc2a8}
+  .thesis b{color:var(--ochre-bright);font-weight:500}
+  .thesis .mono{font-family:"IBM Plex Mono",monospace;font-size:14px;color:var(--verified)}
+
+  /* view tabs */
+  .viewtabs{display:flex;justify-content:center;gap:8px;margin:22px auto 0;flex-wrap:wrap;max-width:900px}
+  .vtab{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.08em;cursor:pointer;
+    border:1px solid var(--etchhi);border-radius:7px;padding:9px 16px;color:var(--muted);
+    background:#0e0b06;transition:all .14s;text-transform:uppercase}
+  .vtab:hover{color:var(--bone);border-color:var(--ochre)}
+  .vtab.on{color:#1a140b;background:linear-gradient(var(--ochre-bright),var(--ochre));border-color:var(--ochre);font-weight:600}
+  .vtab small{display:block;font-size:9.5px;letter-spacing:.04em;text-transform:none;opacity:.7;margin-top:2px}
+
+  /* controls */
+  .controls{position:sticky;top:0;z-index:20;backdrop-filter:blur(8px);
+    background:linear-gradient(#14110bee,#14110bcc);border-bottom:1px solid var(--etch);
+    padding:13px 18px;margin-top:18px}
+  .controls .inner{max-width:1320px;margin:0 auto;display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+  .search{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;
+    background:#0e0b06;border:1px solid var(--etchhi);border-radius:7px;padding:7px 11px}
+  .search input{flex:1;background:none;border:none;outline:none;color:var(--bone);
+    font-family:"EB Garamond",serif;font-size:15px}
+  .search .ic{color:var(--faint)}
+  .chip{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.04em;cursor:pointer;
+    border:1px solid var(--etchhi);border-radius:30px;padding:5px 11px;color:var(--muted);
+    background:#0e0b06;white-space:nowrap;transition:all .12s;display:inline-flex;gap:6px;align-items:center}
+  .chip:hover{color:var(--bone);border-color:var(--ochre)}
+  .chip .gl{font-weight:600;color:var(--cc,var(--ochre))}
+  .chip.on{color:#1a140b;background:var(--ochre);border-color:var(--ochre);font-weight:500}
+  .chip.on .gl{color:#1a140b}
+  .count{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--faint)}
+  .evtoggle{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--muted);
+    display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:1px solid var(--etchhi);
+    border-radius:30px;padding:5px 11px;background:#0e0b06}
+  .evtoggle.on{border-color:var(--verified);color:var(--verified)}
+
+  .wrap{max-width:1320px;margin:8px auto 0;padding:8px 18px 60px}
+  .view{display:none}
+  .view.on{display:block}
+
+  /* ---- OPERATOR VIEW ---- */
+  .section{margin-top:26px}
+  .section h2{font-family:"Cinzel",serif;font-weight:600;font-size:18px;color:#f0e3c8;
+    margin:0 0 3px;display:flex;align-items:center;gap:11px}
+  .section h2 .gl{font-family:"IBM Plex Mono",monospace;font-size:20px;color:var(--cc);width:26px;text-align:center}
+  .section h2 .n{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--faint);font-weight:400}
+  .section .sub{font-size:14px;color:var(--muted);margin:0 0 13px;padding-left:37px;font-style:italic}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:13px}
+
+  .card{background:linear-gradient(#1b150e,#15110b);border:1px solid var(--etch);
+    border-left:3px solid var(--cc,var(--ochre));border-radius:9px;padding:13px 14px 12px;
+    cursor:pointer;transition:transform .12s,border-color .12s,box-shadow .12s;position:relative}
+  .card:hover{transform:translateY(-2px);border-color:var(--etchhi);box-shadow:0 10px 24px #0008}
+  .card .top{display:flex;align-items:baseline;gap:8px}
+  .card .nm{font-family:"Cinzel",serif;font-weight:600;font-size:15px;color:#f1e6cd;line-height:1.15;flex:1}
+  .card .yr{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--cc,var(--ochre));flex:none}
+  .card .lab{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.03em}
+  /* the diff line: base → component → effect */
+  .diff{margin-top:10px;font-family:"IBM Plex Mono",monospace;font-size:11.5px;line-height:1.5}
+  .diff .row{display:flex;gap:7px;margin-top:3px}
+  .diff .k{color:var(--faint);flex:none;width:46px;text-transform:uppercase;font-size:9.5px;letter-spacing:.08em;padding-top:1px}
+  .diff .v{color:var(--ink2);flex:1}
+  .diff .base{color:var(--ochre-bright)}
+  .diff .comp .v{color:#e0d4b6}
+  .diff .arrow{color:var(--cc);font-weight:600}
+  .card .bl{font-size:13.5px;color:#bdb295;margin-top:9px;line-height:1.42;font-style:italic;
+    max-height:0;overflow:hidden;opacity:0;transition:max-height .2s,opacity .2s,margin .2s}
+  .card.open .bl{max-height:200px;opacity:1;margin-top:10px;border-top:1px solid var(--etch);padding-top:9px}
+  .card .badges{display:flex;gap:6px;margin-top:10px;align-items:center;flex-wrap:wrap}
+  .badge{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;
+    border-radius:4px;padding:2px 7px;border:1px solid}
+  .badge.v{color:var(--verified);border-color:#2f5249;background:#13201c}
+  .badge.i{color:var(--inferred);border-color:#3a3122;background:#1a160e}
+  .badge.sub{color:var(--muted);border-color:var(--etchhi);background:#0e0b06}
+  .card .src{display:inline-flex;align-items:center;gap:5px;margin-left:auto;
+    font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--ochre-bright)}
+  .card .src:hover{color:#fff}
+  .hidden{display:none!important}
+
+  /* ---- DAG VIEW ---- */
+  .dagwrap{margin-top:18px;border:1px solid var(--etch);border-radius:10px;background:#100d08;
+    overflow-x:auto;padding:0}
+  .dagscroll{position:relative}
+  svg.dag{display:block}
+  .dag .edge{stroke:#5a4a30;stroke-width:1.4;fill:none;opacity:.55}
+  .dag .edge.hl{stroke:var(--ochre-bright);stroke-width:2.2;opacity:1}
+  .dnode{cursor:pointer}
+  .dnode rect{rx:6;transition:all .12s}
+  .dnode text.t{font-family:"Cinzel",serif;font-weight:600;fill:#f1e6cd;font-size:11px}
+  .dnode text.s{font-family:"IBM Plex Mono",monospace;fill:var(--faint);font-size:8.5px}
+  .dnode.star rect{filter:drop-shadow(0 0 7px rgba(240,207,134,.55))}
+  .dnode.dim{opacity:.25}
+  .lanelab{font-family:"IBM Plex Mono",monospace;font-size:10px;fill:var(--muted);letter-spacing:.12em;text-transform:uppercase}
+  .yrlab{font-family:"Cinzel",serif;fill:var(--ochre);font-size:13px;font-weight:700}
+  .lanesep{stroke:#241d12;stroke-width:1}
+
+  /* ---- MATRIX VIEW ---- */
+  .matnote{font-size:14px;color:var(--muted);margin:16px 0 14px;line-height:1.55;max-width:880px}
+  .matnote b{color:var(--ochre-bright);font-weight:500}
+  .mtable{overflow-x:auto;border:1px solid var(--etch);border-radius:10px;background:#100d08}
+  table.matrix{border-collapse:collapse;width:100%;min-width:760px}
+  table.matrix th,table.matrix td{border:1px solid #241d12;padding:0;text-align:center;vertical-align:middle}
+  table.matrix thead th{background:#1a150d;color:var(--ink2);font-family:"IBM Plex Mono",monospace;
+    font-size:10.5px;letter-spacing:.05em;padding:9px 6px;text-transform:uppercase;font-weight:500}
+  table.matrix tbody th{background:#1a150d;text-align:left;padding:8px 11px;font-family:"IBM Plex Mono",monospace;
+    font-size:11px;color:var(--ink2);white-space:nowrap}
+  table.matrix tbody th .gl{color:var(--cc);font-size:14px;margin-right:6px;font-weight:600}
+  .cell{height:54px;cursor:pointer;position:relative;transition:background .12s}
+  .cell .cnt{font-family:"IBM Plex Mono",monospace;font-size:15px;color:#f1e6cd}
+  .cell .vc{font-family:"IBM Plex Mono",monospace;font-size:9px;color:var(--verified);display:block;margin-top:1px}
+  .cell.has:hover{background:#241c10}
+  .cell.empty{background:repeating-linear-gradient(45deg,#120f09 0 6px,#161109 6px 12px)}
+  .cell.empty .hyp{font-family:"IBM Plex Mono",monospace;font-size:9px;color:#7a5a3a;letter-spacing:.05em}
+  .cell.empty:hover{background:#2a1d10}
+  .cell.demo{box-shadow:inset 0 0 0 2px var(--ochre-bright)}
+  .cell.sel{box-shadow:inset 0 0 0 2px var(--verified)}
+  .matlist{margin-top:16px}
+
+  .empty-msg{text-align:center;color:var(--faint);padding:50px;font-style:italic;display:none}
+
+  footer{max-width:1000px;margin:10px auto 0;padding:22px 24px 40px;text-align:center;color:var(--muted);font-size:14px;line-height:1.6}
+  footer .mono{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.05em;color:var(--faint)}
+  footer b{color:var(--ochre)}
+  @media(max-width:600px){ .grid{grid-template-columns:1fr} .thesis{font-size:15.5px} }
+</style>
+</head>
+<body>
+
+<div class="strip">
+  <span>RL for LLMs</span><span class="dot">·</span><b>The Diff Map</b>
+  <span class="dot">·</span><span>a corpus of moves · 1992 → 2026</span>
+</div>
+
+<header>
+  <h1>THE RL DIFF MAP</h1>
+  <p class="kicker">the atomic unit is the diff, not the paper</p>
+  <p class="thesis">A paper is <b>one substrate + one operator</b>: <span class="mono">on X, swap component C for C′, get effect E</span>. The sibling <a href="rl-paper-map.html">paper map</a> indexes by <i>what a paper is about</i> — so retrieval returns lookalikes and you can only interpolate. This map indexes by <b>which move it made</b>. Group by operator and a move becomes <b>transferable</b>: take the abstract form of RNN→Transformer (kill the serial dependency, go fully parallel) and ask what it does on another substrate. The hard, dirty step is <b>diff against what</b> — pick the wrong baseline and the diff is noise — so baselines are first-class and confidence is labelled.</p>
+</header>
+
+<div class="viewtabs">
+  <div class="vtab on" data-view="op">By operator <small>which move did it make</small></div>
+  <div class="vtab" data-view="dag">Diff lineage <small>predecessor → successor</small></div>
+  <div class="vtab" data-view="matrix">Transfer matrix <small>operator × substrate · empty = hypothesis</small></div>
+</div>
+
+<div class="controls">
+  <div class="inner">
+    <div class="search"><span class="ic">⌕</span><input id="q" placeholder="search move, paper, lab, component…  (e.g. critic, verifier, async, sequence-level)"></div>
+    <span class="chip on" data-op="all">All <span class="count" id="cAll"></span></span>
+    <span id="chips"></span>
+    <span class="evtoggle" id="evToggle" title="show only hand-verified backbone diffs">◆ verified only</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="view on" id="view-op"><div id="opmap"></div><div class="empty-msg" id="emptyOp">no diffs match that filter.</div></div>
+  <div class="view" id="view-dag">
+    <p class="matnote">The hand-verified backbone only — every edge is a checked predecessor relation. Hover a node to light its lineage. Lanes are <b>substrates</b>; left-to-right is time. ★ marks a fork that spawned a family.</p>
+    <div class="dagwrap"><div class="dagscroll" id="dagscroll"></div></div>
+  </div>
+  <div class="view" id="view-matrix">
+    <p class="matnote">Every diff placed on its <b>operator</b> (row) × <b>substrate</b> (column). A populated cell is a move that's been tried; click it to read the diffs. A <b>hatched empty cell is an open hypothesis</b> — an operator nobody has yet pointed at that substrate. The gold-ringed cell is the worked example: <b>parallelize × infra</b> (async rollout) is the same abstract move as RNN→Transformer on the architecture side — proof a move can travel.</p>
+    <div class="mtable" id="mtable"></div>
+    <div class="matlist" id="matlist"></div>
+  </div>
+</div>
+
+<footer>
+  <p class="mono">remove · replace · granularity · revive · reframe · selfref · debias · regularize · parallelize</p>
+  <p>companions: <a href="rl-paper-map.html">the paper map (by theme)</a> · <a href="rl-focus-tree.html">the RL focus tree</a> · <a href="architecture-focus-tree.html">the architecture focus tree</a></p>
+  <p style="font-size:12px;color:var(--faint)">diff records are judgment, not exhaustive scholarship · the <b>verified backbone</b> has hand-checked predecessors and operators · the <b>inferred</b> long tail was operator-classified by heuristic from titles/abstracts and is best-effort — treat its baselines as provisional and double-check before citing.</p>
+</footer>
+
+<script>
+/* ============================================================
+   THE OPERATOR VOCABULARY — small, closed, typed.
+   A "move" is one of these applied to one substrate.
+   ============================================================ */
+const OPERATORS = [
+ {key:"remove",     glyph:"−", label:"remove",      color:"#cf6f4a", sub:"delete a component the predecessor relied on"},
+ {key:"replace",    glyph:"⇄", label:"replace",     color:"#cf9f54", sub:"swap component C for a different C′"},
+ {key:"granularity",glyph:"⊞", label:"granularity", color:"#d98b4a", sub:"change the unit the update acts on (token→seq→turn, outcome→step)"},
+ {key:"revive",     glyph:"↺", label:"revive",      color:"#5f9c8b", sub:"bring back a component an earlier move pruned"},
+ {key:"reframe",    glyph:"≡", label:"reframe",     color:"#a88bd0", sub:"restate the objective by an identity — same target, new form"},
+ {key:"selfref",    glyph:"⟲", label:"self-ref",    color:"#6a9bb0", sub:"the model supplies its own reward / label / judge"},
+ {key:"debias",     glyph:"⊿", label:"debias",      color:"#93a06a", sub:"remove a systematic bias from the estimator itself"},
+ {key:"regularize", glyph:"⊜", label:"regularize",  color:"#c0512f", sub:"add a leash on the dynamics — KL, trust region, entropy band, clip"},
+ {key:"parallelize",glyph:"∥", label:"parallelize", color:"#5fa8c0", sub:"cut a serial dependency — the move attention made on architecture"}
+];
+
+/* substrates: the X a move is performed on */
+const SUBSTRATES = [
+ {key:"optimizer", label:"policy optimizer"},
+ {key:"pipeline",  label:"rlhf pipeline"},
+ {key:"reward",    label:"reward signal"},
+ {key:"rollout",   label:"agent rollout"},
+ {key:"infra",     label:"training infra"},
+ {key:"prefloss",  label:"preference loss"}
+];
+
+/* ============================================================
+   VERIFIED BACKBONE — hand-checked predecessor + operator.
+   baseId points at the predecessor node so the DAG can wire it.
+   ============================================================ */
+const VD = [
+ {id:"reinforce", nm:"REINFORCE", yr:1992, lab:"Williams", url:"https://doi.org/10.1007/BF00992696",
+  sub:"optimizer", base:"—", baseId:null, op:"reframe", comp:"the score-function estimator",
+  eff:"the taproot: optimize a policy by sampling actions and reweighting by reward", star:true},
+
+ {id:"trpo", nm:"TRPO", yr:2015, lab:"Schulman et al.", url:"https://arxiv.org/abs/1502.05477",
+  sub:"optimizer", base:"REINFORCE", baseId:"reinforce", op:"regularize", comp:"step size → hard KL trust region",
+  eff:"monotonic improvement by bounding each step inside a KL ball"},
+
+ {id:"gae", nm:"GAE", yr:2015, lab:"Schulman et al.", url:"https://arxiv.org/abs/1506.02438",
+  sub:"optimizer", base:"REINFORCE", baseId:"reinforce", op:"replace", comp:"raw return → TD-bootstrapped critic baseline",
+  eff:"trade a little bias for much lower variance — the critic GRPO later drops"},
+
+ {id:"ppo", nm:"PPO", yr:2017, lab:"Schulman et al. (OpenAI)", url:"https://arxiv.org/abs/1707.06347",
+  sub:"optimizer", base:"TRPO", baseId:"trpo", op:"replace", comp:"hard KL trust region → clipped importance ratio",
+  eff:"a cheap first-order proxy for the trust region; the workhorse everything is measured against", star:true},
+
+ {id:"dprefs", nm:"Deep RL from Human Preferences", yr:2017, lab:"Christiano et al.", url:"https://arxiv.org/abs/1706.03741",
+  sub:"reward", base:"hand-coded env reward", baseId:null, op:"replace", comp:"environment reward → reward learned from pairwise human comparisons",
+  eff:"the preference-reward substrate — idle until LLMs gave it a killer app"},
+
+ {id:"instructgpt", nm:"InstructGPT / RLHF", yr:2022, lab:"Ouyang et al. (OpenAI)", url:"https://arxiv.org/abs/2203.02155",
+  sub:"pipeline", base:"PPO + preference reward", baseId:"ppo", op:"replace", comp:"assemble SFT → reward model → PPO with a KL leash",
+  eff:"the alignment bet: optimize against a learned reward, tethered to SFT by KL", star:true},
+
+ {id:"cai", nm:"Constitutional AI / RLAIF", yr:2022, lab:"Bai et al. (Anthropic)", url:"https://arxiv.org/abs/2212.08073",
+  sub:"reward", base:"InstructGPT / RLHF", baseId:"instructgpt", op:"replace", comp:"human labels → AI feedback against a written constitution",
+  eff:"moves the human from labeler to law-giver; ancestor of LLM-as-judge rewards"},
+
+ {id:"rmoveropt", nm:"RM over-optimization scaling laws", yr:2022, lab:"Gao et al. (OpenAI)", url:"https://arxiv.org/abs/2210.10760",
+  sub:"reward", base:"InstructGPT / RLHF", baseId:"instructgpt", op:"regularize", comp:"quantifies how hard you may push the proxy",
+  eff:"Goodhart made law: over-optimizing a learned RM turns real quality over — the empirical case for the KL penalty"},
+
+ {id:"dpo", nm:"DPO", yr:2023, lab:"Rafailov et al. (Stanford)", url:"https://arxiv.org/abs/2305.18290",
+  sub:"prefloss", base:"InstructGPT / RLHF", baseId:"instructgpt", op:"reframe", comp:"RM + RL loop → one classification loss",
+  eff:"the optimal RLHF policy is itself a reward, so you can skip the RM and the loop entirely — the defining fork", star:true},
+
+ {id:"ipo", nm:"IPO", yr:2023, lab:"Azar et al. (DeepMind)", url:"https://arxiv.org/abs/2310.12036",
+  sub:"prefloss", base:"DPO", baseId:"dpo", op:"regularize", comp:"add a regularizer against deterministic-preference overfit",
+  eff:"stops DPO collapsing on near-certain pairs"},
+
+ {id:"kto", nm:"KTO", yr:2024, lab:"Ethayarajh et al.", url:"https://arxiv.org/abs/2402.01306",
+  sub:"prefloss", base:"DPO", baseId:"dpo", op:"reframe", comp:"paired winner/loser → prospect-theory loss on unpaired good/bad",
+  eff:"learns from cheap thumbs-up/down, no matched pairs needed"},
+
+ {id:"orpo", nm:"ORPO", yr:2024, lab:"Hong et al.", url:"https://arxiv.org/abs/2403.07691",
+  sub:"prefloss", base:"DPO", baseId:"dpo", op:"remove", comp:"drop the frozen reference model; fold odds-ratio into SFT",
+  eff:"one loss for preference + supervised stage, no reference"},
+
+ {id:"simpo", nm:"SimPO", yr:2024, lab:"Meng et al. (Princeton)", url:"https://arxiv.org/abs/2405.14734",
+  sub:"prefloss", base:"DPO", baseId:"dpo", op:"remove", comp:"drop the reference model; average log-prob as implicit reward",
+  eff:"reference-free and length-normalized — simpler than DPO"},
+
+ {id:"selfreward", nm:"Self-Rewarding LMs", yr:2024, lab:"Yuan et al. (Meta)", url:"https://arxiv.org/abs/2401.10020",
+  sub:"prefloss", base:"DPO", baseId:"dpo", op:"selfref", comp:"external preferences → the model judges its own answers",
+  eff:"generates its own prompts, judges itself, DPO-trains on them — bootstrapping past fixed human data"},
+
+ {id:"raft", nm:"RAFT", yr:2023, lab:"Dong et al.", url:"https://arxiv.org/abs/2304.06767",
+  sub:"pipeline", base:"InstructGPT / RLHF", baseId:"instructgpt", op:"remove", comp:"drop the whole RL machinery → best-of-N then SFT",
+  eff:"sample, filter by reward, fine-tune; dismissed as too simple, later a reasoning-data backbone"},
+
+ {id:"rest", nm:"ReST", yr:2023, lab:"Gulcehre et al. (DeepMind)", url:"https://arxiv.org/abs/2308.08998",
+  sub:"pipeline", base:"InstructGPT / RLHF", baseId:"instructgpt", op:"replace", comp:"online PPO → offline grow/improve loops on self-generated data",
+  eff:"a stable offline alternative to online PPO"},
+
+ {id:"restem", nm:"ReST-EM", yr:2023, lab:"Singh et al. (DeepMind)", url:"https://arxiv.org/abs/2312.06585",
+  sub:"pipeline", base:"ReST", baseId:"rest", op:"reframe", comp:"recast self-training as expectation-maximization on verifier-filtered data",
+  eff:"showed verifier-filtered self-generated data scales reasoning — a direct RLVR precursor"},
+
+ {id:"prm", nm:"Let's Verify Step by Step (PRM)", yr:2023, lab:"Lightman et al. (OpenAI)", url:"https://arxiv.org/abs/2305.20050",
+  sub:"reward", base:"outcome reward model", baseId:null, op:"granularity", comp:"reward the final answer → reward each reasoning step",
+  eff:"a denser, less-hackable signal; the data was released", star:true},
+
+ {id:"mathshepherd", nm:"Math-Shepherd", yr:2023, lab:"Wang et al.", url:"https://arxiv.org/abs/2312.08935",
+  sub:"reward", base:"Let's Verify (PRM)", baseId:"prm", op:"selfref", comp:"human step labels → MCTS rollouts auto-label step value",
+  eff:"removes the cost barrier to process supervision"},
+
+ {id:"grpo", nm:"DeepSeekMath / GRPO", yr:2024, lab:"Shao et al. (DeepSeek)", url:"https://arxiv.org/abs/2402.03300",
+  sub:"optimizer", base:"PPO", baseId:"ppo", op:"remove", comp:"drop the critic; group-mean reward as the baseline",
+  eff:"REINFORCE-with-a-baseline reborn, halving compute vs PPO — the fork the whole 2025 zoo descends from", star:true},
+
+ {id:"rlvr", nm:"Tülu 3 / RLVR", yr:2024, lab:"Lambert et al. (Ai2)", url:"https://arxiv.org/abs/2411.15124",
+  sub:"reward", base:"InstructGPT / RLHF", baseId:"instructgpt", op:"replace", comp:"learned reward model → a deterministic verifier",
+  eff:"reward = 1 if the answer checks out, else 0; generalizes verifiable reward into a full open recipe", star:true},
+
+ {id:"remax", nm:"ReMax", yr:2023, lab:"Li et al.", url:"https://arxiv.org/abs/2310.10505",
+  sub:"optimizer", base:"PPO", baseId:"ppo", op:"remove", comp:"drop the value network; single greedy rollout as baseline",
+  eff:"cheap variance reduction, critic-free before GRPO made it standard"},
+
+ {id:"rloo", nm:"RLOO / Back to Basics", yr:2024, lab:"Ahmadian et al. (Cohere)", url:"https://arxiv.org/abs/2402.14740",
+  sub:"optimizer", base:"PPO", baseId:"ppo", op:"remove", comp:"drop critic + clipping; leave-one-out REINFORCE baseline",
+  eff:"argues a plain LOO baseline is enough for LLMs — ≈ GRPO without the normalization"},
+
+ {id:"reinforcepp", nm:"REINFORCE++", yr:2025, lab:"Hu", url:"https://arxiv.org/abs/2501.03262",
+  sub:"optimizer", base:"GRPO", baseId:"grpo", op:"regularize", comp:"port PPO-style stabilizers onto a global-baseline REINFORCE",
+  eff:"aims for simpler, more robust critic-free training"},
+
+ {id:"dapo-clip", nm:"DAPO · Clip-Higher", yr:2025, lab:"Yu et al. (ByteDance·Tsinghua)", url:"https://arxiv.org/abs/2503.14476",
+  sub:"optimizer", base:"GRPO", baseId:"grpo", op:"regularize", comp:"raise the upper clip bound to keep entropy alive",
+  eff:"one of four open-sourced fixes for long-CoT GRPO", star:true},
+ {id:"dapo-dyn", nm:"DAPO · Dynamic Sampling", yr:2025, lab:"Yu et al. (ByteDance·Tsinghua)", url:"https://arxiv.org/abs/2503.14476",
+  sub:"optimizer", base:"GRPO", baseId:"grpo", op:"debias", comp:"drop prompts whose group is all-right/all-wrong (zero gradient)",
+  eff:"keeps every batch informative"},
+ {id:"dapo-tok", nm:"DAPO · Token-level Loss", yr:2025, lab:"Yu et al. (ByteDance·Tsinghua)", url:"https://arxiv.org/abs/2503.14476",
+  sub:"optimizer", base:"GRPO", baseId:"grpo", op:"granularity", comp:"sample-level mean → token-level loss",
+  eff:"stops long correct answers being under-weighted"},
+ {id:"dapo-overlong", nm:"DAPO · Overlong Shaping", yr:2025, lab:"Yu et al. (ByteDance·Tsinghua)", url:"https://arxiv.org/abs/2503.14476",
+  sub:"optimizer", base:"GRPO", baseId:"grpo", op:"regularize", comp:"soft length penalty on truncated generations",
+  eff:"matches R1-Zero-32B in half the training steps"},
+
+ {id:"drgrpo", nm:"Dr.GRPO / Understanding R1-Zero", yr:2025, lab:"Liu et al. (Sea AI Lab)", url:"https://arxiv.org/abs/2503.20783",
+  sub:"optimizer", base:"GRPO", baseId:"grpo", op:"debias", comp:"strip the length & std normalizations",
+  eff:"those terms inflate response length (esp. for wrong answers); removing them is an unbiased, token-efficient update"},
+
+ {id:"vapo", nm:"VAPO", yr:2025, lab:"ByteDance", url:"https://arxiv.org/abs/2504.05118",
+  sub:"optimizer", base:"GRPO / DAPO", baseId:"grpo", op:"revive", comp:"bring the critic back — value-augmented PPO",
+  eff:"a well-fit value model beats value-free on long-horizon reasoning; the pruned branch returns", star:true},
+
+ {id:"gspo", nm:"GSPO", yr:2025, lab:"Zheng et al. (Qwen)", url:"https://arxiv.org/abs/2507.18071",
+  sub:"optimizer", base:"GRPO", baseId:"grpo", op:"granularity", comp:"token-level importance ratio → sequence-level",
+  eff:"matches the ratio to sequence-level rewards; key to training Qwen3's MoE with RL", star:true},
+
+ {id:"gmpo", nm:"GMPO", yr:2025, lab:"—", url:"https://arxiv.org/abs/2507.20673",
+  sub:"optimizer", base:"GRPO", baseId:"grpo", op:"replace", comp:"arithmetic mean of token ratios → geometric mean",
+  eff:"a more stable surrogate, narrower clip, lower variance"},
+
+ {id:"cispo", nm:"CISPO / MiniMax-M1", yr:2025, lab:"MiniMax", url:"https://arxiv.org/abs/2506.13585",
+  sub:"optimizer", base:"GRPO", baseId:"grpo", op:"regularize", comp:"clip the IS ratio only, leave the gradient magnitude",
+  eff:"efficient long-CoT RL behind MiniMax-M1's hybrid-attention model"},
+
+ {id:"groffpolicy", nm:"Group-Relative REINFORCE is secretly off-policy", yr:2025, lab:"—", url:"https://arxiv.org/abs/2509.24203",
+  sub:"optimizer", base:"GRPO family", baseId:"grpo", op:"reframe", comp:"recast the whole GRPO zoo as one off-policy REINFORCE estimator",
+  eff:"a lens for telling real differences from folklore"},
+
+ {id:"o1", nm:"OpenAI o1", yr:2024, lab:"OpenAI", url:"https://openai.com/index/learning-to-reason-with-llms/",
+  sub:"pipeline", base:"RLHF", baseId:"instructgpt", op:"reframe", comp:"align-for-taste → RL on chain-of-thought + test-time compute",
+  eff:"training a model to think longer and paying compute at inference bends the accuracy curve", star:true},
+
+ {id:"r1", nm:"DeepSeek-R1 / R1-Zero", yr:2025, lab:"DeepSeek", url:"https://arxiv.org/abs/2501.12948",
+  sub:"pipeline", base:"GRPO + RLVR", baseId:"grpo", op:"remove", comp:"drop the SFT cold-start — pure RL straight from base",
+  eff:"reasoning emerges from GRPO + verifiable rewards alone; the open report that detonated the field", star:true},
+
+ {id:"kimi15", nm:"Kimi 1.5", yr:2025, lab:"Moonshot", url:"https://arxiv.org/abs/2501.12599",
+  sub:"pipeline", base:"OpenAI o1", baseId:"o1", op:"granularity", comp:"scale RL jointly with context length",
+  eff:"an o1-class recipe emphasizing long context and length control"},
+
+ {id:"scalerl", nm:"The Art of Scaling RL Compute (ScaleRL)", yr:2025, lab:"Meta · UT Austin", url:"https://arxiv.org/abs/2510.13786",
+  sub:"optimizer", base:"GRPO family", baseId:"grpo", op:"reframe", comp:"recast design choices as points on a sigmoid compute curve",
+  eff:"400k+ GPU-hours show normalization/off-policy choices shift efficiency, not the asymptote — the alpha is in model+data+reward"},
+
+ {id:"verl", nm:"veRL / HybridFlow", yr:2024, lab:"Sheng et al. (ByteDance)", url:"https://github.com/verl-project/verl",
+  sub:"infra", base:"monolithic RLHF trainer", baseId:null, op:"parallelize", comp:"a hybrid controller separating training (FSDP/Megatron) from async rollout (vLLM/SGLang)",
+  eff:"the dominant open RL post-training framework; what most 2025 RL papers run on", star:true},
+
+ {id:"areal", nm:"AReaL", yr:2025, lab:"Ant / Tsinghua", url:"https://arxiv.org/abs/2505.24298",
+  sub:"infra", base:"synchronous PPO loop", baseId:"verl", op:"parallelize", comp:"couple generation↔training → fully decouple them (staleness-enhanced PPO)",
+  eff:"~2.8× faster; the same kill-the-serial-dependency move attention made on architecture", star:true}
+];
+
+/* ============================================================
+   INFERRED LONG TAIL — operator-classified by heuristic from
+   the title/abstract. baselines are provisional; NOT in the DAG.
+   th = original paper-map theme (used to guess the substrate).
+   ============================================================ */
+const INF = [
+ {nm:"TOPR", yr:2025, lab:"Le Roux et al. (MSR)", th:"opt", url:"https://arxiv.org/abs/2503.14286", bl:"Tapered off-policy REINFORCE: asymmetric importance sampling, fully offline, no KL.", base:"REINFORCE"},
+ {nm:"T-PPO", yr:2025, lab:"Tencent", th:"opt", url:"https://arxiv.org/abs/2506.15050", bl:"Truncated PPO with extended GAE — progressive updates on partial generations, ~60% faster.", base:"PPO"},
+ {nm:"VC-PPO", yr:2025, lab:"ByteDance Seed", th:"opt", url:"https://arxiv.org/abs/2503.01491", bl:"Diagnoses long-CoT PPO collapse; value-pretraining + decoupled GAE fix it.", base:"PPO"},
+ {nm:"Lite-PPO", yr:2025, lab:"Alibaba ROLL", th:"opt", url:"https://arxiv.org/abs/2508.08221", bl:"Minimalist advantage-norm + token-level loss beats fancier critic-free recipes.", base:"GRPO"},
+ {nm:"VCRL", yr:2025, lab:"Jiang/Feng", th:"opt", url:"https://arxiv.org/abs/2509.19803", bl:"Group-reward variance as a curriculum difficulty signal + replay bank.", base:"GRPO"},
+ {nm:"RiskPO", yr:2025, lab:"RiskPO authors", th:"opt", url:"https://arxiv.org/abs/2510.00911", bl:"CVaR-style risk objective amplifies hard instances, prevents entropy collapse.", base:"GRPO"},
+ {nm:"ASPO", yr:2025, lab:"ASPO authors", th:"opt", url:"https://arxiv.org/abs/2510.06062", bl:"Flips importance ratios of positive-advantage tokens; soft dual-clipping.", base:"GRPO"},
+ {nm:"CE-GPPO", yr:2025, lab:"Netease", th:"opt", url:"https://arxiv.org/abs/2509.20712", bl:"Gradient-preserving clipping: bounded gradients from out-of-clip tokens for entropy control.", base:"GRPO"},
+ {nm:"λ-GRPO", yr:2025, lab:"λ-GRPO authors", th:"opt", url:"https://arxiv.org/abs/2510.06870", bl:"Learnable token-preference λ unifies length/token-normalization variants.", base:"GRPO"},
+ {nm:"GTPO / GRPO-S", yr:2025, lab:"GTPO authors", th:"opt", url:"https://arxiv.org/abs/2508.04349", bl:"Entropy-weighted reward shaping at token (GTPO) and sequence (GRPO-S) level.", base:"GRPO"},
+ {nm:"QAE", yr:2025, lab:"QAE authors", th:"opt", url:"https://arxiv.org/abs/2509.22611", bl:"Quantile advantage baseline with proven two-sided entropy safety.", base:"GRPO"},
+ {nm:"EPO", yr:2025, lab:"Xu et al.", th:"opt", url:"https://arxiv.org/abs/2509.22576", bl:"Multi-turn entropy regularization with phase-based weighting for agentic exploration.", base:"GRPO"},
+ {nm:"ESPO", yr:2025, lab:"ESPO authors", th:"opt", url:"https://arxiv.org/abs/2512.00499", bl:"Entropy-grouped importance sampling + entropy-adaptive clipping by model uncertainty.", base:"GRPO"},
+ {nm:"AEnt", yr:2025, lab:"Shen et al. (IBM)", th:"opt", url:"https://arxiv.org/abs/2509.03493", bl:"Adaptive clamped entropy bonus auto-tunes its coefficient.", base:"GRPO"},
+ {nm:"AdaptEnt", yr:2025, lab:"AdaptEnt authors", th:"opt", url:"https://arxiv.org/abs/2510.10959", bl:"Adaptive entropy-coefficient controller preventing collapse and explosion.", base:"GRPO"},
+ {nm:"EntroPIC", yr:2025, lab:"EntroPIC authors", th:"opt", url:"https://arxiv.org/abs/2511.15248", bl:"PI-controller stabilizes entropy for long-horizon training.", base:"GRPO"},
+ {nm:"SSPO", yr:2026, lab:"SSPO authors", th:"opt", url:"https://arxiv.org/abs/2602.19327", bl:"Soft sequence-level weighting with token attenuation; no hard clipping.", base:"GSPO"},
+ {nm:"VESPO", yr:2026, lab:"VESPO authors", th:"opt", url:"https://arxiv.org/abs/2602.10693", bl:"Variational sequence-IS reshaping with variance bound; stable at 64× staleness.", base:"GSPO"},
+ {nm:"TBA", yr:2025, lab:"Mila / Bengio et al.", th:"opt", url:"https://arxiv.org/abs/2503.18929", bl:"Trajectory Balance with Asynchrony — off-policy GFlowNet fine-tuning, decoupled rollout.", base:"GRPO"},
+ {nm:"Turn-IS", yr:2025, lab:"Turn-IS authors", th:"opt", url:"https://arxiv.org/abs/2511.20718", bl:"Turn-level importance sampling + clipping-triggered normalization for agentic off-policy.", base:"GRPO"},
+ {nm:"StableRL", yr:2025, lab:"StableRL authors", th:"opt", url:"https://arxiv.org/abs/2512.01374", bl:"Sequence-reward view of the token objective; IS correction + routing replay for MoE.", base:"GSPO"},
+ {nm:"Clip-Asymmetry", yr:2025, lab:"independent", th:"opt", url:"https://arxiv.org/abs/2509.26114", bl:"Clip-low raises entropy, clip-high lowers it — asymmetric clipping as an entropy dial.", base:"DAPO"},
+ {nm:"AEPO (entropy)", yr:2025, lab:"Arbitrary Entropy PO", th:"opt", url:"https://arxiv.org/abs/2510.08141", bl:"Keeps entropy in a stable target band to avoid collapse/explosion.", base:"GRPO"},
+
+ {nm:"OmegaPRM", yr:2024, lab:"Google DeepMind", th:"reward", url:"https://arxiv.org/abs/2406.06592", bl:"Divide-and-conquer MCTS auto-labels 1.5M process annotations — no human labels.", base:"Math-Shepherd"},
+ {nm:"Generative Reward Models", yr:2024, lab:"SynthLabs", th:"reward", url:"https://arxiv.org/abs/2410.12832", bl:"CoT generative RM unifying RLHF and RLAIF preference signals.", base:"reward model"},
+ {nm:"ThinkPRM", yr:2025, lab:"Khalifa et al.", th:"reward", url:"https://arxiv.org/abs/2504.16828", bl:"Generative long-CoT PRM from ~1K verification CoTs beats discriminative PRMs OOD.", base:"PRM"},
+ {nm:"R-PRM", yr:2025, lab:"R-PRM authors", th:"reward", url:"https://arxiv.org/abs/2503.21295", bl:"Bootstraps a reasoning-driven PRM from limited labels via self-generated critiques.", base:"PRM"},
+ {nm:"RRM", yr:2025, lab:"Microsoft Research", th:"reward", url:"https://arxiv.org/abs/2505.14674", bl:"Reward Reasoning Model reasons before scoring; adaptive test-time compute.", base:"reward model"},
+ {nm:"RM-R1", yr:2025, lab:"UIUC", th:"reward", url:"https://arxiv.org/abs/2505.02387", bl:"Reasoning reward model generates rubrics/solutions before judging.", base:"reward model"},
+ {nm:"RL-Tango", yr:2025, lab:"Zha et al.", th:"reward", url:"https://arxiv.org/abs/2505.15034", bl:"Co-trains generator + generative process verifier via RL on outcome rewards only.", base:"GenRM"},
+ {nm:"J1", yr:2025, lab:"Meta", th:"reward", url:"https://arxiv.org/abs/2505.10320", bl:"RL recasts judging as verifiable-reward to train thinking LLM-judges.", base:"GenRM"},
+ {nm:"J4R", yr:2025, lab:"J4R authors", th:"reward", url:"https://arxiv.org/abs/2505.13346", bl:"Position-bias-robust reasoning judge via equivalent-initial-state GRPO.", base:"GenRM"},
+ {nm:"Critic-RM", yr:2024, lab:"Meta", th:"reward", url:"https://arxiv.org/abs/2411.16646", bl:"Joint reward prediction + self-generated critiques lifts RM accuracy.", base:"reward model"},
+ {nm:"TIR-Judge", yr:2025, lab:"TIR-Judge authors", th:"reward", url:"https://arxiv.org/abs/2510.23038", bl:"Tool-integrated RL trains an 8B code-executing judge.", base:"GenRM"},
+ {nm:"Skywork-Reward", yr:2024, lab:"Skywork", th:"reward", url:"https://arxiv.org/abs/2410.18451", bl:"Bag-of-tricks data curation yields strong open Bradley-Terry reward models.", base:"reward model"},
+ {nm:"Skywork-Reward-V2", yr:2025, lab:"Skywork", th:"reward", url:"https://arxiv.org/abs/2507.01352", bl:"40M-pair human-AI curated preference data → SOTA open reward models.", base:"reward model"},
+ {nm:"Rubrics as Rewards", yr:2025, lab:"Scale AI", th:"reward", url:"https://arxiv.org/abs/2507.17746", bl:"Weighted checklist rubrics scored by a judge bring GRPO to non-verifiable domains.", base:"verifier"},
+ {nm:"OpenRubrics", yr:2025, lab:"OpenRubrics authors", th:"reward", url:"https://arxiv.org/abs/2510.07743", bl:"Large-scale synthetic (prompt, rubric) generation for rubric-based reward models.", base:"verifier"},
+ {nm:"Rubric-Scaffolded RL", yr:2025, lab:"authors", th:"reward", url:"https://arxiv.org/abs/2508.16949", bl:"Checklist rubrics as both rollout scaffolds and reward references.", base:"verifier"},
+ {nm:"Libra", yr:2025, lab:"Libra authors", th:"reward", url:"https://arxiv.org/abs/2507.21645", bl:"Reasoning-augmented reward modeling with a paired benchmark.", base:"reward model"},
+ {nm:"Process Self-Rewarding", yr:2025, lab:"Nanjing/MSRA", th:"reward", url:"https://arxiv.org/abs/2503.03746", bl:"Step-wise LLM-judge builds step preference pairs for self-rewarding math.", base:"PRM"},
+ {nm:"Energy-Based RM", yr:2025, lab:"EnergyRM authors", th:"reward", url:"https://arxiv.org/abs/2504.13134", bl:"Energy-based reward model improves robustness/generalization.", base:"reward model"},
+ {nm:"GenRM", yr:2024, lab:"Zhang et al. (DeepMind)", th:"reward", url:"https://arxiv.org/abs/2408.15240", bl:"Reward modeling as next-token prediction — a verifier that reasons and votes.", base:"reward model"},
+ {nm:"PRIME", yr:2025, lab:"Cui et al.", th:"reward", url:"https://arxiv.org/abs/2502.01456", bl:"Online token-level process reward from outcome labels only.", base:"PRM"},
+ {nm:"GenPRM", yr:2025, lab:"—", th:"reward", url:"https://arxiv.org/abs/2504.00891", bl:"Generative process reward with CoT + code verification; scales test-time.", base:"PRM"},
+ {nm:"AgentV-RL", yr:2026, lab:"AgentV-RL authors", th:"reward", url:"https://arxiv.org/abs/2604.16004", bl:"Distills multi-agent verification into one tool-using verifier; 4B beats SOTA ORM.", base:"verifier"},
+
+ {nm:"WARM", yr:2024, lab:"Google DeepMind", th:"hack", url:"https://arxiv.org/abs/2401.12187", bl:"Weight-averaged reward models improve reliability and resist reward hacking.", base:"reward model"},
+ {nm:"Reward Model Ensembles", yr:2023, lab:"Coste et al.", th:"hack", url:"https://arxiv.org/abs/2310.02743", bl:"RM ensembles with conservative objectives cut over-optimization.", base:"reward model"},
+ {nm:"Scalable RM Ensembling", yr:2024, lab:"Ahmed et al.", th:"hack", url:"https://arxiv.org/abs/2406.01013", bl:"Shared-backbone (LoRA) reward ensembles make uncertainty-penalized RLHF scalable.", base:"reward model"},
+ {nm:"Behavior-Supported Reg.", yr:2025, lab:"BSR authors", th:"hack", url:"https://arxiv.org/abs/2503.18130", bl:"Penalizes OOD actions to prevent reward over-optimization.", base:"RLHF"},
+ {nm:"PAR Reward Shaping", yr:2025, lab:"—", th:"hack", url:"https://arxiv.org/abs/2502.18770", bl:"Preference-as-reward shaping resists hacking even after many epochs.", base:"reward model"},
+ {nm:"InfoRM", yr:2025, lab:"—", th:"hack", url:"https://arxiv.org/abs/2510.13694", bl:"Information-bottleneck reward model; detect and curb over-optimization.", base:"reward model"},
+ {nm:"Inference-Time Reward Hacking", yr:2025, lab:"authors", th:"hack", url:"https://arxiv.org/abs/2506.19248", bl:"Characterizes BoN reward hacking; HedgeTune for optimal reward-KL.", base:"best-of-N"},
+ {nm:"Best-of-N Smoothing Lens", yr:2025, lab:"authors", th:"hack", url:"https://arxiv.org/abs/2507.05913", bl:"Theory of soft/regularized Best-of-N as reward-hacking mitigation.", base:"best-of-N"},
+ {nm:"Crome", yr:2025, lab:"Google", th:"hack", url:"https://arxiv.org/abs/2506.16507", bl:"Causal counterfactual augmentation teaches RMs to ignore spurious cues.", base:"reward model"},
+ {nm:"reWordBench", yr:2025, lab:"MIT/Meta", th:"hack", url:"https://arxiv.org/abs/2503.11751", bl:"Meaning-preserving input transforms expose RM brittleness; consistency training fixes it.", base:"reward model"},
+
+ {nm:"Intuitor / RLIF", yr:2025, lab:"Zhao et al. (Berkeley)", th:"vfree", url:"https://arxiv.org/abs/2505.19590", bl:"Reward = the model's own self-certainty; no verifier at all.", base:"RLVR"},
+ {nm:"No Free Lunch (Internal Feedback)", yr:2025, lab:"—", th:"vfree", url:"https://arxiv.org/abs/2506.17219", bl:"Intrinsic-reward RL helps base models but degrades instruct models.", base:"RLVR"},
+ {nm:"TTRL", yr:2025, lab:"Zuo et al.", th:"vfree", url:"https://arxiv.org/abs/2504.16084", bl:"RL on majority-vote pseudo-labels — train on the test set, unsupervised.", base:"RLVR"},
+ {nm:"One-Shot RLVR", yr:2025, lab:"Wang et al.", th:"vfree", url:"https://arxiv.org/abs/2504.20571", bl:"One training example lifts MATH500 36%→74% on Qwen-Math.", base:"RLVR"},
+ {nm:"EMPO", yr:2025, lab:"Tencent", th:"vfree", url:"https://arxiv.org/abs/2504.05812", bl:"Fully unsupervised RL minimizing predictive entropy over answer clusters.", base:"RLVR"},
+ {nm:"RENT", yr:2025, lab:"CMU", th:"vfree", url:"https://arxiv.org/abs/2505.22660", bl:"Negative token-entropy as a dense unsupervised intrinsic reward.", base:"RLVR"},
+ {nm:"Entropy Minimization (EM-FT/RL)", yr:2025, lab:"UCSB", th:"vfree", url:"https://arxiv.org/abs/2505.15134", bl:"Token-level entropy minimization rivals RLVR with no labels.", base:"RLVR"},
+ {nm:"RLSC", yr:2025, lab:"Imperial College", th:"vfree", url:"https://arxiv.org/abs/2506.06395", bl:"Self-confidence mode-sharpening reward — gains from ~16 samples/question.", base:"RLVR"},
+ {nm:"CoVo / Self-Rewarding RL", yr:2025, lab:"NeurIPS'25", th:"vfree", url:"https://arxiv.org/abs/2506.08745", bl:"Intrinsic reward from consistency + volatility of reasoning + curiosity.", base:"RLVR"},
+ {nm:"SRT (Self-Train)", yr:2025, lab:"KAIST/CMU", th:"vfree", url:"https://arxiv.org/abs/2505.21444", bl:"Majority-vote self-reward improves then collapses; documents the mechanism.", base:"TTRL"},
+ {nm:"Co-rewarding", yr:2025, lab:"HKBU", th:"vfree", url:"https://arxiv.org/abs/2508.00410", bl:"Contrastive agreement across paraphrases + slow teacher prevents collapse.", base:"TTRL"},
+ {nm:"EVOL-RL", yr:2025, lab:"UNC", th:"vfree", url:"https://arxiv.org/abs/2509.15194", bl:"Majority anchor + novelty reward to counter label-free entropy collapse.", base:"TTRL"},
+ {nm:"Self-Harmony", yr:2025, lab:"Self-Harmony authors", th:"vfree", url:"https://arxiv.org/abs/2511.01191", bl:"Solver+Reframer with harmonic-mean aggregation avoids spurious majorities.", base:"TTRL"},
+ {nm:"ETTRL", yr:2025, lab:"ETTRL authors", th:"vfree", url:"https://arxiv.org/abs/2508.11356", bl:"Entropy-fork tree rollout + entropy advantage reshaping fixes TTRL overconfidence.", base:"TTRL"},
+ {nm:"MM-UPT", yr:2025, lab:"NeurIPS'25", th:"vfree", url:"https://arxiv.org/abs/2505.22453", bl:"Unsupervised GRPO with majority-vote self-reward for multimodal self-improvement.", base:"TTRL"},
+ {nm:"Beyond Majority Voting", yr:2025, lab:"authors", th:"vfree", url:"https://arxiv.org/abs/2512.15146", bl:"Step-wise confidence-weighted pseudo-labels beat majority-vote TTRL rewards.", base:"TTRL"},
+ {nm:"Distribution-Aware TTRL", yr:2026, lab:"authors", th:"vfree", url:"https://arxiv.org/abs/2601.21804", bl:"Distribution-aware reward estimation replaces majority-vote pseudo-labels.", base:"TTRL"},
+
+ {nm:"Search-R1", yr:2025, lab:"Jin et al.", th:"agent", url:"https://arxiv.org/abs/2503.09516", bl:"RL to interleave reasoning with live search-engine calls.", base:"GRPO"},
+ {nm:"ReTool", yr:2025, lab:"Feng et al.", th:"agent", url:"https://arxiv.org/abs/2504.11536", bl:"RL for strategic code/tool use inside the PPO loop.", base:"PPO"},
+ {nm:"RAGEN / StarPO", yr:2025, lab:"Wang et al.", th:"agent", url:"https://arxiv.org/abs/2504.20073", bl:"Multi-turn agent RL with trajectory-level rewards & self-evolution.", base:"GRPO"},
+ {nm:"Turn-PPO", yr:2025, lab:"—", th:"agent", url:"https://arxiv.org/abs/2512.17008", bl:"Turn-level advantage estimation for multi-turn agentic RL.", base:"PPO"},
+ {nm:"VerlTool", yr:2025, lab:"—", th:"agent", url:"https://arxiv.org/abs/2509.01055", bl:"Holistic agentic RL with tool use — a unified framework on veRL.", base:"veRL"},
+ {nm:"R1-Searcher", yr:2025, lab:"RUC", th:"agent", url:"https://arxiv.org/abs/2503.05592", bl:"Two-stage outcome RL teaching LLMs to invoke external search.", base:"GRPO"},
+ {nm:"R1-Searcher++", yr:2025, lab:"RUC", th:"agent", url:"https://arxiv.org/abs/2505.17005", bl:"Adaptively balances internal vs external knowledge to cut redundant retrieval.", base:"R1-Searcher"},
+ {nm:"ReSearch", yr:2025, lab:"Baichuan/Tongji", th:"agent", url:"https://arxiv.org/abs/2503.19470", bl:"GRPO learns a search-interleaved reasoning policy.", base:"GRPO"},
+ {nm:"ZeroSearch", yr:2025, lab:"Alibaba", th:"agent", url:"https://arxiv.org/abs/2505.04588", bl:"Trains search via a simulated LLM retriever — no real search-API cost.", base:"Search-R1"},
+ {nm:"DeepResearcher", yr:2025, lab:"GAIR-NLP", th:"agent", url:"https://arxiv.org/abs/2504.03160", bl:"First end-to-end RL of deep-research agents in the live open web.", base:"GRPO"},
+ {nm:"ToRL", yr:2025, lab:"GAIR-NLP", th:"agent", url:"https://arxiv.org/abs/2503.23383", bl:"RL lets base LLMs discover and refine code-tool usage from scratch.", base:"GRPO"},
+ {nm:"ARTIST", yr:2025, lab:"Microsoft", th:"agent", url:"https://arxiv.org/abs/2505.01441", bl:"Interleaves reasoning, tool queries and outputs under outcome RL.", base:"GRPO"},
+ {nm:"ToolRL", yr:2025, lab:"UIUC", th:"agent", url:"https://arxiv.org/abs/2504.13958", bl:"Systematic study of fine-grained reward design for tool selection.", base:"GRPO"},
+ {nm:"SimpleTIR", yr:2025, lab:"ByteDance Seed", th:"agent", url:"https://arxiv.org/abs/2509.02479", bl:"Filters 'void turns' to block gradient explosions in multi-turn tool RL.", base:"GRPO"},
+ {nm:"ARPO", yr:2025, lab:"RUC-NLPIR", th:"agent", url:"https://arxiv.org/abs/2507.19849", bl:"Entropy-based adaptive branching rollout aligns step-level tool use.", base:"GRPO"},
+ {nm:"GiGPO", yr:2025, lab:"NTU", th:"agent", url:"https://arxiv.org/abs/2505.10978", bl:"Group-in-group (episode + anchor-state step) critic-free fine-grained credit.", base:"GRPO"},
+ {nm:"MT-GRPO", yr:2025, lab:"UMN / Prime Intellect", th:"agent", url:"https://arxiv.org/abs/2505.11821", bl:"Turn-level advantage estimation for precise multi-turn tool-use credit.", base:"GRPO"},
+ {nm:"SWE-RL", yr:2025, lab:"Meta FAIR", th:"agent", url:"https://arxiv.org/abs/2502.18449", bl:"Rule-based outcome rewards from GitHub commit histories scale RL to real SWE.", base:"RLVR"},
+ {nm:"DeepSWE", yr:2025, lab:"Together / Agentica", th:"agent", url:"https://arxiv.org/abs/2507.02913", bl:"Pure RL from Qwen3-32B in containers with execution reward; open SWE SOTA.", base:"GRPO"},
+ {nm:"SkyRL-Agent", yr:2025, lab:"UC Berkeley", th:"agent", url:"https://arxiv.org/abs/2511.16108", bl:"Async dispatch + light tool integration for cheap long-horizon agent RL.", base:"async infra"},
+ {nm:"WebRL", yr:2024, lab:"Tsinghua", th:"agent", url:"https://arxiv.org/abs/2411.02337", bl:"Self-evolving curriculum + outcome RM lets open web agents beat GPT-4.", base:"RLHF"},
+ {nm:"WebAgent-R1", yr:2025, lab:"Zhou et al.", th:"agent", url:"https://arxiv.org/abs/2505.16421", bl:"End-to-end multi-turn RL with async trajectory generation + group advantages.", base:"GRPO"},
+ {nm:"UI-TARS-2", yr:2025, lab:"ByteDance Seed", th:"agent", url:"https://arxiv.org/abs/2509.02544", bl:"Multi-turn RL with milestone tracking/reflection for long-horizon GUI control.", base:"GRPO"},
+ {nm:"UI-R1", yr:2025, lab:"UI-R1 authors", th:"agent", url:"https://arxiv.org/abs/2503.21620", bl:"Rule-based RL with small data improves GUI action-prediction grounding.", base:"RLVR"},
+ {nm:"MobileGUI-RL", yr:2025, lab:"authors", th:"agent", url:"https://arxiv.org/abs/2507.05720", bl:"Online-environment RL with trajectory rewards for mobile GUI agents.", base:"GRPO"},
+ {nm:"WebDancer", yr:2025, lab:"Alibaba Tongyi", th:"agent", url:"https://arxiv.org/abs/2505.22648", bl:"Four-stage SFT-then-RL pipeline for multi-turn deep web information-seeking.", base:"GRPO"},
+ {nm:"WebSailor", yr:2025, lab:"Alibaba Tongyi", th:"agent", url:"https://arxiv.org/abs/2507.02592", bl:"SailorFog-QA data + DUPO RL for extreme-uncertainty browsing.", base:"GRPO"},
+ {nm:"ASearcher", yr:2025, lab:"Ant / inclusionAI", th:"agent", url:"https://arxiv.org/abs/2508.07976", bl:"Fully async RL + synthetic QA drives 100+ turn long-horizon search agents.", base:"async infra"},
+ {nm:"AgentRL", yr:2025, lab:"Tsinghua", th:"agent", url:"https://arxiv.org/abs/2510.04206", bl:"Fully async generation-training pipeline for multi-task multi-turn agent RL.", base:"async infra"},
+ {nm:"OPRL", yr:2025, lab:"OPRL authors", th:"agent", url:"https://arxiv.org/abs/2509.19199", bl:"On-policy process reward learning from outcomes for long-horizon credit.", base:"PRM"},
+ {nm:"CriticSearch", yr:2025, lab:"authors", th:"agent", url:"https://arxiv.org/abs/2511.12159", bl:"Retrospective critic supplies dense per-step credit to search agents.", base:"GRPO"},
+ {nm:"AEPO (agentic)", yr:2025, lab:"Dong et al.", th:"agent", url:"https://arxiv.org/abs/2510.14545", bl:"Balances entropy in rollout and update to stabilize agentic RL.", base:"GRPO"},
+ {nm:"EPO (agentic)", yr:2025, lab:"Xu et al.", th:"agent", url:"https://arxiv.org/abs/2509.22576", bl:"Phase-based entropy regularization for agentic exploration.", base:"GRPO"},
+ {nm:"ProRL-Agent", yr:2026, lab:"authors", th:"agent", url:"https://arxiv.org/abs/2603.18815", bl:"Serves the agentic rollout lifecycle as an API with hierarchical load balancing.", base:"async infra"},
+
+ {nm:"VLM-R1", yr:2025, lab:"Omlab (ZJU)", th:"mm", url:"https://arxiv.org/abs/2504.07615", bl:"Stable, generalizable R1-style RL for VLMs; transfers to grounding/detection.", base:"R1"},
+ {nm:"Vision-R1", yr:2025, lab:"ECNU/Xiaohongshu", th:"mm", url:"https://arxiv.org/abs/2503.06749", bl:"First R1-like cold-start + RL for MLLMs to incentivize long-CoT visual reasoning.", base:"R1"},
+ {nm:"MM-Eureka", yr:2025, lab:"Shanghai AI Lab", th:"mm", url:"https://arxiv.org/abs/2503.07365", bl:"Rule-based large-scale multimodal RLVR with online filtering.", base:"RLVR"},
+ {nm:"R1-VL", yr:2025, lab:"NTU", th:"mm", url:"https://arxiv.org/abs/2503.12937", bl:"StepGRPO with step-wise accuracy and validity rewards for MLLMs.", base:"GRPO"},
+ {nm:"Skywork-R1V", yr:2025, lab:"Skywork", th:"mm", url:"https://arxiv.org/abs/2504.05599", bl:"Transfers R1 reasoning to vision via a lightweight projector + hybrid optimization.", base:"R1"},
+ {nm:"Skywork-R1V2", yr:2025, lab:"Skywork", th:"mm", url:"https://arxiv.org/abs/2504.16656", bl:"Acquires multimodal reasoning directly via RL with hybrid MPO + GRPO.", base:"GRPO"},
+ {nm:"Video-R1", yr:2025, lab:"CUHK", th:"mm", url:"https://arxiv.org/abs/2503.21776", bl:"First systematic R1-style RL for video reasoning; temporal GRPO (T-GRPO).", base:"GRPO"},
+ {nm:"R1-ShareVL", yr:2025, lab:"Huang et al.", th:"mm", url:"https://arxiv.org/abs/2505.16673", bl:"Share-GRPO expands question space and shares rollouts to fix vanishing advantage.", base:"GRPO"},
+ {nm:"Perception-R1", yr:2025, lab:"Yang et al.", th:"mm", url:"https://arxiv.org/abs/2506.07218", bl:"Adds an LLM-judged visual-perception reward to RLVR.", base:"RLVR"},
+ {nm:"Pixel-Reasoner", yr:2025, lab:"Waterloo / TIGER-Lab", th:"mm", url:"https://arxiv.org/abs/2505.15966", bl:"Pixel-space operations (zoom, select-frame) via a curiosity reward.", base:"GRPO"},
+ {nm:"MMOA-RAG", yr:2025, lab:"Chen et al.", th:"mm", url:"https://arxiv.org/abs/2501.15228", bl:"RAG modules as cooperating agents jointly optimized via multi-agent RL on F1.", base:"GRPO"},
+ {nm:"VRAG-RL", yr:2025, lab:"Alibaba Tongyi", th:"mm", url:"https://arxiv.org/abs/2505.22019", bl:"RL for visual/document RAG with iterative perception-driven retrieval.", base:"GRPO"},
+ {nm:"MM-R5", yr:2025, lab:"Wu et al.", th:"mm", url:"https://arxiv.org/abs/2506.12364", bl:"RL-trained multimodal reasoning reranker for document retrieval.", base:"GRPO"},
+ {nm:"d1", yr:2025, lab:"UCLA (Grover)", th:"mm", url:"https://arxiv.org/abs/2504.12216", bl:"Masked SFT + diffu-GRPO — first critic-free policy-gradient RL for diffusion LLMs.", base:"GRPO"},
+ {nm:"wd1", yr:2025, lab:"wd1 authors", th:"mm", url:"https://arxiv.org/abs/2507.08838", bl:"Ratio-free weighted-log-likelihood RL for dLLMs; beats d1.", base:"d1"},
+ {nm:"GDPO", yr:2025, lab:"Rojas et al.", th:"mm", url:"https://arxiv.org/abs/2510.08554", bl:"Variance-decomposition ELBO + semi-deterministic MC; outperforms diffu-GRPO.", base:"d1"},
+ {nm:"IGPO", yr:2025, lab:"Zhao et al.", th:"mm", url:"https://arxiv.org/abs/2509.10396", bl:"Diffusion inpainting of partial ground-truth densifies reward in dLLM RL.", base:"d1"},
+ {nm:"Diffusion-DPO", yr:2023, lab:"Salesforce/Stanford", th:"mm", url:"https://arxiv.org/abs/2311.12908", bl:"DPO via the diffusion ELBO to align text-to-image diffusion, no RL.", base:"DPO"},
+
+ {nm:"Deliberative Alignment", yr:2024, lab:"OpenAI", th:"safety", url:"https://arxiv.org/abs/2412.16339", bl:"Models reason over safety specs before answering; jailbreak robustness + less overrefusal.", base:"RLHF"},
+ {nm:"Safe RLHF", yr:2023, lab:"PKU", th:"safety", url:"https://arxiv.org/abs/2310.12773", bl:"Separate reward + cost models with a Lagrangian-constrained RL objective.", base:"RLHF"},
+ {nm:"Safe RLHF-V", yr:2025, lab:"PKU", th:"safety", url:"https://arxiv.org/abs/2503.17682", bl:"First multimodal safe-RLHF with separate reward/cost models + constrained optimization.", base:"Safe RLHF"},
+ {nm:"HC-RLHF", yr:2025, lab:"Chittepu et al.", th:"safety", url:"https://arxiv.org/abs/2506.08266", bl:"High-confidence (certifiable) safety guarantees while maximizing helpfulness.", base:"Safe RLHF"},
+ {nm:"Amplification in TTRL", yr:2026, lab:"authors", th:"safety", url:"https://arxiv.org/abs/2603.15417", bl:"Test-time RL amplifies both reasoning and unsafe behaviors.", base:"TTRL"},
+
+ {nm:"QwQ-32B", yr:2025, lab:"Qwen Team", th:"reason", url:"https://qwenlm.github.io/blog/qwq-32b/", bl:"32B dense matching R1 via two-stage outcome-reward RL.", base:"R1"},
+ {nm:"Llama-Nemotron", yr:2025, lab:"NVIDIA", th:"reason", url:"https://arxiv.org/abs/2505.00949", bl:"Open Nano/Super/Ultra reasoning family; NAS + distill + large-scale RL.", base:"R1"},
+ {nm:"Magistral", yr:2025, lab:"Mistral AI", th:"reason", url:"https://arxiv.org/abs/2506.10910", bl:"Mistral's reasoning model from a ground-up pure-RL stack; removes the KL penalty.", base:"GRPO"},
+ {nm:"Phi-4-reasoning", yr:2025, lab:"Microsoft", th:"reason", url:"https://arxiv.org/abs/2504.21318", bl:"14B SFT on teachable traces + short outcome RL rivaling far larger models.", base:"R1"},
+ {nm:"MiMo-7B", yr:2025, lab:"Xiaomi", th:"reason", url:"https://arxiv.org/abs/2505.07608", bl:"7B reasoning-from-base RL with difficulty-driven code reward.", base:"R1"},
+ {nm:"Kimi K2", yr:2025, lab:"Moonshot AI", th:"reason", url:"https://arxiv.org/abs/2507.20534", bl:"1T-param MoE agentic model; RLVR + self-critique rubric reward, MuonClip.", base:"RLVR"},
+ {nm:"GLM-4.5", yr:2025, lab:"Zhipu / Z.ai", th:"reason", url:"https://arxiv.org/abs/2508.06471", bl:"355B MoE; expert-iteration + RL on the open slime framework.", base:"R1"},
+ {nm:"GLM-5.2", yr:2026, lab:"Zhipu / Z.ai", th:"reason", url:"https://huggingface.co/zai-org/GLM-5.2", bl:"744B MoE agentic-coding model RL-post-trained with Slime async infra.", base:"GLM-5"},
+ {nm:"Hunyuan-A13B", yr:2025, lab:"Tencent", th:"reason", url:"https://arxiv.org/abs/2506.15154", bl:"80B MoE, adaptive fast/slow CoT, multi-stage RL.", base:"R1"},
+ {nm:"ERNIE 4.5", yr:2025, lab:"Baidu", th:"reason", url:"https://yiyan.baidu.com/blog/publication/ERNIE_Technical_Report.pdf", bl:"Unified RLVR + RLHF with GRPO + DAPO-style dynamic sampling.", base:"GRPO"},
+ {nm:"Open-Reasoner-Zero", yr:2025, lab:"StepFun / Tsinghua", th:"reason", url:"https://arxiv.org/abs/2503.24290", bl:"First fully-open large RL-from-base recipe; minimalist PPO matching R1-Zero-32B.", base:"R1"},
+ {nm:"SimpleRL-Zoo", yr:2025, lab:"HKUST", th:"reason", url:"https://arxiv.org/abs/2503.18892", bl:"Zero-RL across 10 base models; documents aha-moment and length dynamics.", base:"R1"},
+ {nm:"Logic-RL", yr:2025, lab:"MSRA / Ubiquant", th:"reason", url:"https://arxiv.org/abs/2502.14768", bl:"Rule-based RL on logic puzzles; reflection generalizes to AIME/AMC.", base:"RLVR"},
+ {nm:"DeepScaleR-1.5B", yr:2025, lab:"Agentica (Berkeley)", th:"reason", url:"https://pretty-radio-b75.notion.site/DeepScaleR-Surpassing-O1-Preview-with-a-1-5B-Model-by-Scaling-RL-19681902c1468005bed8ca303013a4e2", bl:"Context-scaled GRPO; 1.5B beats o1-preview at 43.1% AIME.", base:"GRPO"},
+ {nm:"DeepCoder-14B", yr:2025, lab:"Agentica + Together", th:"reason", url:"https://www.together.ai/blog/deepcoder", bl:"Distributed code-RL to o1/o3-mini level; releases verl-pipeline.", base:"GRPO"},
+ {nm:"Light-R1", yr:2025, lab:"Qihoo 360", th:"reason", url:"https://arxiv.org/abs/2503.10460", bl:"Curriculum SFT + DPO + RL training long-CoT from scratch.", base:"R1"},
+ {nm:"STILL-3-1.5B", yr:2025, lab:"RUCAIBox", th:"reason", url:"https://arxiv.org/abs/2503.04548", bl:"RL on 30K math queries; slow-thinking study reaching 39.3% AIME.", base:"GRPO"},
+ {nm:"OpenThoughts", yr:2025, lab:"Stanford", th:"reason", url:"https://arxiv.org/abs/2506.04178", bl:"1000+-experiment data-curation recipe yielding SOTA open-data OpenThinker3.", base:"R1"},
+ {nm:"AceReason-Nemotron", yr:2025, lab:"NVIDIA", th:"reason", url:"https://arxiv.org/abs/2505.16400", bl:"Math-only then code-only RL curriculum boosts both.", base:"GRPO"},
+ {nm:"AceReason-Nemotron 1.1", yr:2025, lab:"NVIDIA", th:"reason", url:"https://arxiv.org/abs/2506.13284", bl:"SFT/RL synergy + sampling-temperature study sets 7B SOTA.", base:"GRPO"},
+ {nm:"Polaris", yr:2025, lab:"HKU NLP / NUS", th:"reason", url:"https://hkunlp.github.io/blog/2025/Polaris/", bl:"RL-scaling recipe (difficulty, diversity, length) lifts 4B/7B past larger models.", base:"GRPO"},
+ {nm:"ProRL", yr:2025, lab:"NVIDIA", th:"reason", url:"https://arxiv.org/abs/2505.24864", bl:"Prolonged RL DOES expand reasoning boundaries — KL control + reference resets.", base:"GRPO"},
+ {nm:"ProRLv2", yr:2025, lab:"NVIDIA", th:"reason", url:"https://arxiv.org/abs/2507.12507", bl:"Extends ProRL with controlled KL/clip and periodic reference resets.", base:"ProRL"},
+ {nm:"Klear-Reasoner", yr:2025, lab:"Kuaishou", th:"reason", url:"https://arxiv.org/abs/2508.07629", bl:"Long-CoT model with gradient-preserving clipping (GPPO).", base:"GRPO"},
+ {nm:"Open-R1", yr:2025, lab:"Hugging Face", th:"reason", url:"https://github.com/huggingface/open-r1", bl:"Community open reproduction of the R1 pipeline (SFT + GRPO).", base:"R1"},
+ {nm:"Phi-4-mini-reasoning", yr:2025, lab:"Microsoft", th:"reason", url:"https://arxiv.org/abs/2504.21233", bl:"Distill + preference + RL gives a 3.8B math reasoner competitive with larger models.", base:"R1"},
+ {nm:"Seed-Thinking v1.5", yr:2025, lab:"ByteDance", th:"reason", url:"https://arxiv.org/abs/2504.13914", bl:"MoE reasoning model with a VAPO/DAPO-style recipe.", base:"VAPO"},
+ {nm:"Skywork-OR1", yr:2025, lab:"Skywork", th:"reason", url:"https://arxiv.org/abs/2505.22312", bl:"Fully open reasoner: +15% on AIME/LiveCodeBench; data + code released.", base:"GRPO"},
+ {nm:"Qwen3", yr:2025, lab:"Qwen (Alibaba)", th:"reason", url:"https://arxiv.org/abs/2505.09388", bl:"Reasoning-by-default family; trained with GSPO at scale.", base:"GSPO"},
+ {nm:"Olmo 3", yr:2025, lab:"AI2 / Allen AI", th:"reason", url:"https://arxiv.org/abs/2512.13961", bl:"Fully-open 7B/32B reasoning family; OlmoRL = GRPO + zero-grad filter + active sampling + token loss + truncated IS.", base:"GRPO"},
+ {nm:"Nemotron 3", yr:2025, lab:"NVIDIA", th:"reason", url:"https://arxiv.org/abs/2512.20856", bl:"Open MoE hybrid Mamba-Transformer; multi-environment RL via NeMo-Gym with synchronous GRPO across ~21 envs.", base:"GRPO"},
+ {nm:"GLM-5", yr:2026, lab:"Zhipu / Z.ai", th:"reason", url:"https://arxiv.org/abs/2602.15763", bl:"reason-RL (GRPO + IcePop) → agentic-RL → general-RL with cross-stage on-policy distillation.", base:"GRPO"},
+ {nm:"DeepSeek V4", yr:2026, lab:"DeepSeek", th:"reason", url:"https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro", bl:"Per-domain experts consolidated via On-Policy Distillation instead of a unified RLHF stage; GenRM for hard-to-verify.", base:"R1"},
+ {nm:"MAI-Thinking-1", yr:2026, lab:"Microsoft AI", th:"reason", url:"https://microsoft.ai/news/", bl:"Pure RL with no traces builds three specialist teachers → consolidation SFT → final lightweight RL climb.", base:"R1"},
+ {nm:"Kimi K2.5 / K2.6", yr:2026, lab:"Moonshot AI", th:"reason", url:"https://arxiv.org/abs/2602.02276", bl:"Multimodal agentic MoE; MuonClip + QK-Clip, PARL (freeze sub-agents, train orchestrator) + Agent Swarm.", base:"Kimi K2"},
+ {nm:"MiniMax-M2 Series", yr:2026, lab:"MiniMax", th:"reason", url:"https://arxiv.org/abs/2605.26494", bl:"Agent-native; Forge agent-RL system + CISPO; multi-scaffold RL to generalize across tool interfaces.", base:"CISPO"},
+
+ {nm:"NeMo-Aligner", yr:2024, lab:"NVIDIA", th:"scale", url:"https://arxiv.org/abs/2405.01481", bl:"Thousand-GPU toolkit for RLHF/DPO/SteerLM/SPIN with tensor/pipeline parallelism.", base:"RLHF infra"},
+ {nm:"OpenRLHF", yr:2024, lab:"Hu et al.", th:"scale", url:"https://github.com/openrlhf/openrlhf", bl:"Ray/vLLM-based scalable RLHF — now agentic & async.", base:"RLHF infra"},
+ {nm:"AReaL-Hex", yr:2025, lab:"Ant / Tsinghua", th:"scale", url:"https://arxiv.org/abs/2511.00796", bl:"Extends async RL to heterogeneous GPU clusters.", base:"AReaL"},
+ {nm:"ROLL", yr:2025, lab:"Alibaba", th:"scale", url:"https://arxiv.org/abs/2506.06122", bl:"Multi-role Ray-based RL library (Megatron + SGLang/vLLM).", base:"veRL"},
+ {nm:"ROLL Flash", yr:2025, lab:"Alibaba", th:"scale", url:"https://arxiv.org/abs/2510.11345", bl:"Adds asynchronous execution with per-sample freshness control to ROLL.", base:"ROLL"},
+ {nm:"StreamRL", yr:2025, lab:"PKU/StepFun", th:"scale", url:"https://arxiv.org/abs/2504.15930", bl:"Disaggregated async generation/training pipeline; tackles pipeline + skewness bubbles.", base:"veRL"},
+ {nm:"Jet-RL", yr:2026, lab:"Jet-RL authors", th:"scale", url:"https://arxiv.org/abs/2601.14243", bl:"Unified FP8 precision for training and rollout removes numerical mismatch; ~16% faster.", base:"async infra"},
+ {nm:"APRIL", yr:2025, lab:"APRIL authors", th:"scale", url:"https://arxiv.org/abs/2509.18521", bl:"Active partial rollouts tame long-tail generation latency.", base:"async infra"},
+
+ {nm:"Does RL incentivize reasoning beyond base?", yr:2025, lab:"Yue et al. (Tsinghua)", th:"limits", url:"https://arxiv.org/abs/2504.13837", bl:"RLVR mostly sharpens existing abilities — the pass@k ceiling doesn't move.", base:"RLVR"},
+ {nm:"The Entropy Mechanism of RL", yr:2025, lab:"Cui et al. (PRIME-RL)", th:"limits", url:"https://github.com/PRIME-RL/Entropy-Mechanism-of-RL", bl:"Why policy entropy collapses — and how to control it.", base:"GRPO"},
+ {nm:"Spurious Rewards", yr:2025, lab:"Shao et al. (UW)", th:"limits", url:"https://arxiv.org/abs/2506.10947", bl:"Random/wrong rewards still boost Qwen — a warning about the signal.", base:"RLVR"},
+ {nm:"Model–Task Alignment drives RL", yr:2025, lab:"—", th:"limits", url:"https://arxiv.org/abs/2508.21188", bl:"Whether weird rewards work depends on base-model/task alignment.", base:"RLVR"},
+ {nm:"MATH-Beyond", yr:2025, lab:"authors", th:"limits", url:"https://arxiv.org/abs/2510.11653", bl:"Problems base models can't solve even at pass@1024 — consolidation vs expansion.", base:"RLVR"},
+ {nm:"Beyond Pass@k", yr:2025, lab:"Bitdefender", th:"limits", url:"https://arxiv.org/abs/2510.08325", bl:"Large-k pass@k reflects sampling luck; proposes a breadth-depth metric.", base:"RLVR"},
+ {nm:"RLVR Implicitly Incentivizes Correct Reasoning", yr:2025, lab:"Wen et al.", th:"limits", url:"https://arxiv.org/abs/2506.14245", bl:"RLVR up-weights already-correct base paths rather than creating new ones.", base:"RLVR"},
+ {nm:"SFT Memorizes, RL Generalizes", yr:2025, lab:"HKU/Google", th:"limits", url:"https://arxiv.org/abs/2501.17161", bl:"Outcome-reward RL generalizes to OOD variants while SFT memorizes.", base:"RLVR"},
+ {nm:"RL's Razor", yr:2025, lab:"MIT", th:"limits", url:"https://arxiv.org/abs/2509.04259", bl:"On-policy RL forgets less than SFT because it biases toward KL-minimal solutions.", base:"RLVR"},
+ {nm:"RL Fine-Tunes a Sparse Subnetwork", yr:2025, lab:"authors", th:"limits", url:"https://arxiv.org/abs/2507.17107", bl:"RL updates only a ~5-30% sparse, seed-stable subnetwork.", base:"RLVR"},
+ {nm:"Reasoning with Sampling", yr:2025, lab:"Harvard", th:"limits", url:"https://arxiv.org/abs/2510.14901", bl:"Pure sampling from the base model matches RL's single-shot gains.", base:"RLVR"},
+ {nm:"Why Distillation Outperforms Zero-RL", yr:2025, lab:"authors", th:"limits", url:"https://arxiv.org/abs/2505.21067", bl:"Distillation injects genuinely new flexible reasoning that zero-RL cannot.", base:"R1"},
+
+ {nm:"A Survey of RL for Large Reasoning Models", yr:2025, lab:"—", th:"survey", url:"https://arxiv.org/abs/2509.08827", bl:"The comprehensive map of RL-for-reasoning: foundations → frontier.", base:"—"},
+ {nm:"RL Meets LLMs: lifecycle survey", yr:2025, lab:"—", th:"survey", url:"https://arxiv.org/abs/2509.16679", bl:"RL at every stage: pretraining, alignment, post-training reasoning.", base:"—"},
+ {nm:"A Survey of Process Reward Models", yr:2025, lab:"—", th:"survey", url:"https://arxiv.org/abs/2510.08049", bl:"From outcome signals to process supervision.", base:"—"},
+ {nm:"RL for LLM Post-Training: A Survey", yr:2024, lab:"—", th:"survey", url:"https://arxiv.org/abs/2407.16216", bl:"An earlier, broad post-training survey — good historical baseline.", base:"—"}
+];
+
+/* ============================================================
+   HEURISTIC OPERATOR CLASSIFIER for the inferred tail.
+   Honest keyword rules over (nm + bl). First match wins.
+   This is best-effort — that's why these carry an "inferred" badge.
+   ============================================================ */
+function classifyOp(text){
+  const t = text.toLowerCase();
+  // order matters: most specific signal first
+  if(/(async|asynchron|decoupl|disaggregat|pipeline bubble|fp8|partial rollout|heterogen|staleness|generation.*training|throughput)/.test(t)) return "parallelize";
+  if(/(bring.*back|value-pretrain|value model|revive|re-introduc|reintroduc|critic back|decoupled gae)/.test(t)) return "revive";
+  if(/(unbias|removes? .*bias|debias|zero-grad|all-right|void turn|dynamic sampling|std.*bias|length.*bias|spurious|contamination)/.test(t)) return "debias";
+  if(/(entropy|clip|kl|trust region|stabili|collapse|leash|penalty|regulari|constrained|cost model|lagrangian|conservative|ensembl|uncertainty|robust|over-optimi)/.test(t)) return "regularize";
+  if(/(self-reward|self-certain|self-confiden|majority.?vote|pseudo-label|intrinsic|consistency|self-train|self-judg|self-critique|unsupervised|label-free|test-time|confidence)/.test(t)) return "selfref";
+  if(/(token-level|sequence-level|step-wise|step-level|turn-level|process reward|per-step|per-token|granular|stepgrpo|step rar|temporal grpo|t-grpo)/.test(t)) return "granularity";
+  if(/(generative|reasons before|recast|identity|elbo|odds-ratio|prospect|reframe|view of|secretly|as next-token)/.test(t)) return "reframe";
+  if(/(drop the|drop critic|critic-free|no critic|without the|reference-free|no kl|removes the|no reference|pure rl|no sft|leave-one-out|ratio-free)/.test(t)) return "remove";
+  // default: a swap of some component
+  return "replace";
+}
+
+/* substrate guess from original theme */
+const TH2SUB = {opt:"optimizer", reward:"reward", hack:"reward", vfree:"reward",
+  agent:"rollout", mm:"reward", safety:"pipeline", reason:"pipeline", scale:"infra",
+  limits:"reward", survey:"reward", pref:"prefloss", found:"pipeline", reject:"pipeline", rlvr:"reward"};
+
+/* ---- assemble the unified diff corpus ---- */
+const OPI = {}; OPERATORS.forEach((o,i)=>OPI[o.key]=o);
+const SUBI = {}; SUBSTRATES.forEach((s,i)=>SUBI[s.key]=s);
+
+const DIFFS = [];
+VD.forEach(d=>{
+  DIFFS.push(Object.assign({verified:true, comp:d.comp, eff:d.eff}, d));
+});
+INF.forEach(d=>{
+  const op = classifyOp(d.nm+" "+d.bl);
+  const sub = TH2SUB[d.th] || "reward";
+  DIFFS.push({
+    id:"inf-"+d.nm.replace(/[^a-z0-9]/gi,"").toLowerCase(),
+    nm:d.nm, yr:d.yr, lab:d.lab, url:d.url, sub:sub, base:d.base, baseId:null,
+    op:op, comp:null, eff:d.bl, verified:false, star:false
+  });
+});
+
+/* counts */
+const opCount = {}; OPERATORS.forEach(o=>opCount[o.key]=0);
+DIFFS.forEach(d=>opCount[d.op]++);
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let curView="op", curOp="all", curQ="", verifiedOnly=false;
+
+function host(url){
+  return url.includes("arxiv.org")?("arXiv "+(url.split("/abs/")[1]||"")):
+         url.includes("github.com")?"GitHub":
+         url.includes("openai.com")?"openai.com":
+         url.includes("huggingface")?"HF":
+         url.includes("notion")?"notion":
+         url.includes("qwenlm")||url.includes("hkunlp")||url.includes("together")?"blog":"source";
+}
+function escapeHtml(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+/* ============================================================
+   VIEW 1 — BY OPERATOR
+   ============================================================ */
+const chipsEl=document.getElementById("chips");
+const opmapEl=document.getElementById("opmap");
+OPERATORS.forEach(o=>{
+  const c=document.createElement("span");
+  c.className="chip"; c.dataset.op=o.key; c.style.setProperty("--cc",o.color);
+  c.innerHTML=`<span class="gl">${o.glyph}</span>${o.label} <span class="count">${opCount[o.key]}</span>`;
+  chipsEl.appendChild(c);
+});
+document.getElementById("cAll").textContent=DIFFS.length;
+
+function diffCardHTML(d){
+  const o=OPI[d.op], s=SUBI[d.sub];
+  const compRow = d.comp ? `<div class="row comp"><span class="k">move</span><span class="v">${escapeHtml(d.comp)}</span></div>` : "";
+  const baseRow = `<div class="row"><span class="k">base</span><span class="v base">${escapeHtml(d.base)}</span></div>`;
+  return `<div class="top"><div class="nm">${escapeHtml(d.nm)}</div><div class="yr">${d.yr}</div></div>`+
+    `<div class="lab">${escapeHtml(d.lab)}</div>`+
+    `<div class="diff">${baseRow}`+
+      `<div class="row"><span class="k">op</span><span class="v"><span class="arrow">${o.glyph}</span> ${o.label}</span></div>`+
+      compRow+
+    `</div>`+
+    `<div class="bl">${escapeHtml(d.eff)}</div>`+
+    `<div class="badges">`+
+      (d.verified?`<span class="badge v">◆ verified</span>`:`<span class="badge i">◇ inferred</span>`)+
+      `<span class="badge sub">${s.label}</span>`+
+      `<a class="src" href="${d.url}" target="_blank" rel="noopener">↗ ${host(d.url)}</a>`+
+    `</div>`;
+}
+
+function buildOpView(){
+  opmapEl.innerHTML="";
+  OPERATORS.forEach(o=>{
+    const items=DIFFS.filter(d=>d.op===o.key);
+    if(!items.length) return;
+    const sec=document.createElement("div");
+    sec.className="section"; sec.dataset.op=o.key; sec.style.setProperty("--cc",o.color);
+    sec.innerHTML=`<h2><span class="gl">${o.glyph}</span>${o.label} <span class="n">· ${items.length}</span></h2><p class="sub">${o.sub}</p>`;
+    const grid=document.createElement("div"); grid.className="grid";
+    items.sort((a,b)=>a.yr-b.yr).forEach(d=>{
+      const card=document.createElement("div");
+      card.className="card"+(d.star?" star":""); card.style.setProperty("--cc",o.color);
+      card.dataset.text=(d.nm+" "+d.lab+" "+d.base+" "+(d.comp||"")+" "+d.eff+" "+o.label+" "+SUBI[d.sub].label).toLowerCase();
+      card.dataset.verified=d.verified?"1":"0";
+      card.innerHTML=diffCardHTML(d);
+      card.addEventListener("click",e=>{ if(e.target.closest(".src"))return; card.classList.toggle("open"); });
+      grid.appendChild(card);
+    });
+    sec.appendChild(grid);
+    opmapEl.appendChild(sec);
+  });
+}
+
+function applyOpFilter(){
+  let any=false;
+  document.querySelectorAll("#opmap .section").forEach(sec=>{
+    const op=sec.dataset.op; let secV=false;
+    sec.querySelectorAll(".card").forEach(card=>{
+      const okOp = curOp==="all" || op===curOp;
+      const okQ = !curQ || card.dataset.text.includes(curQ);
+      const okV = !verifiedOnly || card.dataset.verified==="1";
+      const show = okOp && okQ && okV;
+      card.classList.toggle("hidden", !show);
+      if(show) secV=true;
+    });
+    sec.classList.toggle("hidden", !secV);
+    if(secV) any=true;
+  });
+  document.getElementById("emptyOp").style.display=any?"none":"block";
+}
+
+/* ============================================================
+   VIEW 2 — DIFF LINEAGE DAG  (verified backbone only)
+   lanes = substrate, x = year, edge = predecessor relation
+   ============================================================ */
+const dagscroll=document.getElementById("dagscroll");
+function buildDag(){
+  const nodes=VD.map(d=>Object.assign({},d));
+  const byId={}; nodes.forEach(n=>byId[n.id]=n);
+  // lane order top→bottom
+  const laneOrder=["pipeline","prefloss","reward","optimizer","infra","rollout"];
+  const laneIdx={}; laneOrder.forEach((l,i)=>laneIdx[l]=i);
+  const years=nodes.map(n=>n.yr);
+  const minY=Math.min(...years), maxY=Math.max(...years);
+  const padL=150, padT=44, colW=150, laneH=88, nodeW=126, nodeH=46;
+  const W = padL + (maxY-minY+1)*colW + 40;
+  const H = padT + laneOrder.length*laneH + 30;
+
+  // assign x by year, stagger within same (year,lane) to avoid overlap
+  const slot={};
+  nodes.forEach(n=>{
+    const li=laneIdx[n.sub] ?? 0;
+    const key=n.yr+"|"+n.sub;
+    slot[key]=(slot[key]||0);
+    const stagger=slot[key]; slot[key]++;
+    n._x = padL + (n.yr-minY)*colW + stagger*16;
+    n._y = padT + li*laneH + laneH/2 - nodeH/2 + (stagger%2?10:0);
+  });
+
+  let svg=`<svg class="dag" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+  // lane bands + labels
+  laneOrder.forEach((l,i)=>{
+    const y=padT+i*laneH;
+    svg+=`<line class="lanesep" x1="0" y1="${y}" x2="${W}" y2="${y}"/>`;
+    svg+=`<text class="lanelab" x="10" y="${y+laneH/2+4}">${SUBI[l].label}</text>`;
+  });
+  // year ticks
+  for(let y=minY;y<=maxY;y++){
+    const x=padL+(y-minY)*colW;
+    svg+=`<text class="yrlab" x="${x}" y="26">${y}</text>`;
+    svg+=`<line class="lanesep" x1="${x-12}" y1="34" x2="${x-12}" y2="${H-10}" opacity="0.4"/>`;
+  }
+  // edges
+  let edges="";
+  nodes.forEach(n=>{
+    if(n.baseId && byId[n.baseId]){
+      const p=byId[n.baseId];
+      const x1=p._x+nodeW, y1=p._y+nodeH/2, x2=n._x, y2=n._y+nodeH/2;
+      const mx=(x1+x2)/2;
+      edges+=`<path class="edge" data-from="${p.id}" data-to="${n.id}" d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}"/>`;
+    }
+  });
+  svg+=edges;
+  // nodes
+  nodes.forEach(n=>{
+    const o=OPI[n.op];
+    svg+=`<g class="dnode${n.star?' star':''}" data-id="${n.id}" transform="translate(${n._x},${n._y})">`+
+      `<rect width="${nodeW}" height="${nodeH}" fill="#1b150e" stroke="${o.color}" stroke-width="${n.star?2.2:1.3}"/>`+
+      `<text class="t" x="8" y="18">${escapeHtml(n.nm.length>20?n.nm.slice(0,19)+'…':n.nm)}</text>`+
+      `<text class="s" x="8" y="34">${o.glyph} ${o.label}</text>`+
+      `</g>`;
+  });
+  svg+=`</svg>`;
+  dagscroll.innerHTML=svg;
+
+  // hover highlight lineage (ancestors + descendants)
+  const adj={}, radj={};
+  nodes.forEach(n=>{adj[n.id]=[];radj[n.id]=[];});
+  nodes.forEach(n=>{ if(n.baseId&&byId[n.baseId]){adj[n.baseId].push(n.id);radj[n.id].push(n.baseId);} });
+  function chain(id,map){const seen=new Set();const st=[id];while(st.length){const c=st.pop();(map[c]||[]).forEach(x=>{if(!seen.has(x)){seen.add(x);st.push(x);}});}return seen;}
+  dagscroll.querySelectorAll(".dnode").forEach(g=>{
+    g.addEventListener("mouseenter",()=>{
+      const id=g.dataset.id;
+      const lit=new Set([id,...chain(id,adj),...chain(id,radj)]);
+      dagscroll.querySelectorAll(".dnode").forEach(x=>x.classList.toggle("dim",!lit.has(x.dataset.id)));
+      dagscroll.querySelectorAll(".edge").forEach(e=>{
+        const on=lit.has(e.dataset.from)&&lit.has(e.dataset.to);
+        e.classList.toggle("hl",on); e.style.opacity=on?1:0.12;
+      });
+    });
+    g.addEventListener("mouseleave",()=>{
+      dagscroll.querySelectorAll(".dnode").forEach(x=>x.classList.remove("dim"));
+      dagscroll.querySelectorAll(".edge").forEach(e=>{e.classList.remove("hl");e.style.opacity="";});
+    });
+    g.addEventListener("click",()=>{ const n=byId[g.dataset.id]; if(n) window.open(n.url,"_blank","noopener"); });
+  });
+}
+
+/* ============================================================
+   VIEW 3 — TRANSFER MATRIX  (operator × substrate)
+   populated = tried; hatched empty = open hypothesis
+   ============================================================ */
+const mtableEl=document.getElementById("mtable");
+const matlistEl=document.getElementById("matlist");
+function buildMatrix(){
+  // bucket
+  const bucket={}; OPERATORS.forEach(o=>{SUBSTRATES.forEach(s=>{bucket[o.key+"|"+s.key]={all:[],v:0};});});
+  DIFFS.forEach(d=>{const k=d.op+"|"+d.sub; if(bucket[k]){bucket[k].all.push(d); if(d.verified)bucket[k].v++;}});
+
+  let html=`<table class="matrix"><thead><tr><th>operator \\ substrate</th>`;
+  SUBSTRATES.forEach(s=>{html+=`<th>${s.label}</th>`;});
+  html+=`</tr></thead><tbody>`;
+  OPERATORS.forEach(o=>{
+    html+=`<tr><th style="--cc:${o.color}"><span class="gl">${o.glyph}</span>${o.label}</th>`;
+    SUBSTRATES.forEach(s=>{
+      const k=o.key+"|"+s.key, b=bucket[k], n=b.all.length;
+      const demo=(o.key==="parallelize"&&s.key==="infra");
+      if(n>0){
+        html+=`<td><div class="cell has${demo?' demo':''}" data-k="${k}">`+
+          `<span class="cnt">${n}</span>`+(b.v?`<span class="vc">◆${b.v}</span>`:``)+
+          `</div></td>`;
+      }else{
+        html+=`<td><div class="cell empty" data-k="${k}"><span class="hyp">hypothesis</span></div></td>`;
+      }
+    });
+    html+=`</tr>`;
+  });
+  html+=`</tbody></table>`;
+  mtableEl.innerHTML=html;
+
+  function showCell(k){
+    mtableEl.querySelectorAll(".cell").forEach(c=>c.classList.toggle("sel",c.dataset.k===k));
+    const [op,sub]=k.split("|");
+    const b=bucket[k];
+    const o=OPI[op], s=SUBI[sub];
+    if(!b.all.length){
+      matlistEl.innerHTML=`<div class="section" style="--cc:${o.color}">`+
+        `<h2><span class="gl">${o.glyph}</span>${o.label} × ${s.label} <span class="n">· open hypothesis</span></h2>`+
+        `<p class="sub">No diff in this corpus applies the <b>${o.label}</b> move (${o.sub}) to the <b>${s.label}</b> substrate. `+
+        `That's the generative prompt: what would it mean to do that here?</p></div>`;
+      return;
+    }
+    let h=`<div class="section" style="--cc:${o.color}"><h2><span class="gl">${o.glyph}</span>${o.label} × ${s.label} <span class="n">· ${b.all.length}</span></h2>`+
+      `<p class="sub">${o.sub}</p><div class="grid">`;
+    b.all.sort((a,c)=>a.yr-c.yr).forEach(d=>{
+      h+=`<div class="card open" style="--cc:${o.color}">${diffCardHTML(d)}</div>`;
+    });
+    h+=`</div></div>`;
+    matlistEl.innerHTML=h;
+    matlistEl.querySelectorAll(".card .src").forEach(a=>a.addEventListener("click",e=>e.stopPropagation()));
+  }
+  mtableEl.querySelectorAll(".cell").forEach(c=>c.addEventListener("click",()=>showCell(c.dataset.k)));
+  // open the worked example by default
+  showCell("parallelize|infra");
+}
+
+/* ============================================================
+   WIRING
+   ============================================================ */
+buildOpView(); applyOpFilter();
+
+document.querySelectorAll(".vtab").forEach(t=>t.addEventListener("click",()=>{
+  curView=t.dataset.view;
+  document.querySelectorAll(".vtab").forEach(x=>x.classList.toggle("on",x===t));
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
+  document.getElementById("view-"+curView).classList.add("on");
+  if(curView==="dag" && !dagscroll.dataset.built){buildDag();dagscroll.dataset.built="1";}
+  if(curView==="matrix" && !mtableEl.dataset.built){buildMatrix();mtableEl.dataset.built="1";}
+}));
+
+document.querySelector('.chip[data-op="all"]').addEventListener("click",e=>setOp("all",e.currentTarget));
+chipsEl.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",e=>setOp(c.dataset.op,e.currentTarget)));
+function setOp(op,el){
+  curOp=op;
+  document.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+  el.classList.add("on");
+  applyOpFilter();
+}
+document.getElementById("q").addEventListener("input",e=>{curQ=e.target.value.trim().toLowerCase();applyOpFilter();});
+document.getElementById("evToggle").addEventListener("click",e=>{
+  verifiedOnly=!verifiedOnly;
+  e.currentTarget.classList.toggle("on",verifiedOnly);
+  applyOpFilter();
+});
+</script>
+</body>
+</html>
