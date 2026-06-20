@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Omni Design Focus Tree · Native Multimodality 2020–2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Noto+Serif+SC:wght@500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#161310; --bg-1:#221b13;
+    --gold:#d8b15a; --gold-bright:#f3d488; --gold-deep:#9a7327;
+    --frame-1:#caa257; --frame-2:#7c5e26; --frame-3:#3a2c12;
+    --ink:#efe2c6; --ink-dim:#b6a079; --ink-faint:#8a7857;
+    --plate:#1c1812; --plate-2:#272015;
+    --ghost:#9f93b8; --ghost-frame:#6b6087; --ghost-deep:#403a52;
+    --revived:#4fd6b4; --revived-deep:#1c6e5c;
+    --line-gold:#caa257; --line-mutex:#c98a5a;
+    --slot:#0d0b08;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; color:var(--ink);
+    font-family:"Noto Serif SC","IBM Plex Mono",serif; line-height:1.5;
+    background:
+      radial-gradient(1400px 900px at 70% -8%, #3a2c17 0%, transparent 55%),
+      radial-gradient(1000px 700px at 12% 105%, #241a0f 0%, transparent 60%),
+      repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 2px, transparent 2px 4px),
+      repeating-linear-gradient(90deg, rgba(120,90,40,.05) 0 3px, transparent 3px 6px),
+      linear-gradient(180deg,#211a12, #14110d 70%);
+  }
+  .wrap{max-width:1500px;margin:0 auto;padding:0 20px}
+
+  /* ===== HEADER ===== */
+  header.banner{padding:42px 0 14px;text-align:center;position:relative}
+  .banner .kingdom{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.42em;
+    text-transform:uppercase;color:var(--gold-deep)}
+  .banner h1{font-family:"Cinzel","Noto Serif SC",serif;font-weight:900;
+    font-size:clamp(26px,4.6vw,50px);margin:.18em 0 .14em;color:var(--gold-bright);
+    letter-spacing:.04em;text-shadow:0 2px 0 #000,0 0 22px rgba(216,177,90,.28)}
+  .banner h1 .cn{display:block;font-family:"Noto Serif SC",serif;font-size:.5em;color:var(--ink);letter-spacing:.06em;margin-top:.1em}
+  .banner p{max-width:760px;margin:.4em auto 0;color:var(--ink-dim);font-size:14.5px;font-family:"Noto Serif SC",serif}
+  .rule{height:2px;max-width:540px;margin:18px auto 0;
+    background:linear-gradient(90deg,transparent,var(--gold-deep),var(--gold),var(--gold-deep),transparent)}
+
+  /* ===== LEGEND ===== */
+  .legend{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 14px;margin:22px auto 8px;max-width:1180px}
+  .lg{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--ink-dim);
+    border:1px solid var(--frame-3);background:rgba(20,16,11,.7);border-radius:6px;padding:7px 13px}
+  .lg .sw{width:16px;height:16px;flex:0 0 auto;border-radius:3px}
+  .sw.gold{background:linear-gradient(150deg,var(--frame-1),var(--frame-2));border:1.5px solid var(--gold-bright)}
+  .sw.star{background:radial-gradient(circle,var(--gold-bright),var(--frame-2));border:1.5px solid var(--gold-bright);box-shadow:0 0 8px var(--gold)}
+  .sw.ghost{background:repeating-linear-gradient(45deg,#2a2536 0 4px,#1c1826 4px 8px);border:1.5px dashed var(--ghost-frame)}
+  .sw.rev{background:linear-gradient(150deg,#1c6e5c,#0e3a30);border:1.5px solid var(--revived)}
+  .lg b{color:var(--ink);font-weight:700}
+  .hint{text-align:center;color:var(--ink-faint);font-size:12px;font-family:"IBM Plex Mono",monospace;margin:4px 0 0;letter-spacing:.05em}
+
+  /* ===== TREE CANVAS ===== */
+  .scroller{overflow-x:auto;overflow-y:hidden;padding:18px 0 60px;-webkit-overflow-scrolling:touch}
+  .canvas{position:relative;margin:0 auto}
+  svg.wires{position:absolute;left:0;top:0;pointer-events:none;z-index:1}
+
+  /* year rail */
+  .yrtab{position:absolute;left:0;transform:translateY(-50%);z-index:1;
+    font-family:"Cinzel",serif;font-weight:700;font-size:19px;color:var(--gold);
+    background:linear-gradient(180deg,#2a2114,#191409);border:1px solid var(--frame-2);
+    border-left:3px solid var(--gold);border-radius:4px;padding:3px 12px 3px 10px;letter-spacing:.06em;
+    box-shadow:0 2px 6px rgba(0,0,0,.5)}
+  .yrtab small{display:block;font-family:"IBM Plex Mono",monospace;font-weight:400;font-size:9px;color:var(--ink-faint);letter-spacing:.14em}
+
+  /* ===== FOCUS NODE ===== */
+  .focus{position:absolute;z-index:2;width:158px;display:flex;flex-direction:column;align-items:center;cursor:default}
+  .focus .icon{position:relative;width:74px;height:74px;display:flex;align-items:center;justify-content:center;
+    border-radius:7px;
+    background:
+      linear-gradient(150deg,#2a2113 0%, #16110a 60%),
+      radial-gradient(circle at 50% 30%, rgba(243,212,136,.10), transparent 60%);
+    border:2px solid transparent;
+    background-clip:padding-box;}
+  /* the ornate gold frame via layered box-shadow + pseudo */
+  .focus .icon::before{content:"";position:absolute;inset:-4px;border-radius:9px;z-index:-1;
+    background:linear-gradient(145deg,var(--frame-1) 0%,var(--frame-3) 45%,var(--frame-2) 100%);
+    box-shadow:0 3px 7px rgba(0,0,0,.55), inset 0 0 0 1px rgba(243,212,136,.35)}
+  .focus .icon::after{content:"";position:absolute;inset:2px;border-radius:6px;pointer-events:none;
+    box-shadow:inset 0 1px 0 rgba(243,212,136,.22), inset 0 -8px 14px rgba(0,0,0,.5)}
+  .focus .glyph{font-size:34px;line-height:1;filter:drop-shadow(0 1px 1px #000)}
+  .focus .plate{margin-top:7px;width:152px;min-height:30px;display:flex;align-items:center;justify-content:center;text-align:center;
+    padding:4px 8px;border-radius:4px;font-family:"Noto Serif SC",serif;font-weight:700;font-size:11px;line-height:1.22;
+    color:var(--ink);background:linear-gradient(180deg,var(--plate-2),var(--plate));
+    border:1px solid var(--frame-2);box-shadow:0 2px 4px rgba(0,0,0,.5), inset 0 1px 0 rgba(243,212,136,.08)}
+
+  /* chosen / trunk */
+  .focus.chosen .plate{color:var(--gold-bright)}
+  /* fork (★ key node) */
+  .focus.fork .icon::before{background:linear-gradient(145deg,var(--gold-bright),var(--frame-2),var(--gold-deep));
+    box-shadow:0 0 18px rgba(243,212,136,.5),0 3px 7px rgba(0,0,0,.6), inset 0 0 0 1px rgba(243,212,136,.6)}
+  .focus.fork .plate{color:var(--gold-bright);border-color:var(--gold-deep);
+    background:linear-gradient(180deg,#3a2e16,#1c1609)}
+  .focus.fork .star{position:absolute;top:-12px;right:-10px;font-size:17px;color:var(--gold-bright);
+    text-shadow:0 0 8px var(--gold);z-index:3}
+  .focus.now .icon::before{background:linear-gradient(145deg,#fff0c8,var(--gold),var(--gold-deep));
+    box-shadow:0 0 26px rgba(243,212,136,.7),0 3px 8px rgba(0,0,0,.6), inset 0 0 0 1px #fff0c8}
+  .focus.now .plate{color:#fff3d4}
+  .focus.now .nowtag{position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+    font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.18em;color:var(--bg-0);
+    background:var(--gold-bright);border-radius:3px;padding:1px 6px;font-weight:700;z-index:3}
+
+  /* ghost / pruned */
+  .focus.ghost .icon{background:linear-gradient(150deg,#221d2c,#14111c)}
+  .focus.ghost .icon::before{background:linear-gradient(145deg,var(--ghost-frame),var(--ghost-deep));
+    box-shadow:0 2px 5px rgba(0,0,0,.5), inset 0 0 0 1px rgba(159,147,184,.3)}
+  .focus.ghost .glyph{filter:grayscale(1) brightness(.92) drop-shadow(0 1px 1px #000);opacity:.72}
+  .focus.ghost .plate{color:var(--ghost);background:linear-gradient(180deg,#1d1a26,#141119);
+    border-color:var(--ghost-deep);border-style:dashed}
+  .focus.ghost{opacity:.93}
+  .focus.ghost .pruned{position:absolute;top:-11px;right:-9px;font-family:"IBM Plex Mono",monospace;
+    font-size:11px;color:#caa;background:#2a1d22;border:1px solid #5a3a3a;border-radius:50%;
+    width:19px;height:19px;display:flex;align-items:center;justify-content:center;z-index:3}
+
+  /* revived */
+  .focus.revived .icon{background:linear-gradient(150deg,#10302a,#0a1d19)}
+  .focus.revived .icon::before{background:linear-gradient(145deg,var(--revived),var(--revived-deep));
+    box-shadow:0 0 14px rgba(79,214,180,.35),0 2px 5px rgba(0,0,0,.5), inset 0 0 0 1px rgba(79,214,180,.5)}
+  .focus.revived .glyph{filter:drop-shadow(0 1px 1px #000) hue-rotate(8deg)}
+  .focus.revived .plate{color:var(--revived);background:linear-gradient(180deg,#10302a,#0a1c18);border-color:var(--revived-deep)}
+  .focus.revived .reborn{position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+    font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.1em;color:var(--bg-0);
+    background:var(--revived);border-radius:3px;padding:1px 6px;font-weight:700;z-index:3;white-space:nowrap}
+
+  .focus:hover .icon::before{filter:brightness(1.18)}
+  .focus:hover{z-index:5}
+
+  /* ===== TOOLTIP ===== */
+  #tip{position:fixed;z-index:80;max-width:340px;pointer-events:none;opacity:0;transform:translateY(4px);
+    transition:opacity .12s;background:linear-gradient(180deg,#241d12,#161009);
+    border:1px solid var(--frame-2);border-top:2px solid var(--gold);border-radius:7px;
+    box-shadow:0 12px 34px rgba(0,0,0,.7);padding:13px 15px;font-family:"Noto Serif SC",serif}
+  #tip.on{opacity:1;transform:translateY(0)}
+  #tip .tt-tag{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-deep)}
+  #tip h5{margin:3px 0 8px;font-family:"Cinzel","Noto Serif SC",serif;font-size:15.5px;color:var(--gold-bright);line-height:1.2}
+  #tip .row{font-size:12.5px;margin:6px 0;color:var(--ink-dim);line-height:1.5}
+  #tip .row .lbl{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.08em;
+    padding:1px 6px;border-radius:3px;margin-right:6px;vertical-align:1px}
+  #tip .lbl.sub{background:rgba(143,182,200,.16);color:#9fc3d2}
+  #tip .lbl.gh{background:rgba(159,147,184,.18);color:var(--ghost)}
+  #tip .lbl.ch{background:rgba(216,177,90,.18);color:var(--gold-bright)}
+  #tip .lbl.rv{background:rgba(79,214,180,.16);color:var(--revived)}
+  #tip .note{margin-top:9px;padding-top:8px;border-top:1px dashed var(--frame-3);font-size:12px;color:var(--ink);font-style:italic}
+  #tip code{font-family:"IBM Plex Mono",monospace;color:var(--gold);font-size:11.5px}
+
+  footer{border-top:1px solid var(--frame-3);margin-top:10px;padding:20px 0 56px;color:var(--ink-faint);
+    font-size:12px;font-family:"IBM Plex Mono",monospace;text-align:center;line-height:1.7}
+  footer b{color:var(--gold-deep)}
+
+  /* ===== YEAR REPORT · clickable rail + slide-in panel ===== */
+  .yrtab{cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s,background .12s}
+  .yrtab:hover{transform:translateY(-50%) translateX(3px);border-left-color:var(--gold-bright);
+    box-shadow:0 2px 12px rgba(216,177,90,.45)}
+  .yrtab.active{border-left-color:var(--gold-bright);background:linear-gradient(180deg,#3a2e16,#241a0c);
+    box-shadow:0 0 16px rgba(243,212,136,.5)}
+  .yrtab small{color:var(--gold-deep)}
+
+  #scrim{position:fixed;inset:0;background:rgba(8,6,3,.5);backdrop-filter:blur(2px);z-index:90;opacity:0;
+    pointer-events:none;transition:opacity .28s}
+  #scrim.on{opacity:1;pointer-events:auto}
+
+  #report{position:fixed;top:0;right:0;height:100vh;width:min(700px,95vw);z-index:95;
+    transform:translateX(103%);transition:transform .34s cubic-bezier(.22,.61,.36,1);
+    display:flex;flex-direction:column;background:linear-gradient(180deg,#221a11,#15110b);
+    border-left:2px solid var(--gold);box-shadow:-18px 0 54px rgba(0,0,0,.62)}
+  #report.on{transform:translateX(0)}
+  #report .rp-head{flex:0 0 auto;position:relative;padding:22px 26px 16px;
+    border-bottom:1px solid var(--frame-2);background:linear-gradient(180deg,#2a2114,#1a130b)}
+  #report .rp-era{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-deep)}
+  #report .rp-yr{font-family:"Cinzel","Noto Serif SC",serif;font-weight:900;font-size:42px;color:var(--gold-bright);
+    line-height:1;margin:3px 0 3px;text-shadow:0 2px 0 #000,0 0 20px rgba(216,177,90,.3)}
+  #report .rp-name{font-family:"Noto Serif SC",serif;font-weight:700;font-size:17px;color:var(--ink)}
+  #report .rp-thesis{margin-top:10px;font-size:13.5px;color:var(--gold);font-style:italic;line-height:1.58;
+    border-left:2px solid var(--gold-deep);padding-left:11px}
+  #report .rp-close{position:absolute;top:18px;right:20px;width:32px;height:32px;border-radius:50%;
+    border:1px solid var(--frame-2);background:#1a140b;color:var(--gold);font-size:17px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;line-height:1;transition:.15s}
+  #report .rp-close:hover{background:#2a2114;color:var(--gold-bright);border-color:var(--gold)}
+  #report .rp-nav{display:flex;gap:8px;margin-top:15px}
+  #report .rp-nav button{flex:1;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.05em;
+    background:#1a140b;border:1px solid var(--frame-3);color:var(--ink-dim);border-radius:5px;padding:6px 0;cursor:pointer;transition:.15s}
+  #report .rp-nav button:hover:not(:disabled){border-color:var(--gold-deep);color:var(--gold)}
+  #report .rp-nav button:disabled{opacity:.28;cursor:default}
+  #report .rp-body{flex:1 1 auto;overflow-y:auto;padding:20px 26px 64px;scrollbar-width:thin;
+    scrollbar-color:var(--frame-2) transparent}
+  #report .rp-body::-webkit-scrollbar{width:9px}
+  #report .rp-body::-webkit-scrollbar-thumb{background:var(--frame-2);border-radius:5px}
+  .rp-sec{margin:0 0 24px}
+  .rp-sec>h4{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;
+    display:flex;align-items:center;gap:8px;margin:0 0 11px;padding-bottom:6px;border-bottom:1px dashed var(--frame-3)}
+  .rp-sec>h4 .dot{width:10px;height:10px;border-radius:2px;flex:0 0 auto}
+  .rp-sec.s-sub>h4{color:#9fc3d2} .rp-sec.s-sub .dot{background:#9fc3d2}
+  .rp-sec.s-ch>h4{color:var(--gold-bright)} .rp-sec.s-ch .dot{background:linear-gradient(150deg,var(--frame-1),var(--frame-2));border:1px solid var(--gold-bright)}
+  .rp-sec.s-gh>h4{color:var(--ghost)} .rp-sec.s-gh .dot{background:repeating-linear-gradient(45deg,#2a2536 0 3px,#1c1826 3px 6px);border:1px solid var(--ghost-frame)}
+  .rp-sec.s-rv>h4{color:var(--revived)} .rp-sec.s-rv .dot{background:linear-gradient(150deg,#1c6e5c,#0e3a30);border:1px solid var(--revived)}
+  .rp-sec.s-note>h4{color:var(--gold-deep)} .rp-sec.s-note .dot{background:var(--gold-deep)}
+  .rp-sec>p{font-size:13.5px;line-height:1.74;color:var(--ink-dim);margin:0 0 10px}
+  .rp-item{margin:0 0 13px;padding:11px 14px;border-radius:6px;background:rgba(20,16,11,.55);
+    border:1px solid var(--frame-3);border-left:3px solid var(--frame-2)}
+  .rp-item.i-ch{border-left-color:var(--gold)}
+  .rp-item.i-gh{border-left-color:var(--ghost-frame);border-left-style:dashed}
+  .rp-item.i-rv{border-left-color:var(--revived)}
+  .rp-item h5{margin:0 0 5px;font-family:"Noto Serif SC",serif;font-size:14px;font-weight:700;color:var(--ink)}
+  .rp-item.i-ch h5{color:var(--gold-bright)} .rp-item.i-gh h5{color:var(--ghost)} .rp-item.i-rv h5{color:var(--revived)}
+  .rp-item p{font-size:12.8px;line-height:1.68;color:var(--ink-dim);margin:0}
+  .rp-item .arx{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--gold-deep);margin-top:6px;display:block}
+  .rp-refs{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-faint);line-height:1.95;
+    background:rgba(0,0,0,.25);border:1px solid var(--frame-3);border-radius:6px;padding:11px 13px}
+  .rp-refs b{color:var(--gold-deep)}
+  em.k{color:var(--gold);font-style:normal;font-family:"IBM Plex Mono",monospace;font-size:.92em}
+  .rp-eq{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--gold-bright);
+    background:rgba(0,0,0,.34);border:1px solid var(--frame-3);border-left:2px solid var(--gold-deep);
+    border-radius:5px;padding:7px 11px;margin:8px 0 2px;overflow-x:auto;white-space:pre-wrap;
+    line-height:1.55;letter-spacing:.01em}
+  .rp-eq b{color:var(--ink-faint);font-weight:400;font-size:10px;letter-spacing:.08em;display:block;margin-bottom:3px;text-transform:uppercase}
+  .rp-eq sub,.rp-eq sup{font-size:.68em;line-height:0;letter-spacing:0;color:var(--gold-bright)}
+  .rp-eq sub{vertical-align:-.28em} .rp-eq sup{vertical-align:.5em}
+  .rp-key{font-size:12.6px;line-height:1.62;color:var(--ink);margin:8px 0 0;padding-left:11px;border-left:2px solid var(--gold-deep)}
+  .rp-key b{color:var(--gold-bright);font-weight:700}
+  @media (max-width:560px){#report .rp-yr{font-size:34px}#report .rp-body{padding:16px 16px 50px}#report .rp-head{padding:18px 18px 14px}}
+
+  /* ===== PAGE TABS (HoI4 multi-page) ===== */
+  .pagetabs{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:14px auto 0;max-width:1120px}
+  .ptab{display:flex;align-items:center;gap:11px;cursor:pointer;text-align:left;
+    background:linear-gradient(180deg,#1f1810,#15100a);border:1px solid var(--frame-2);
+    border-bottom:none;border-radius:8px 8px 0 0;padding:10px 18px;min-width:248px;
+    color:var(--ink-dim);font-family:"Noto Serif SC",serif;transition:.16s;position:relative;top:3px}
+  .ptab:hover{border-color:var(--gold-deep);color:var(--ink)}
+  .ptab .pt-ic{font-size:23px;filter:drop-shadow(0 1px 1px #000)}
+  .ptab .pt-tx{display:flex;flex-direction:column;line-height:1.3}
+  .ptab .pt-tx b{font-family:"Cinzel","Noto Serif SC",serif;font-size:14px;letter-spacing:.05em;color:var(--ink)}
+  .ptab .pt-tx small{font-size:10px;color:var(--ink-faint);font-family:"IBM Plex Mono",monospace}
+  .ptab.active{background:linear-gradient(180deg,#3a2e16,#211808);border-color:var(--gold);
+    box-shadow:0 -3px 16px rgba(243,212,136,.3);top:0}
+  .ptab.active .pt-tx b{color:var(--gold-bright)} .ptab.active .pt-ic{filter:drop-shadow(0 0 7px var(--gold))}
+  .pagetabs+.scroller,.pagetabs{position:relative}
+  @media (max-width:600px){.ptab{min-width:0;flex:1 1 30%;padding:8px 9px;gap:7px}.ptab .pt-tx small{display:none}.ptab .pt-tx b{font-size:12px}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* ===== custom SVG node icons ===== */
+  .focus .glyph svg{width:40px;height:40px;display:block;
+    filter:drop-shadow(0 1px 1px #000);color:var(--gold-bright)}
+  .focus .glyph{color:var(--gold-bright)}
+  .focus.fork .glyph{color:#fff0c8}
+  .focus.now .glyph{color:#fff3d4}
+  .focus.ghost .glyph svg{color:var(--ghost);filter:drop-shadow(0 1px 1px #000) opacity(.92)}
+  .focus.revived .glyph svg{color:var(--revived)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="banner">
+    <div class="kingdom">National Focus · Native Multimodality (Omni) · 2020… 2023–2026</div>
+    <h1>THE OMNI DESIGN FOCUS TREE
+      <span class="cn">Every fork is a pruning · the four engineering decisions that build an omni model</span></h1>
+    <p>The rise of omni / native-multimodal models laid out as a national focus tree, read by its <b style="color:var(--gold-bright)">real engineering decisions, not its marketing categories.</b> Four orthogonal forks — how a modality is represented, where modalities fuse, how non-text output is generated, and how real-time speech is produced — each a pruned search tree: every year has a mainline that won, branches that were viable but pruned, and buried ideas that revived once the substrate (scale, codecs, diffusion-in-transformer) landed. A model like GPT-4o or Qwen2.5-Omni is a vector across all four pages.</p>
+    <div class="rule"></div>
+  </header>
+
+  <div class="legend">
+    <div class="lg"><span class="sw gold"></span><span><b>Trunk focus</b> the mainline actually taken</span></div>
+    <div class="lg"><span class="sw star"></span><span><b>★ Key fork</b> the fork that decided direction</span></div>
+    <div class="lg"><span class="sw ghost"></span><span><b>Mutex branch</b> viable but pruned</span></div>
+    <div class="lg"><span class="sw rev"></span><span><b>Buried then revived</b> back once the substrate landed</span></div>
+  </div>
+  <p class="hint">Four pages = the four orthogonal decisions that build an omni model · hover any focus for the "already exists / road not taken / the choice" detail · click the year rail for a full-year report ·  ← → scroll horizontally</p>
+</div>
+
+<div class="wrap"><div class="pagetabs" id="pagetabs"></div></div>
+
+<div class="scroller">
+  <div class="canvas" id="canvas">
+    <svg class="wires" id="wires" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+</div>
+
+<div class="wrap">
+  <footer>
+    omni-design-focus-tree · native multimodality 2023–2026 · four engineering forks as pruning search trees (focus-tree form)<br>
+    decisions verified against arXiv by reading the papers · years mark representative first appearance / mainstreaming · annotations are judgment, not exhaustive scholarship<br>
+    <a href="omni-design-tree.html" style="color:var(--gold)">→ companion: the same models as a decision-vector tree (by option)</a> · <a href="architecture-focus-tree.html" style="color:var(--gold)">the architecture focus tree</a>
+  </footer>
+</div>
+
+<div id="tip"></div>
+
+<div id="scrim"></div>
+<aside id="report" aria-hidden="true">
+  <div class="rp-head">
+    <button class="rp-close" id="rpClose" title="Close (Esc)">✕</button>
+    <div class="rp-era" id="rpEra"></div>
+    <div class="rp-yr" id="rpYr"></div>
+    <div class="rp-name" id="rpName"></div>
+    <div class="rp-thesis" id="rpThesis"></div>
+    <div class="rp-nav">
+      <button id="rpPrev">← Prev year</button>
+      <button id="rpNext">Next year →</button>
+    </div>
+  </div>
+  <div class="rp-body" id="rpBody"></div>
+</aside>
+
+<script>
+(function(){
+  // ---------- layout constants ----------
+  var COL = { GL5:180, GL4:390, GL3:600, GL2:810, GL1:1020, T:1230, GR1:1440, GR2:1650, GR3:1860, GR4:2070, GR5:2280 };
+  var NODEW=158, BOXH=112, ROW=160, TOP=120;
+  var CANVAS_W=2400, XOFF=0, PADX=120;
+  function yOf(year){ return TOP + (year-2020)*ROW; }
+
+  // ---------- node data ----------
+  // kind: chosen | fork | now | ghost | revived
+  // prereq: [ids] solid gold lines (parent above -> this)
+  // mutex:  [ids] mutually-exclusive sibling marker
+  // revive: {from:id} dashed teal thread (buried -> reborn)
+  var TREES = { structure:{nodes:[],threads:[]}, data:{nodes:[],threads:[]}, algorithm:{nodes:[],threads:[]}, infra:{nodes:[],threads:[]} };
+  var PAGE='structure';
+  var N=[], extraThreads=[];
+  var ICONS={"🔁":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 12a7 7 0 1 1-3-5.7\"/><polyline points=\"19 4 19 8 15 8\"/></svg>","📼":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"6\" width=\"18\" height=\"12\" rx=\"2\"/><circle cx=\"9\" cy=\"12\" r=\"2\"/><circle cx=\"15\" cy=\"12\" r=\"2\"/></svg>","👉":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 4l14 7.5-6 1.4-3 6.1z\"/></svg>","🛣️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 21 10 3\"/><path d=\"M16 21 14 3\"/><line x1=\"12\" y1=\"5\" x2=\"12\" y2=\"8\"/><line x1=\"12\" y1=\"11\" x2=\"12\" y2=\"14\"/><line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"20\"/></svg>","🏗️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"4\" y=\"4\" width=\"16\" height=\"4\" rx=\"1\"/><rect x=\"4\" y=\"10\" width=\"16\" height=\"4\" rx=\"1\"/><rect x=\"4\" y=\"16\" width=\"16\" height=\"4\" rx=\"1\"/></svg>","〰️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 12c3-8 6-8 9 0s6 8 9 0\"/></svg>","🌊":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2 8q3-3 5 0t5 0 5 0\"/><path d=\"M2 13q3-3 5 0t5 0 5 0\"/><path d=\"M2 18q3-3 5 0t5 0 5 0\"/></svg>","🔍":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"10\" cy=\"10\" r=\"6\"/><line x1=\"14.5\" y1=\"14.5\" x2=\"20\" y2=\"20\"/></svg>","🚪":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"6\" y=\"3\" width=\"12\" height=\"18\" rx=\"1\"/><circle cx=\"14.5\" cy=\"12\" r=\"1\"/></svg>","⚡":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"13 2 5 13 11 13 9 22 19 10 12 10\"/></svg>","🧩":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 4h2a1.5 1.5 0 1 1 3 0h2a1 1 0 0 1 1 1v3a1.5 1.5 0 1 1 0 3v4a1 1 0 0 1-1 1h-3a1.5 1.5 0 1 0-3 0H6a1 1 0 0 1-1-1v-3a1.5 1.5 0 1 0 0-3V5a1 1 0 0 1 1-1z\"/></svg>","🧠":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"6\" cy=\"6\" r=\"1.6\"/><circle cx=\"12\" cy=\"6\" r=\"1.6\"/><circle cx=\"18\" cy=\"6\" r=\"1.6\"/><circle cx=\"6\" cy=\"12\" r=\"1.6\"/><circle cx=\"12\" cy=\"12\" r=\"1.6\" fill=\"currentColor\"/><circle cx=\"18\" cy=\"18\" r=\"1.6\" fill=\"currentColor\"/><circle cx=\"6\" cy=\"18\" r=\"1.6\"/></svg>","🔀":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 7h4l10 10h4\"/><polyline points=\"18 14 21 17 18 20\"/><path d=\"M3 17h4l3-3\"/><path d=\"M14 10l3-3h4\"/><polyline points=\"18 4 21 7 18 10\"/></svg>","➡️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"4\" y1=\"12\" x2=\"20\" y2=\"12\"/><polyline points=\"14 6 20 12 14 18\"/></svg>","🔄":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 11a7 7 0 0 1 11.7-4\"/><polyline points=\"17 3 17 7 13 7\"/><path d=\"M19 13a7 7 0 0 1-11.7 4\"/><polyline points=\"7 21 7 17 11 17\"/></svg>","🪟":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"1\"/><line x1=\"12\" y1=\"4\" x2=\"12\" y2=\"20\"/><line x1=\"4\" y1=\"12\" x2=\"20\" y2=\"12\"/></svg>","❄️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"12\" y1=\"2\" x2=\"12\" y2=\"22\"/><line x1=\"3\" y1=\"7\" x2=\"21\" y2=\"17\"/><line x1=\"3\" y1=\"17\" x2=\"21\" y2=\"7\"/><path d=\"M12 6l-2.4 2M12 6l2.4 2\"/><path d=\"M12 18l-2.4-2M12 18l2.4-2\"/></svg>","📉":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"4 4 4 20 20 20\"/><polyline points=\"6 9 10 13 13 10 18 16\"/><path d=\"M18 16h-4M18 16v-4\"/></svg>","🔗":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"9\" width=\"11\" height=\"6\" rx=\"3\"/><rect x=\"10\" y=\"9\" width=\"11\" height=\"6\" rx=\"3\"/></svg>","🧭":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><polygon points=\"12 7 14 12 12 17 10 12\"/></svg>","🌀":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 12a1.6 1.6 0 1 1 1.6 1.6a3.6 3.6 0 1 1-3.6-3.6a5.8 5.8 0 1 1 5.8 5.8\"/></svg>","📐":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 5v14h14Z\"/><path d=\"M5 16h3v3\"/><path d=\"M9 19v-2M13 19v-3\"/></svg>","🦴":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"6\" cy=\"7\" r=\"2\"/><circle cx=\"8\" cy=\"5\" r=\"2\"/><circle cx=\"18\" cy=\"17\" r=\"2\"/><circle cx=\"16\" cy=\"19\" r=\"2\"/><path d=\"M7.5 8.5 16.5 17.5\"/></svg>","🦩":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"7\" cy=\"5\" r=\"1.6\"/><path d=\"M5.6 4.7 4 5\"/><path d=\"M7 6.6c1 3.4-1 4.4 2 6.4c2 1.5 4 2 4 4\"/><path d=\"M12 16.5 11.5 21M13.5 16.5 14.5 21\"/></svg>","🕳️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"1\"/><path d=\"M4 9.3h16M4 14.6h16M9.3 4v16M14.6 4v16\"/><circle cx=\"6.6\" cy=\"6.6\" r=\"1\" fill=\"currentColor\"/><circle cx=\"17.3\" cy=\"12\" r=\"1\" fill=\"currentColor\"/><circle cx=\"12\" cy=\"17.3\" r=\"1\" fill=\"currentColor\"/></svg>","🗜️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 7H10V17H4\"/><path d=\"M20 7H14V17H20\"/><path d=\"M10.5 12H13.5M11.6 10.8 10.5 12 11.6 13.2M12.4 10.8 13.5 12 12.4 13.2\"/></svg>","🐍":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 16q2.5-3.5 5 0t5 0q2 0 3-2\"/><circle cx=\"16.2\" cy=\"12.4\" r=\"0.6\" fill=\"currentColor\"/><path d=\"M16 11.5 17.6 10.3M17.6 10.3l-.2 1M17.6 10.3l-1 .2\"/></svg>","🧬":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 3C16 8 8 16 16 21\"/><path d=\"M16 3C8 8 16 16 8 21\"/><path d=\"M9 6h6M9.5 12h5M9 18h6\"/></svg>","➖":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8 12h8\"/></svg>","🪜":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 3V21M16 3V21\"/><path d=\"M8 7h8M8 12h8M8 17h8\"/></svg>","🌐":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><ellipse cx=\"12\" cy=\"12\" rx=\"4\" ry=\"9\"/><path d=\"M3 12h18\"/></svg>","🧱":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"4\" y=\"5\" width=\"16\" height=\"14\" rx=\"1\"/><path d=\"M4 9.7h16M4 14.4h16\"/><path d=\"M10 5v4.7M16 5v4.7M7 9.7v4.7M13 9.7v4.7M10 14.4v4.6M16 14.4v4.6\"/></svg>","🦢":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M13 4C10 4 10 8 12 10\"/><path d=\"M5 16C5 12 9 11 13 11C16 11 18 13 17 16\"/><path d=\"M13 4 11 5\"/><path d=\"M4 19q2 1 4 0t4 0t4 0t4 0\"/></svg>","🌫️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 8q3-2 6 0t6 0\"/><path d=\"M4 12q3-2 6 0t6 0\"/><path d=\"M4 16q3-2 6 0t6 0\"/></svg>","🔭":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"3,15 6,18 18,6 15,3\"/><line x1=\"10.5\" y1=\"10.5\" x2=\"11\" y2=\"20\"/><line x1=\"8\" y1=\"21\" x2=\"14\" y2=\"21\"/></svg>","↩️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"8,7 5,10 8,13\"/><path d=\"M5 10h9a4 4 0 0 1 4 4v3\"/></svg>","🎯":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"1.5\" fill=\"currentColor\"/></svg>","📏":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"8\" width=\"18\" height=\"8\" rx=\"1\"/><line x1=\"7\" y1=\"8\" x2=\"7\" y2=\"12\"/><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"12\"/><line x1=\"15\" y1=\"8\" x2=\"15\" y2=\"12\"/></svg>","⏩":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"3,6 11,12 3,18\"/><polygon points=\"12,6 20,12 12,18\"/></svg>","🖼️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><circle cx=\"8.5\" cy=\"9\" r=\"1.5\"/><polyline points=\"4,17 9,12 13,15 20,8\"/></svg>","📜":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6 6a2 2 0 0 1 2-2h10v14a2 2 0 0 1-2 2H6\"/><path d=\"M6 6h3v12a2 2 0 0 1-3 0\"/><line x1=\"11\" y1=\"9\" x2=\"16\" y2=\"9\"/><line x1=\"11\" y1=\"13\" x2=\"16\" y2=\"13\"/></svg>","🏛️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"3,8 12,3 21,8\"/><line x1=\"5\" y1=\"8\" x2=\"5\" y2=\"18\"/><line x1=\"9.5\" y1=\"8\" x2=\"9.5\" y2=\"18\"/><line x1=\"14.5\" y1=\"8\" x2=\"14.5\" y2=\"18\"/><line x1=\"19\" y1=\"8\" x2=\"19\" y2=\"18\"/><line x1=\"3\" y1=\"21\" x2=\"21\" y2=\"21\"/></svg>","📖":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 6v14\"/><path d=\"M12 6c-2-1.5-5-2-9-2v14c4 0 7 .5 9 2\"/><path d=\"M12 6c2-1.5 5-2 9-2v14c-4 0-7 .5-9 2\"/></svg>","🗄️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"5\" y=\"3\" width=\"14\" height=\"18\" rx=\"1\"/><line x1=\"5\" y1=\"9\" x2=\"19\" y2=\"9\"/><line x1=\"5\" y1=\"15\" x2=\"19\" y2=\"15\"/><line x1=\"10\" y1=\"6\" x2=\"14\" y2=\"6\"/><line x1=\"10\" y1=\"12\" x2=\"14\" y2=\"12\"/><line x1=\"10\" y1=\"18\" x2=\"14\" y2=\"18\"/></svg>","📋":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"5\" y=\"4\" width=\"14\" height=\"17\" rx=\"2\"/><rect x=\"9\" y=\"2\" width=\"6\" height=\"4\" rx=\"1\"/><line x1=\"8\" y1=\"11\" x2=\"16\" y2=\"11\"/><line x1=\"8\" y1=\"15\" x2=\"13\" y2=\"15\"/></svg>","🔡":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"9\" width=\"18\" height=\"6\" rx=\"1.5\"/><line x1=\"9\" y1=\"9\" x2=\"9\" y2=\"15\"/><line x1=\"14\" y1=\"9\" x2=\"14\" y2=\"15\"/></svg>","🔠":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"9\" width=\"18\" height=\"6\" rx=\"1.5\"/><line x1=\"6.6\" y1=\"9\" x2=\"6.6\" y2=\"15\"/><line x1=\"10.2\" y1=\"9\" x2=\"10.2\" y2=\"15\"/><line x1=\"13.8\" y1=\"9\" x2=\"13.8\" y2=\"15\"/><line x1=\"17.4\" y1=\"9\" x2=\"17.4\" y2=\"15\"/></svg>","🗝️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"7\" cy=\"9\" r=\"4\"/><line x1=\"9.8\" y1=\"11.8\" x2=\"19\" y2=\"21\"/><line x1=\"16\" y1=\"18\" x2=\"18\" y2=\"16\"/><line x1=\"13\" y1=\"15\" x2=\"15\" y2=\"13\"/></svg>","♻️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6 10a6 6 0 0 1 10-3\"/><polyline points=\"16,3 16,7 12,7\"/><path d=\"M18 14a6 6 0 0 1-10 3\"/><polyline points=\"8,21 8,17 12,17\"/></svg>","📚":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"4\" y=\"3\" width=\"5\" height=\"18\" rx=\"1\"/><rect x=\"9\" y=\"3\" width=\"4\" height=\"18\" rx=\"1\"/><rect x=\"13\" y=\"5\" width=\"4\" height=\"16\" rx=\"1\"/><line x1=\"4\" y1=\"8\" x2=\"9\" y2=\"8\"/></svg>","🔦":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"9\" width=\"8\" height=\"6\" rx=\"1\"/><path d=\"M11 9l4-2v10l-4-2z\"/><line x1=\"16\" y1=\"8\" x2=\"20\" y2=\"6\"/><line x1=\"16\" y1=\"12\" x2=\"20\" y2=\"12\"/><line x1=\"16\" y1=\"16\" x2=\"20\" y2=\"18\"/></svg>","🍞":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 13c0-3.3 3.6-5 8-5s8 1.7 8 5v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z\"/><path d=\"M9 9.5 8 13M13 9 12 13\"/></svg>","🔎":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"10\" cy=\"10\" r=\"6\"/><line x1=\"14.4\" y1=\"14.4\" x2=\"20\" y2=\"20\"/></svg>","📈":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 4v16h16\"/><polyline points=\"7 15 11 11 14 13 19 7\"/><polyline points=\"16 7 19 7 19 10\"/></svg>","🧹":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 4 12 11\"/><path d=\"M12 11 6 17l3 3 6-6z\"/><path d=\"M7 18l2 2M9.5 15.5l2 2\"/></svg>","🌱":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 21v-8\"/><path d=\"M12 14c0-3-2-5-5-5 0 3 2 5 5 5z\"/><path d=\"M12 12c0-3 2-5 5-5 0 3-2 5-5 5z\"/></svg>","🧽":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"4\" y=\"8\" width=\"16\" height=\"11\" rx=\"3\"/><circle cx=\"9\" cy=\"13\" r=\"1\"/><circle cx=\"13\" cy=\"15\" r=\"1\"/><circle cx=\"16\" cy=\"12\" r=\"1\"/></svg>","💻":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"4\" y=\"5\" width=\"16\" height=\"11\" rx=\"1\"/><path d=\"M2 19h20\"/><polyline points=\"9 9 7 11 9 13\"/><polyline points=\"14 9 16 11 14 13\"/></svg>","🐭":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"11\" cy=\"13\" r=\"5\"/><circle cx=\"6.5\" cy=\"7.5\" r=\"2.5\"/><circle cx=\"15.5\" cy=\"7.5\" r=\"2.5\"/><path d=\"M16 15c3 0 4 2 4 4\"/><circle cx=\"11\" cy=\"13\" r=\"0.7\" fill=\"currentColor\"/></svg>","👍":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 11h3v9H4z\"/><path d=\"M7 11l4-7c1.4 0 2.2 1 1.8 2.4L12 10h5a2 2 0 0 1 2 2.4l-1.3 5.6A2 2 0 0 1 15.7 20H7\"/></svg>","🧪":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 3h6\"/><path d=\"M10 3v9l-3.5 6A2 2 0 0 0 8.3 21h7.4a2 2 0 0 0 1.8-3l-3.5-6V3\"/><line x1=\"8.5\" y1=\"15\" x2=\"15.5\" y2=\"15\"/></svg>","📕":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M7 4h11a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z\"/><line x1=\"9\" y1=\"4\" x2=\"9\" y2=\"21\"/></svg>","🏭":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 21V10l5 3.5V10l5 3.5V8h6v13z\"/><path d=\"M8 21v-3M13 21v-3M18 21v-3\"/></svg>","⏭️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"5 6 13 12 5 18\"/><polygon points=\"12 6 18 12 12 18\"/><line x1=\"19\" y1=\"6\" x2=\"19\" y2=\"18\"/></svg>","🥥":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"8\"/><path d=\"M7 11a5 5 0 0 1 10 0\"/><circle cx=\"10\" cy=\"9.5\" r=\"0.8\" fill=\"currentColor\"/><circle cx=\"14\" cy=\"9.5\" r=\"0.8\" fill=\"currentColor\"/></svg>","✅":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><polyline points=\"7.5 12.5 11 16 16.5 8.5\"/></svg>","🧵":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 5h8M8 19h8\"/><rect x=\"9\" y=\"5\" width=\"6\" height=\"14\"/><path d=\"M9.5 9h5M9.5 12h5M9.5 15h5\"/><path d=\"M15 19c2.5 1 2.5 3.5 0 3.5\"/></svg>","🪶":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 5c-2 9-7 13-13 14 0 0 1-9 6-12s7-2 7-2z\"/><path d=\"M5 19 12 12\"/><path d=\"M16 7l-7 8\"/></svg>","✂️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"6\" cy=\"7\" r=\"2.3\"/><circle cx=\"6\" cy=\"17\" r=\"2.3\"/><path d=\"M8 8.4 20 16M8 15.6 20 8\"/></svg>","🎬":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"8\" width=\"18\" height=\"12\" rx=\"1\"/><path d=\"M3 12h18\"/><path d=\"M7 8 9 12M12 8 14 12M17 8 19 12\"/></svg>","🕹️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"6\" r=\"2.6\"/><line x1=\"12\" y1=\"8.6\" x2=\"12\" y2=\"15\"/><ellipse cx=\"12\" cy=\"19\" rx=\"6\" ry=\"2\"/></svg>","🕵️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 11h16\"/><path d=\"M7 11c0-3 1.6-5 5-5s5 2 5 5\"/><circle cx=\"10\" cy=\"17\" r=\"2.6\"/><line x1=\"12\" y1=\"19\" x2=\"15\" y2=\"21\"/></svg>","👤":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"8\" r=\"3.6\"/><path d=\"M5 20c0-4 3-6.2 7-6.2s7 2.2 7 6.2\"/></svg>","🧮":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"1\"/><line x1=\"3\" y1=\"12\" x2=\"21\" y2=\"12\"/><circle cx=\"8\" cy=\"8\" r=\"1\"/><circle cx=\"14\" cy=\"8\" r=\"1\"/><circle cx=\"10\" cy=\"16\" r=\"1\"/><circle cx=\"16\" cy=\"16\" r=\"1\"/></svg>","🌟":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"12,3 14.5,9 21,9.6 16,13.9 17.5,20.4 12,17 6.5,20.4 8,13.9 3,9.6 9.5,9\"/></svg>","🦫":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6 10c0-3 2.6-5 6-5s6 2 6 5c0 4-3 7-6 7s-6-3-6-7z\"/><circle cx=\"9.5\" cy=\"9\" r=\"0.8\"/><circle cx=\"14.5\" cy=\"9\" r=\"0.8\"/><rect x=\"10.8\" y=\"13.5\" width=\"2.4\" height=\"3\" rx=\"0.5\"/></svg>","🌴":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 21c0-5 0-8-1-11\"/><path d=\"M11 10c-3-2-6-2-8 0\"/><path d=\"M11 10c1-3 1-6-1-8\"/><path d=\"M11 10c3-2 6-1 8 1\"/><path d=\"M11 10c2-2 4-4 4-7\"/></svg>","🎛️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"6\" y1=\"4\" x2=\"6\" y2=\"20\"/><line x1=\"12\" y1=\"4\" x2=\"12\" y2=\"20\"/><line x1=\"18\" y1=\"4\" x2=\"18\" y2=\"20\"/><circle cx=\"6\" cy=\"9\" r=\"2\"/><circle cx=\"12\" cy=\"15\" r=\"2\"/><circle cx=\"18\" cy=\"8\" r=\"2\"/></svg>","🧼":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"4\" y=\"11\" width=\"13\" height=\"8\" rx=\"2\"/><circle cx=\"17\" cy=\"7\" r=\"1.5\"/><circle cx=\"20\" cy=\"10\" r=\"1\"/><circle cx=\"19\" cy=\"5\" r=\"0.8\"/></svg>","⚙️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1\"/></svg>","🖧":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"9\" y=\"3\" width=\"6\" height=\"5\" rx=\"1\"/><rect x=\"3\" y=\"16\" width=\"6\" height=\"5\" rx=\"1\"/><rect x=\"15\" y=\"16\" width=\"6\" height=\"5\" rx=\"1\"/><path d=\"M12 8v4M6 16v-2h12v2\"/></svg>","📦":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z\"/><path d=\"M3 7.5 12 12l9-4.5M12 12v9\"/></svg>","🌡️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 14V5a2 2 0 0 0-4 0v9a4 4 0 1 0 4 0z\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"14\"/></svg>","🚦":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"8\" y=\"3\" width=\"8\" height=\"16\" rx=\"3\"/><circle cx=\"12\" cy=\"7\" r=\"1.5\"/><circle cx=\"12\" cy=\"11\" r=\"1.5\"/><circle cx=\"12\" cy=\"15\" r=\"1.5\"/><path d=\"M16 8h3M16 14h3\"/></svg>","🧊":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"5,7 12,4 19,7 12,10\"/><polyline points=\"5,7 5,15 12,18 12,10\"/><polyline points=\"19,7 19,15 12,18 12,10\"/><line x1=\"5\" y1=\"11\" x2=\"12\" y2=\"14\"/></svg>","🪄":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"6\" y1=\"18\" x2=\"15\" y2=\"9\"/><line x1=\"18\" y1=\"4\" x2=\"18\" y2=\"9\"/><line x1=\"15.5\" y1=\"6.5\" x2=\"20.5\" y2=\"6.5\"/><line x1=\"19\" y1=\"11\" x2=\"19\" y2=\"13\"/><line x1=\"18\" y1=\"12\" x2=\"20\" y2=\"12\"/></svg>","🪞":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><ellipse cx=\"12\" cy=\"10\" rx=\"6\" ry=\"7\"/><line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"21\"/><path d=\"M9,6 Q8,8 8,11\"/></svg>","📑":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"6\" y=\"4\" width=\"12\" height=\"16\" rx=\"1\"/><path d=\"M11,4 L11,11 L13.5,9 L16,11 L16,4\"/><line x1=\"9\" y1=\"15\" x2=\"15\" y2=\"15\"/><line x1=\"9\" y1=\"18\" x2=\"13\" y2=\"18\"/></svg>","🔢":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"5\" y=\"4\" width=\"14\" height=\"16\" rx=\"2\"/><line x1=\"9.7\" y1=\"4\" x2=\"9.7\" y2=\"20\"/><line x1=\"14.3\" y1=\"4\" x2=\"14.3\" y2=\"20\"/><line x1=\"5\" y1=\"9.3\" x2=\"19\" y2=\"9.3\"/><line x1=\"5\" y1=\"14.6\" x2=\"19\" y2=\"14.6\"/></svg>","🪙":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"8\"/><circle cx=\"12\" cy=\"12\" r=\"3.5\"/><line x1=\"12\" y1=\"6\" x2=\"12\" y2=\"8.5\"/><line x1=\"12\" y1=\"15.5\" x2=\"12\" y2=\"18\"/></svg>","🔂":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18,8 A6.5,6.5 0 1 0 18.5,15.5\"/><polyline points=\"18.5,12 18.5,15.8 15,15.5\"/><line x1=\"12\" y1=\"9.5\" x2=\"12\" y2=\"14.5\"/></svg>","🏅":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"9\" y1=\"3\" x2=\"11\" y2=\"10\"/><line x1=\"15\" y1=\"3\" x2=\"13\" y2=\"10\"/><circle cx=\"12\" cy=\"15\" r=\"5\"/><circle cx=\"12\" cy=\"15\" r=\"2\"/></svg>","🔧":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16,5 a3.5,3.5 0 0 0 -4.5,4.5 L5,16 l3,3 6.5,-6.5 a3.5,3.5 0 0 0 4.5,-4.5 l-2.5,2.5 -2,-2 z\"/></svg>","⏱️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"13\" r=\"7\"/><line x1=\"10\" y1=\"3\" x2=\"14\" y2=\"3\"/><line x1=\"12\" y1=\"3\" x2=\"12\" y2=\"6\"/><line x1=\"18.5\" y1=\"7\" x2=\"20\" y2=\"5.5\"/><line x1=\"12\" y1=\"13\" x2=\"12\" y2=\"9\"/><line x1=\"12\" y1=\"13\" x2=\"15\" y2=\"13\"/></svg>","🌲":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12,3 L7,11 L17,11 Z\"/><path d=\"M12,8 L5,17 L19,17 Z\"/><line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"20\"/></svg>","🛰️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"10\" y=\"10\" width=\"4\" height=\"4\" rx=\"0.5\"/><rect x=\"3\" y=\"9.5\" width=\"5\" height=\"5\"/><rect x=\"16\" y=\"9.5\" width=\"5\" height=\"5\"/><line x1=\"8\" y1=\"12\" x2=\"10\" y2=\"12\"/><line x1=\"14\" y1=\"12\" x2=\"16\" y2=\"12\"/><path d=\"M12,10 L14,6\"/></svg>","🪦":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M7,20 L7,10 a5,5 0 0 1 10,0 L17,20 Z\"/><line x1=\"4\" y1=\"20\" x2=\"20\" y2=\"20\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"13\"/><line x1=\"9.5\" y1=\"10.5\" x2=\"14.5\" y2=\"10.5\"/></svg>","🎚️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"4\" y1=\"9\" x2=\"20\" y2=\"9\"/><rect x=\"8\" y=\"6.5\" width=\"4\" height=\"5\" rx=\"1\"/><line x1=\"4\" y1=\"15\" x2=\"20\" y2=\"15\"/><rect x=\"13\" y=\"12.5\" width=\"4\" height=\"5\" rx=\"1\"/></svg>","💍":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"15\" r=\"4.5\"/><path d=\"M8,7 L12,3 L16,7 L12,11 Z\"/><line x1=\"8\" y1=\"7\" x2=\"16\" y2=\"7\"/></svg>","🛢️":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><ellipse cx=\"12\" cy=\"6\" rx=\"6\" ry=\"2\"/><path d=\"M6,6 L6,18 a6,2 0 0 0 12,0 L18,6\"/><path d=\"M6,10 a6,2 0 0 0 12,0\"/><path d=\"M6,14 a6,2 0 0 0 12,0\"/></svg>","🔌":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"9\" y1=\"3\" x2=\"9\" y2=\"7\"/><line x1=\"15\" y1=\"3\" x2=\"15\" y2=\"7\"/><path d=\"M7,7 L17,7 L17,11 a5,5 0 0 1 -10,0 Z\"/><line x1=\"12\" y1=\"16\" x2=\"12\" y2=\"21\"/></svg>","🔥":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 3c1 3 4 4.5 4 8a4 4 0 0 1-8 0c0-1.4.5-2.4 1.2-3.2C9.6 6.7 11 5.2 12 3z\"/><path d=\"M12 21a3 3 0 0 1-3-3c0-1.6 1.4-2.4 1.8-3.6.7 1 2.2 1.6 2.2 3.2a2 2 0 0 1-1 3.4z\"/></svg>","🤗":"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"11\" r=\"7\"/><path d=\"M9 9.5h.01M15 9.5h.01\"/><path d=\"M9 13.5a3.5 3.5 0 0 0 6 0\"/><path d=\"M4.5 14c-1 .4-1.6 1.1-1.6 2M19.5 14c1 .4 1.6 1.1 1.6 2\"/></svg>"};
+// ===== REPRESENTATION (page key: structure) =====
+// trunk = the winning mainline that year; GL = pruned/ghost; GR = side branches
+TREES.structure.nodes = [
+{id:'r20',year:2020,col:'T',kind:'chosen',g:'🔡',title:'Frozen LM + projected visual embeddings',prereq:[],tip:{tag:'2020 · node',sub:'A pretrained LM is the trunk; vision is projected in as continuous embeddings',gh:'',ch:'Encode the image with a frozen ViT/CLIP, project the features into the LM input space — modalities meet only as continuous vectors',note:'The continuous-feature representation that dominates the early VLM era'}},
+{id:'r_vqvae20',year:2020,col:'GL1',kind:'ghost',g:'🔢',title:'VQ-VAE / VQ-GAN discrete image codes',prereq:[],tip:{tag:'2020 · seed',sub:'',gh:'Quantize an image into a grid of discrete codebook tokens, so pixels become a sequence like text',ch:'',note:'The discrete-token substrate; parked until generation needs it (DALL-E used it, but VLMs stayed continuous)'}},
+{id:'r_clip21',year:2021,col:'GR1',kind:'chosen',g:'🔗',title:'CLIP contrastive image-text space',prereq:['r20'],tip:{tag:'2021 · node',sub:'',gh:'',ch:'Contrastively align image and text into one embedding space — the de-facto vision encoder bolted onto LMs for years',note:'2103.00020; the continuous encoder almost every 2022-24 VLM reuses'}},
+{id:'r_qformer23',year:2023,col:'GR1',kind:'chosen',g:'🌉',title:'Q-Former / resampler bridge',prereq:['r_clip21'],tip:{tag:'2023 · node',sub:'',gh:'',ch:'A few learned query tokens compress the visual features to a fixed set before the LM — continuous, but length-controlled',note:'BLIP-2 2301.12597; the standard continuous bridge'}},
+{id:'r_proj23',year:2023,col:'GL2',kind:'ghost',g:'🪡',title:'Just an MLP projector (LLaVA)',prereq:['r_clip21'],tip:{tag:'2023 · minimalist road',sub:'',gh:'Drop the fancy bridge: one linear/MLP layer maps CLIP features to LM tokens',ch:'',note:'2304.08485; proves the bridge can be trivial — but representation is still continuous'}},
+{id:'r23',year:2023,col:'T',kind:'fork',g:'🔢',title:'Everything-is-a-token (discrete unification)',prereq:['r20'],mutex:['r_qformer23'],tip:{tag:'2023 · ★ FORK',sub:'Continuous features dominate, but input ≠ output, so generation needs a separate head',gh:'Could have kept continuous-in / separate-decoder-out forever',ch:'Quantize every modality (VQ image, codec audio) into one extended vocabulary — input and output become symmetric, one next-token loss',note:'AnyGPT 2402.12226 / SEED 2307.08041; the discrete-token fork that makes perceive = generate'}},
+{id:'r_seed23',year:2023,col:'GR2',kind:'chosen',g:'🌰',title:'Semantic image tokens (SEED)',prereq:['r23'],tip:{tag:'2023 · node',sub:'',gh:'',ch:'Quantize images to 1D causal SEMANTIC codes (not pixel-reconstruction codes) so an LM can autoregress them naturally',note:'2307.08041; discrete tokens tuned for LM consumption'}},
+{id:'r_whisper23',year:2023,col:'GL3',kind:'chosen',g:'📝',title:'Continuous audio encoder (Whisper-style)',prereq:['r20'],tip:{tag:'2023 · node',sub:'',gh:'',ch:'Feed audio as continuous encoder features for understanding — accurate perception, but not generatable',note:'The asymmetric audio-in path used by Qwen-Audio / Mini-Omni understanding'}},
+{id:'r_mimi24',year:2024,col:'GR1',kind:'chosen',g:'🎚',title:'RVQ neural audio codec (Mimi/SNAC)',prereq:['r23'],tip:{tag:'2024 · node',sub:'',gh:'',ch:'Residual-VQ codecs turn speech into discrete semantic+acoustic tokens — audio joins the one-vocabulary club, generatable like text',note:'Mimi (Moshi) / SNAC; the substrate for end-to-end speech-out'}},
+{id:'r_navit24',year:2024,col:'GR2',kind:'chosen',g:'🪟',title:'Native-resolution continuous patches',prereq:['r_qformer23'],tip:{tag:'2024 · node',sub:'',gh:'',ch:'Stop resizing to a square: feed patches at native resolution/aspect (NaViT-style) with M-RoPE — continuous, but truly native',note:'Qwen2-VL 2409.12191; the continuous camp gets sharper'}},
+{id:'r_decouple24',year:2024,col:'T',kind:'fork',g:'⚖',title:'Decoupled representation per task',prereq:['r23'],tip:{tag:'2024 · ★ FORK',sub:'One tokenizer must serve both understanding (semantic) and generation (reconstruction) — and does neither perfectly',gh:'Could have forced a single shared tokenizer for both',ch:'Janus: use continuous SigLIP features for understanding and VQ tokens for generation, decoupled inside one transformer',note:'2410.13848; concedes semantic vs reconstruction are different objectives'}},
+{id:'r_unitok25',year:2025,col:'GR1',kind:'chosen',g:'🎟',title:'Unified tokenizer (UniTok/TokLIP/QLIP)',prereq:['r_decouple24'],tip:{tag:'2025 · node',sub:'',gh:'',ch:'Try to heal the split: train one tokenizer that is both CLIP-aligned (semantic) and reconstruction-capable, so understanding and generation can share it',note:'UniTok 2502.20321 / TokLIP 2505.05422 / QLIP 2502.05178'}},
+{id:'r_atoken25',year:2025,col:'GR2',kind:'chosen',g:'🅰',title:'One tokenizer for image+video+3D (AToken)',prereq:['r_unitok25'],tip:{tag:'2025 · node',sub:'',gh:'',ch:'Extend the unified tokenizer across modalities and dimensions — image, video, and 3D share one discrete space',note:'2509.14476'}},
+{id:'r26',year:2026,col:'T',kind:'now',g:'♾',title:'Symmetric multi-modal token space',prereq:['r_decouple24','r_mimi24'],tip:{tag:'2026 · NOW',sub:'',gh:'',ch:'Flagships converge on one discrete (or hybrid) token space where text, image, and audio are all read and written by the same backbone — the omni representation ideal',note:'Qwen3-Omni / Ming-Omni / the any-to-any line'}},
+  ];
+  TREES.structure.threads = [
+    {from:'r_vqvae20',to:'r23'}
+  ];
+// ===== FUSION & INIT (page key: data) =====
+  TREES.data.nodes = [
+{id:'f20',year:2020,col:'T',kind:'chosen',g:'🔌',title:'Late fusion · frozen LLM + bolt-on encoder',prereq:[],tip:{tag:'2020 · node',sub:'A pretrained text LLM is the trunk; senses are attached, not grown',gh:'',ch:'Keep the LLM frozen, attach a pretrained vision/audio encoder through a thin adapter — cheap, data-efficient, modalities meet only at the LLM input',note:'The pragmatic shortcut of the data-scarce era'}},
+{id:'f_flamingo22',year:2022,col:'T',kind:'fork',g:'🦩',title:'Gated cross-attention (Flamingo)',prereq:['f20'],tip:{tag:'2022 · ★ FORK',sub:'Frozen LLM + frozen vision encoder are both available',gh:'Could have started fine-tuning the whole stack end-to-end',ch:'Insert gated cross-attention layers into the frozen LM so it can attend to visual features — the canonical bolt-on',note:'2204.14198; defined late fusion for a generation of VLMs'}},
+{id:'f_blip2_23',year:2023,col:'GR1',kind:'chosen',g:'🌉',title:'Q-Former, both ends frozen',prereq:['f_flamingo22'],tip:{tag:'2023 · node',sub:'',gh:'',ch:'Freeze encoder AND LLM; train only a lightweight Q-Former bridge — maximally parameter-efficient late fusion',note:'2301.12597'}},
+{id:'f_kosmos23',year:2023,col:'GL1',kind:'ghost',g:'🌐',title:'Early-fusion from scratch (Kosmos-1)',prereq:['f20'],tip:{tag:'2023 · road not taken (early)',sub:'',gh:'Train a decoder-only transformer from scratch on interleaved image-text, modalities mixed at the bottom',ch:'',note:'2302.14045; native fusion, but pre-scale it looked expensive vs bolt-on'}},
+{id:'f23',year:2023,col:'T',kind:'fork',g:'🫧',title:'Early fusion · mix modalities at the bottom',prereq:['f20'],mutex:['f_blip2_23'],tip:{tag:'2023 · ★ FORK',sub:'Late fusion works but bottlenecks cross-modal interaction through a fixed adapter',gh:'Could have kept refining the adapter/bridge forever',ch:'Mix modality tokens at the bottom of one transformer and train jointly — stronger cross-modal reasoning, but you train from scratch',note:'Chameleon 2405.09818; the early-fusion fork'}},
+{id:'f_fuyu23',year:2023,col:'GR2',kind:'fork',g:'🟧',title:'Encoder-free · raw patches in (Fuyu)',prereq:['f23'],tip:{tag:'2023 · ★ branch',sub:'',gh:'',ch:'Delete the vision encoder entirely: linearly project raw image patches straight into the first transformer layer',note:'Adept Fuyu; the radical encoder-free end of native fusion'}},
+{id:'f_chameleon24',year:2024,col:'T',kind:'chosen',g:'🦎',title:'Early-fusion at scale (Chameleon)',prereq:['f23'],tip:{tag:'2024 · node',sub:'',gh:'',ch:'~10T interleaved tokens, one uniform transformer, VQ image tokens woven through text — native multimodality proven at scale',note:'2405.09818'}},
+{id:'f_interleave24',year:2024,col:'GR1',kind:'chosen',g:'🪢',title:'Interleaved-document pretraining',prereq:['f23'],tip:{tag:'2024 · node',sub:'',gh:'',ch:'Pretrain directly on image-text interleaved web documents, so the model treats multimodality as native from step 0',note:'The MM1 / Idefics-style data recipe'}},
+{id:'f_scaling25',year:2025,col:'T',kind:'fork',g:'📐',title:'Scaling laws settle early vs late',prereq:['f_chameleon24'],tip:{tag:'2025 · ★ FORK',sub:'The early-vs-late debate was still folklore',gh:'Could have kept assuming late fusion is the safe default',ch:'457 models: NO inherent advantage to late fusion — early fusion is stronger at low param counts, more compute-efficient, and benefits from MoE',note:'2504.07951; the empirical verdict tilting the field native'}},
+{id:'f_navil25',year:2025,col:'GR1',kind:'chosen',g:'🧭',title:'NaViL · native end-to-end scaling',prereq:['f_scaling25'],tip:{tag:'2025 · node',sub:'',gh:'',ch:'Native end-to-end MLLM; encoder and LLM capacity should scale together, and native training is competitive under data constraints',note:'2510.08565'}},
+{id:'f_neo25',year:2025,col:'GR2',kind:'revived',g:'🧩',title:'NEO · encoder-free, grown from scratch',prereq:['f_scaling25'],revive:{from:'f_fuyu23'},tip:{tag:'2025 · revived',sub:'',gh:'',ch:'',rv:'A dense monolithic VLM grows visual perception from scratch with no encoder, via native vision-language primitives — the Fuyu bet, now competitive',note:'2510.14979; encoder-free revived once scale/data made it work'}},
+{id:'f26',year:2026,col:'T',kind:'now',g:'♾',title:'Native early-fusion is the default',prereq:['f_scaling25'],tip:{tag:'2026 · NOW',sub:'',gh:'',ch:'Flagship omni models are trained natively with early fusion (often MoE); the frozen-LLM bolt-on survives only for cheap/quick adaptations',note:'Qwen3-Omni / Ming-Flash-Omni / the any-to-any line'}},
+  ];
+  TREES.data.threads = [];
+// ===== GENERATION (page key: algorithm) =====
+  TREES.algorithm.nodes = [
+{id:'g21',year:2021,col:'T',kind:'chosen',g:'🚫',title:'Understanding-only (no generation)',prereq:[],tip:{tag:'2021 · node',sub:'Early multimodal LMs perceive but only emit text',gh:'',ch:'Read images/audio, output text — generation of pixels/audio is out of scope, left to separate models',note:'The VLM baseline the generation forks branch off from'}},
+{id:'g_codi23',year:2023,col:'GL1',kind:'ghost',g:'🎼',title:'Composable external diffusion (CoDi)',prereq:['g21'],tip:{tag:'2023 · road (early)',sub:'',gh:'Bridge a shared latent space to several composable diffusion decoders for any-to-any output',ch:'',note:'2305.11846; powerful but generation lives entirely outside the LM'}},
+{id:'g23',year:2023,col:'T',kind:'fork',g:'🌿',title:'External diffuser bridge (Emu/SEED/NExT-GPT)',prereq:['g21'],tip:{tag:'2023 · ★ FORK',sub:'The LM can understand images but cannot draw them',gh:'Could have stayed understanding-only',ch:'The LM emits/regresses conditioning embeddings; a separate (often frozen) SD/SDXL decoder renders them — modular, but generation is bolted on',note:'NExT-GPT 2309.05519 / Emu2 2312.13286 / SEED-X 2404.14396'}},
+{id:'g24',year:2024,col:'T',kind:'fork',g:'🦎',title:'AR over discrete tokens (one model)',prereq:['g23'],mutex:['g_transfusion24'],tip:{tag:'2024 · ★ FORK',sub:'External bridges work but the generator is a different model',gh:'Could have kept the LM and the image model separate forever',ch:'Quantize images to tokens and just predict them next-token, same weights as text — maximal unification, fidelity capped by the tokenizer + serial decoding',note:'Chameleon 2405.09818 / Emu3 2409.18869'}},
+{id:'g_transfusion24',year:2024,col:'GR1',kind:'fork',g:'🔀',title:'AR + diffusion fused in one transformer',prereq:['g23'],mutex:['g24'],tip:{tag:'2024 · ★ branch',sub:'',gh:'',ch:'One transformer, shared weights: next-token for text, diffusion/flow on continuous latents for images — higher fidelity, two objectives at once',note:'Transfusion 2408.11039 / Show-o 2408.12528'}},
+{id:'g_emu3_24',year:2024,col:'GL1',kind:'chosen',g:'3️⃣',title:'Emu3 · next-token is all you need',prereq:['g24'],tip:{tag:'2024 · node',sub:'',gh:'',ch:'Image, text, and video all as one discrete next-token stream, no diffusion module anywhere',note:'2409.18869; the purest AR-over-discrete generator'}},
+{id:'g_janus24',year:2024,col:'GR2',kind:'chosen',g:'⚖',title:'Janus · decoupled gen/understanding encoders',prereq:['g24'],tip:{tag:'2024 · node',sub:'',gh:'',ch:'Keep AR-over-discrete generation, but give understanding and generation separate encoders so neither bottlenecks the other',note:'2410.13848 / Janus-Pro 2501.17811'}},
+{id:'g_bagel25',year:2025,col:'GR1',kind:'chosen',g:'🥯',title:'BAGEL · fused MoT, emergent at scale',prereq:['g_transfusion24'],tip:{tag:'2025 · node',sub:'',gh:'',ch:'Decoder-only Mixture-of-Transformer-Experts: text AR + image rectified-flow on continuous latents, with abilities that emerge from scale',note:'2505.14683'}},
+{id:'g_mmada25',year:2025,col:'GL2',kind:'revived',g:'🌫',title:'Unified discrete diffusion (MMaDA)',prereq:['g_transfusion24'],revive:{from:'g_codi23'},tip:{tag:'2025 · revived',sub:'',gh:'',ch:'',rv:'Drop AR entirely: both text and image generated by masked-token discrete diffusion in one model — the diffusion-LM idea revived inside unification',note:'2505.15809 / LLaDA lineage'}},
+{id:'g_xomni25',year:2025,col:'GR2',kind:'chosen',g:'❎',title:'X-Omni · RL fixes discrete AR images',prereq:['g_emu3_24'],tip:{tag:'2025 · node',sub:'',gh:'',ch:'Use RL to make discrete autoregressive image generation competitive again inside a unified model — closing the fidelity gap to diffusion',note:'2507.22058'}},
+{id:'g26',year:2026,col:'T',kind:'now',g:'🎨',title:'Native any-to-any output (one backbone)',prereq:['g24','g_transfusion24'],tip:{tag:'2026 · NOW',sub:'',gh:'',ch:'Flagships generate image/audio from the same backbone that understands them — 4o image-gen, Qwen-Omni speech-out; the bridge has moved inside the model',note:'4o image generation / Qwen2.5-Omni / Ming-Omni'}},
+{id:'g_e2d2_26',year:2026,col:'GR1',kind:'chosen',g:'⏩',title:'AR ⊕ diffusion converge (mode per deploy)',prereq:['g26'],tip:{tag:'2026 · node',sub:'',gh:'',ch:'Train one model on a joint AR+diffusion objective; switch between autoregressive, diffusion-parallel, and self-speculation decoding by changing the attention mask',note:'E2D2 2510.22852 / Nemotron-Labs-Diffusion; the two generation forks stop being separate model classes'}},
+  ];
+  TREES.algorithm.threads = [];
+// ===== REAL-TIME SPEECH (page key: infra) =====
+  TREES.infra.nodes = [
+{id:'v22',year:2022,col:'T',kind:'chosen',g:'⛓',title:'Cascade · ASR → LLM → TTS',prereq:[],tip:{tag:'2022 · node',sub:'Voice assistants chain three separate boxes',gh:'',ch:'Transcribe with ASR, reason with the LLM, synthesize with TTS — simple and modular, but latency stacks and prosody/emotion is lost',note:'The default that the speech-native fork kills'}},
+{id:'v_audiolm22',year:2022,col:'GL1',kind:'ghost',g:'🎚',title:'Audio as discrete tokens (AudioLM)',prereq:[],tip:{tag:'2022 · seed',sub:'',gh:'Codec-tokenize sound and model it autoregressively like language',ch:'',note:'2209.03143; the substrate that makes speech a token stream the LM can emit'}},
+{id:'v_whisper22',year:2022,col:'GL2',kind:'chosen',g:'📝',title:'Robust ASR at scale (Whisper)',prereq:[],tip:{tag:'2022 · node',sub:'',gh:'',ch:'680k hours of weak supervision make speech-to-text robust enough to be a reliable front-end',note:'2212.04356; the left half of every cascade'}},
+{id:'v24',year:2024,col:'T',kind:'fork',g:'🎙',title:'End-to-end speech-native (emit audio tokens)',prereq:['v22'],revive:{from:'v_audiolm22'},tip:{tag:'2024 · ★ FORK',sub:'Cascade is robust but slow, emotionless, and cannot be interrupted',gh:'Could have kept optimizing each cascade stage',ch:'Make audio a token stream the model itself emits interleaved with text, decoded incrementally — speech starts before the text answer exists',note:'Mini-Omni 2408.16725; the speech-native fork (AudioLM substrate revived)'}},
+{id:'v_llamaomni24',year:2024,col:'GR1',kind:'chosen',g:'🦙',title:'Streaming unit decoder (LLaMA-Omni)',prereq:['v24'],tip:{tag:'2024 · node',sub:'',gh:'',ch:'A non-AR (CTC) decoder streams discrete speech units straight from LLM hidden states, parallel to text — ~226ms',note:'2409.06666'}},
+{id:'v_frozen24',year:2024,col:'GR2',kind:'chosen',g:'🧊',title:'Frozen-LLM speech (Freeze-Omni/Mini-Omni)',prereq:['v24'],tip:{tag:'2024 · node',sub:'',gh:'',ch:'Bolt speech in/out onto a fully FROZEN LLM (adapters + a per-chunk state head) to preserve text reasoning and dodge catastrophic forgetting',note:'Freeze-Omni 2411.00774 / Mini-Omni; the frozen-backbone branch'}},
+{id:'v_moshi24',year:2024,col:'T',kind:'fork',g:'🔁',title:'Full-duplex · parallel audio streams (Moshi)',prereq:['v24'],tip:{tag:'2024 · ★ FORK',sub:'Speech-native models still take turns (half-duplex)',gh:'Could have kept turn-taking with barge-in hacks',ch:'Model the user\'s and the model\'s audio as TWO parallel time-synchronized token streams + an "inner monologue" text scaffold — listen and speak at once',note:'2410.00037; ~200ms, true full-duplex'}},
+{id:'v_glm4voice24',year:2024,col:'GL1',kind:'chosen',g:'🅖',title:'Low-bitrate interleaved tokens (GLM-4-Voice)',prereq:['v24'],tip:{tag:'2024 · node',sub:'',gh:'',ch:'A 175bps / 12.5Hz single-codebook speech tokenizer + flow decoder that can start synthesizing from ~10 tokens — short sequences, low latency',note:'2412.02612'}},
+{id:'v_thinker25',year:2025,col:'T',kind:'chosen',g:'🛰',title:'Thinker–Talker (Qwen2.5-Omni)',prereq:['v24'],tip:{tag:'2025 · node',sub:'',gh:'',ch:'Split roles: a Thinker (continuous encoders + text) feeds a separate AR Talker that streams codec tokens block-wise; TMRoPE time-aligns audio/video',note:'2503.20215; the productized streaming-omni recipe'}},
+{id:'v_mctp25',year:2025,col:'GR1',kind:'chosen',g:'⏭️',title:'Multi-token speech heads (VITA-Audio)',prereq:['v_thinker25'],tip:{tag:'2025 · node',sub:'',gh:'',ch:'Lightweight MCTP heads emit several codec tokens per LLM forward pass, so the first audio chunk lands in the first pass — ~236ms → ~53ms',note:'2505.03739'}},
+{id:'v_salmonn25',year:2025,col:'GR2',kind:'revived',g:'🐟',title:'Codec-free full-duplex (SALMONN-omni)',prereq:['v_moshi24'],revive:{from:'v_moshi24'},tip:{tag:'2025 · revived',sub:'',gh:'',ch:'',rv:'Full-duplex without any audio codec in the token space: operate on continuous embeddings with a periodic "dynamic thinking" step that learns when to switch speak↔listen',note:'2505.17060'}},
+{id:'v26',year:2026,col:'T',kind:'now',g:'🔊',title:'Streaming full-duplex speech is standard',prereq:['v_thinker25','v_moshi24'],tip:{tag:'2026 · NOW',sub:'',gh:'',ch:'Flagship omni models ship real-time, interruptible speech in and out as a first-class modality — the cascade is gone from the frontier',note:'GPT-4o voice / Qwen-Omni / LongCat-Flash-Omni real-time interaction'}},
+  ];
+  TREES.infra.threads = [];
+
+  // ---------- shared refs + helpers (built once) ----------
+  var canvas=document.getElementById('canvas');
+  var wires=document.getElementById('wires');
+  var tip=document.getElementById('tip');
+  var byId={}, revPaths=[];
+  canvas.style.width=CANVAS_W+'px';
+
+  // year rail (static across pages)
+  for(var yr=2020;yr<=2026;yr++){
+    var tab=document.createElement('div');
+    tab.className='yrtab';
+    tab.setAttribute('data-year',yr);
+    tab.style.top=(yOf(yr)+30)+'px';
+    tab.innerHTML=yr+'<small>▸ full-year report</small>';
+    canvas.appendChild(tab);
+  }
+
+  // geometry + svg helpers
+  function cx(n){ return COL[n.col]+XOFF; }
+  function topY(n){ return yOf(n.year); }
+  function geo(n){
+    var x=cx(n), t=topY(n);
+    return {cx:x, top:t, bottom:t+BOXH, left:x-NODEW/2, right:x+NODEW/2,
+            iconTop:t, iconBot:t+78, plateBot:t+BOXH};
+  }
+  var SVGNS='http://www.w3.org/2000/svg';
+  function svg(tag,attrs){ var e=document.createElementNS(SVGNS,tag);
+    for(var k in attrs)e.setAttribute(k,attrs[k]); return e; }
+  function rowHTML(lbl,cls,txt){ return '<div class="row"><span class="lbl '+cls+'">'+lbl+'</span>'+txt+'</div>'; }
+  function buildTip(n){
+    var t=n.tip||{}; var hh='';
+    hh+='<div class="tt-tag">'+(t.tag||'')+'</div>';
+    hh+='<h5>'+n.title+'</h5>';
+    if(t.sub) hh+=rowHTML('already exists','sub',t.sub);
+    if(t.gh)  hh+=rowHTML('road not taken','gh',t.gh);
+    if(t.ch)  hh+=rowHTML('human choice','ch',t.ch);
+    if(t.rv)  hh+=rowHTML('revived','rv',t.rv);
+    if(t.note)hh+='<div class="note">'+t.note+'</div>';
+    return hh;
+  }
+  function threadPath(a,b){
+    var x1=a.cx, y1=a.bottom, x2=b.cx, y2=b.iconTop;
+    var dx=x2-x1, c1x=x1+dx*0.18, c1y=y1+90, c2x=x2-dx*0.18, c2y=y2-90;
+    return 'M '+x1+' '+y1+' C '+c1x+' '+c1y+' '+c2x+' '+c2y+' '+x2+' '+y2;
+  }
+  function addThread(fromId,toId){
+    if(!byId[fromId]||!byId[toId])return;
+    var a=geo(byId[fromId]), b=geo(byId[toId]), d=threadPath(a,b);
+    wires.appendChild(svg('path',{d:d,fill:'none',stroke:'#03110e','stroke-width':4,'stroke-opacity':.5}));
+    var pth=svg('path',{d:d,fill:'none',stroke:'#4fd6b4','stroke-width':2.2,'stroke-dasharray':'7 6','stroke-linecap':'round','stroke-opacity':.85});
+    wires.appendChild(pth); revPaths.push(pth);
+    wires.appendChild(svg('circle',{cx:a.cx,cy:a.bottom,r:3.4,fill:'#9f93b8','stroke':'#03110e','stroke-width':1}));
+    wires.appendChild(svg('circle',{cx:b.cx,cy:b.iconTop,r:4,fill:'#4fd6b4','stroke':'#03110e','stroke-width':1}));
+  }
+
+  // ---------- (re)build a page ----------
+  function buildTree(page){
+    PAGE=page;
+    var tree=TREES[page]||{nodes:[],threads:[]};
+    N=tree.nodes||[]; extraThreads=tree.threads||[];
+    byId={}; N.forEach(function(n){byId[n.id]=n;});
+    revPaths=[];
+    var olds=canvas.querySelectorAll('.focus');
+    for(var oi=0;oi<olds.length;oi++) olds[oi].parentNode.removeChild(olds[oi]);
+    wires.innerHTML='';
+    var maxY=0; N.forEach(function(n){ var y=yOf(n.year); if(y>maxY)maxY=y; });
+    var CANVAS_H=maxY+BOXH+50;
+    // fit + center: use only the columns this page actually occupies
+    var minC=Infinity,maxC=-Infinity;
+    N.forEach(function(n){ var c=COL[n.col]; if(c<minC)minC=c; if(c>maxC)maxC=c; });
+    if(!isFinite(minC)){ minC=maxC=COL.T; }
+    var contentLeft=minC-NODEW/2, contentRight=maxC+NODEW/2;
+    XOFF=PADX-contentLeft;                       // shift leftmost node to sit at PADX
+    CANVAS_W=(contentRight-contentLeft)+PADX*2;  // wrap content + symmetric padding
+    canvas.style.width=CANVAS_W+'px';
+    canvas.style.height=CANVAS_H+'px';
+    wires.setAttribute('width',CANVAS_W);
+    wires.setAttribute('height',CANVAS_H);
+    wires.setAttribute('viewBox','0 0 '+CANVAS_W+' '+CANVAS_H);
+    // prereq lines
+    N.forEach(function(n){
+      if(!n.prereq)return;
+      var c=geo(n);
+      n.prereq.forEach(function(pid){
+        if(!byId[pid])return;
+        var p=geo(byId[pid]), d;
+        if(Math.abs(p.cx-c.cx)<2){ d='M '+p.cx+' '+p.bottom+' L '+c.cx+' '+c.iconTop; }
+        else{ var my=p.bottom+(c.iconTop-p.bottom)*0.5;
+          d='M '+p.cx+' '+p.bottom+' L '+p.cx+' '+my+' L '+c.cx+' '+my+' L '+c.cx+' '+c.iconTop; }
+        wires.appendChild(svg('path',{d:d,fill:'none',stroke:'#000','stroke-width':5,'stroke-opacity':.45,'stroke-linejoin':'round','stroke-linecap':'round'}));
+        var col=(byId[pid].kind==='fork'||n.kind==='fork'||n.kind==='now')?'#e7c873':'#caa257';
+        wires.appendChild(svg('path',{d:d,fill:'none',stroke:col,'stroke-width':2.6,'stroke-linejoin':'round','stroke-linecap':'round','stroke-opacity':.92}));
+        wires.appendChild(svg('circle',{cx:c.cx,cy:c.iconTop-1,r:3.2,fill:col,stroke:'#1a140b','stroke-width':1}));
+      });
+    });
+    // mutex markers
+    N.forEach(function(n){
+      if(!n.mutex)return;
+      var a=geo(n);
+      n.mutex.forEach(function(mid){
+        if(!byId[mid])return;
+        var b=geo(byId[mid]);
+        var y=Math.min(a.iconTop,b.iconTop)+22;
+        var x1=Math.min(a.cx,b.cx), x2=Math.max(a.cx,b.cx);
+        var ex1=x1+NODEW/2-6, ex2=x2-NODEW/2+6, d='M '+ex1+' '+y+' L '+ex2+' '+y;
+        wires.appendChild(svg('path',{d:d,fill:'none',stroke:'#c98a5a','stroke-width':2,'stroke-dasharray':'1 5','stroke-linecap':'round','stroke-opacity':.85}));
+        wires.appendChild(svg('path',{d:'M '+ex1+' '+(y-4)+' L '+(ex1-7)+' '+y+' L '+ex1+' '+(y+4)+' Z',fill:'#c98a5a','fill-opacity':.9}));
+        wires.appendChild(svg('path',{d:'M '+ex2+' '+(y-4)+' L '+(ex2+7)+' '+y+' L '+ex2+' '+(y+4)+' Z',fill:'#c98a5a','fill-opacity':.9}));
+      });
+    });
+    // revive threads
+    N.forEach(function(n){ if(n.revive) addThread(n.revive.from, n.id); });
+    extraThreads.forEach(function(t){ addThread(t.from,t.to); });
+    // focus nodes
+    N.forEach(function(n){
+      var c=geo(n);
+      var el=document.createElement('div');
+      el.className='focus '+n.kind;
+      el.style.left=c.left+'px'; el.style.top=c.top+'px';
+      var badge='';
+      if(n.kind==='fork') badge='<span class="star">★</span>';
+      if(n.kind==='now') badge='<span class="nowtag">NOW</span>';
+      if(n.kind==='ghost') badge='<span class="pruned">✕</span>';
+      if(n.kind==='revived') badge='<span class="reborn">↻ revived</span>';
+      el.innerHTML='<div class="icon">'+badge+'<span class="glyph">'+(ICONS[n.g]||n.g)+'</span></div><div class="plate">'+n.title+'</div>';
+      el._tip=buildTip(n);
+      canvas.appendChild(el);
+    });
+    // animate revival threads
+    var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(!reduce){
+      revPaths.forEach(function(pp,i){
+        var len=pp.getTotalLength();
+        pp.style.strokeDasharray=len; pp.style.strokeDashoffset=len;
+        pp.getBoundingClientRect();
+        pp.style.transition='stroke-dashoffset 1.1s ease '+(0.15+i*0.18)+'s';
+        requestAnimationFrame(function(){ pp.style.strokeDashoffset='0'; });
+        setTimeout(function(){ pp.style.strokeDasharray='7 6'; pp.style.strokeDashoffset='0'; pp.style.transition='none'; }, 1500+i*180);
+      });
+    }
+  }
+
+  // ---------- tooltip (attached once) ----------
+  function show(e){ var f=e.target.closest('.focus'); if(!f)return; tip.innerHTML=f._tip; tip.classList.add('on'); move(e); }
+  function move(e){
+    var pad=16, w=tip.offsetWidth, hh=tip.offsetHeight;
+    var x=e.clientX+18, y=e.clientY+18;
+    if(x+w+pad>window.innerWidth) x=e.clientX-w-18;
+    if(y+hh+pad>window.innerHeight) y=window.innerHeight-hh-pad;
+    if(y<pad)y=pad;
+    tip.style.left=x+'px'; tip.style.top=y+'px';
+  }
+  function hide(){ tip.classList.remove('on'); }
+  canvas.addEventListener('mouseover',show);
+  canvas.addEventListener('mousemove',function(e){ if(tip.classList.contains('on'))move(e); });
+  canvas.addEventListener('mouseout',function(e){ var f=e.target.closest('.focus'); if(f)hide(); });
+  canvas.addEventListener('click',function(e){
+    var f=e.target.closest('.focus'); if(!f){ hide(); return; }
+    tip.innerHTML=f._tip; tip.classList.add('on');
+    var r=f.getBoundingClientRect(); move({clientX:r.left+r.width/2, clientY:r.top});
+  });
+
+  // ============================================================
+  //  YEAR REPORTS — technical-report depth, consistent with nodes
+  // ============================================================
+  var REPORTS = {
+  structure: {
+    2023:{era:'★ The fork',name:'Everything-is-a-token',thesis:'Quantize every modality into one vocabulary so perceiving and generating use the same machinery.',
+      sub:'<p>By 2023 the continuous-feature path (CLIP features → projector → LLM) dominates understanding. But it is <em class="k">asymmetric</em>: the model can read an image as embeddings, yet cannot write one with the same head.</p>',
+      ch:[{t:'Discrete unification',d:'VQ image tokens + RVQ audio tokens are lexicalized into one extended vocabulary; the LM does next-token over all of them.',a:'AnyGPT 2402.12226',key:'Input and output become symmetric — perceive = generate.'},
+          {t:'Semantic image tokens',d:'SEED quantizes to 1D causal semantic codes rather than pixel-reconstruction codes, so an LM autoregresses them naturally.',a:'2307.08041',key:'Discrete tokens designed for LM consumption, not just compression.'}],
+      gh:[{t:'Continuous bridge (Q-Former)',d:'A few learned queries compress continuous visual features for the LM — accurate, length-controlled, but generation needs a separate decoder.',a:'2301.12597',key:'The asymmetric continuous path the discrete fork reacts against.'}],
+      refs:'AnyGPT 2402.12226; SEED 2307.08041; BLIP-2 2301.12597'},
+    2024:{era:'★ The fork',name:'Decoupled representation',thesis:'One tokenizer cannot serve both semantic understanding and faithful reconstruction — so split it.',
+      sub:'<p>Discrete unification is elegant but a single VQ tokenizer is a bottleneck: codes good for reconstruction are not the codes that carry semantics.</p>',
+      ch:[{t:'Janus decoupling',d:'Continuous SigLIP features for understanding, VQ tokens for generation, both feeding one transformer.',a:'2410.13848',key:'Semantic vs reconstruction are different objectives a single tokenizer cannot jointly optimize.'},
+          {t:'Native-resolution patches',d:'NaViT-style: feed patches at native resolution/aspect with M-RoPE instead of resizing to a square.',a:'Qwen2-VL 2409.12191',key:'The continuous camp gets sharper rather than discretizing.'}],
+      rv:[{t:'RVQ audio codec',d:'Mimi/SNAC turn speech into discrete semantic+acoustic tokens — audio joins the one-vocabulary club and becomes generatable.',a:'Moshi 2410.00037',key:'The discrete-token idea, now extended to sound.'}],
+      refs:'Janus 2410.13848; Qwen2-VL 2409.12191; Mimi/Moshi 2410.00037'}
+  },
+  data: {
+    2023:{era:'★ The fork',name:'Early vs late fusion',thesis:'Stop bolting senses onto a frozen LLM; mix modalities at the bottom and train them together.',
+      sub:'<p>Late fusion (frozen LLM + adapter) is cheap and data-efficient, but cross-modal interaction is forced through a fixed interface that never co-adapts.</p>',
+      ch:[{t:'Early fusion',d:'Modality tokens mixed at the bottom of one transformer, trained jointly from scratch.',a:'Chameleon 2405.09818',key:'Cross-modal reasoning improves, at the cost of training from scratch.'},
+          {t:'Encoder-free',d:'Delete the vision encoder; project raw patches straight into the first layer.',a:'Fuyu',key:'The most radical native form — no separate perception stack.'}],
+      gh:[{t:'Late-fusion bolt-on',d:'Freeze both encoder and LLM, train only a bridge (Flamingo gated cross-attn / BLIP-2 Q-Former).',a:'2204.14198 / 2301.12597',key:'The pragmatic shortcut of the data-scarce era.'}],
+      refs:'Chameleon 2405.09818; Flamingo 2204.14198; BLIP-2 2301.12597; Kosmos-1 2302.14045'},
+    2025:{era:'★ The verdict',name:'Scaling laws settle it',thesis:'457 models say: no inherent advantage to late fusion. Early-fusion wins at small scale and is more compute-efficient.',
+      sub:'<p>The early-vs-late debate was folklore until someone trained the grid.</p>',
+      ch:[{t:'Scaling Laws for NMMs',d:'Early-fusion encoder-free models match/outperform late fusion at low param counts, are more compute-efficient to train, and benefit further from modality-agnostic MoE.',a:'2504.07951',key:'The native path is at least as good and structurally cleaner.'},
+          {t:'NaViL',d:'Native end-to-end MLLM; encoder and LLM capacity should scale together, competitive even under data constraints.',a:'2510.08565',key:'Native training is data-efficient, not just compute-efficient.'}],
+      rv:[{t:'NEO encoder-free',d:'A monolithic VLM grows vision from scratch with no encoder via native primitives — the Fuyu bet, now competitive.',a:'2510.14979',key:'Encoder-free revived once scale/data made it work.'}],
+      refs:'Scaling Laws 2504.07951; NaViL 2510.08565; NEO 2510.14979'}
+  },
+  algorithm: {
+    2024:{era:'★ The fork',name:'How to draw pixels',thesis:'Discrete autoregression (max unification) vs diffusion/flow fused in one transformer (max fidelity).',
+      sub:'<p>External diffuser bridges (Emu/SEED/NExT-GPT) let an LM trigger image generation, but the generator is a different model. 2024 pulls generation inside.</p>',
+      ch:[{t:'AR over discrete tokens',d:'Quantize images and predict them next-token with the same weights as text.',a:'Chameleon 2405.09818 / Emu3 2409.18869',key:'Maximal unification; fidelity capped by tokenizer + serial decoding.'},
+          {t:'AR + diffusion fused',d:'One transformer: next-token for text, diffusion/flow on continuous latents for images.',a:'Transfusion 2408.11039 / Show-o 2408.12528',key:'Higher fidelity, two heterogeneous objectives on shared weights.'}],
+      gh:[{t:'External diffuser bridge',d:'The LM emits conditioning embeddings; a separate SD/SDXL decoder renders.',a:'NExT-GPT 2309.05519 / Emu2 2312.13286',key:'Modular, but generation lives outside the LM.'}],
+      refs:'Chameleon 2405.09818; Emu3 2409.18869; Transfusion 2408.11039; Show-o 2408.12528'},
+    2026:{era:'★ NOW',name:'The two forks converge',thesis:'Stop training separate model classes; one model picks AR or diffusion decoding per deployment.',
+      sub:'<p>By 2026 native any-to-any output is the flagship default, and the AR-vs-diffusion split is being dissolved.</p>',
+      ch:[{t:'Joint AR+diffusion objective',d:'E2D2 / Nemotron-Labs-Diffusion train one model that switches between autoregressive, diffusion-parallel, and self-speculation decoding by changing the attention mask.',a:'E2D2 2510.22852',key:'Pick the decode mode per deployment, not per trained model.'},
+          {t:'RL repairs discrete AR',d:'X-Omni uses RL to make discrete autoregressive image generation competitive with diffusion inside a unified model.',a:'2507.22058',key:'The unification path closes its fidelity gap.'}],
+      refs:'E2D2 2510.22852; X-Omni 2507.22058; 4o image generation'}
+  },
+  infra: {
+    2024:{era:'★ The fork',name:'Kill the cascade',thesis:'Make audio a token stream the model itself emits — speech starts before the text answer exists.',
+      sub:'<p>ASR→LLM→TTS is robust but latency stacks, prosody/emotion is lost, and it cannot be interrupted. 2024 collapses the pipeline.</p>',
+      ch:[{t:'End-to-end speech-native',d:'Audio tokens emitted interleaved with text, decoded incrementally by a streaming codec/flow vocoder.',a:'Mini-Omni 2408.16725 / LLaMA-Omni 2409.06666',key:'Speech begins before the full text response is generated.'},
+          {t:'Frozen-LLM speech',d:'Bolt speech in/out onto a fully frozen LLM (adapters + state head) to preserve reasoning.',a:'Freeze-Omni 2411.00774',key:'Avoid catastrophic forgetting of text ability.'}],
+      rv:[{t:'Audio as discrete tokens',d:'AudioLM\'s codec-token-AR idea is the substrate that makes speech emittable by an LM.',a:'2209.03143',key:'A 2022 seed that the speech-native fork is built on.'}],
+      refs:'Mini-Omni 2408.16725; LLaMA-Omni 2409.06666; Freeze-Omni 2411.00774; Moshi 2410.00037; AudioLM 2209.03143'}
+  }
+  };
+
+  // ---------- report renderer ----------
+  // turn _{...}/^{...} and _x/^x notation into real sub/superscripts;
+  // keep the leading <b>label</b> untouched so it stays a plain caption.
+  var GK='A-Za-z0-9α-ωΑ-Ω';
+  function fmtMath(s){
+    // escape literal < > & so math operators (j > i, x_{<t}) never become HTML tags
+    s=s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // braced sub/superscripts, looped to resolve nested braces (x_{z_{<t}})
+    for(var i=0;i<3;i++){
+      s=s.replace(/\^\{([^{}]*)\}/g,'<sup>$1</sup>')
+         .replace(/_\{([^{}]*)\}/g,'<sub>$1</sub>');
+    }
+    // bare single-token sub/superscripts
+    s=s.replace(new RegExp('\\^(['+GK+']+)','g'),'<sup>$1</sup>')
+       .replace(new RegExp('_(['+GK+']+)','g'),'<sub>$1</sub>');
+    return s;
+  }
+  function fmtEq(e){
+    var m=e.match(/^(<b>[^]*?<\/b>)([^]*)$/);
+    if(m) return m[1]+fmtMath(m[2]);
+    return fmtMath(e);
+  }
+  function rpItems(arr,icls){
+    return arr.map(function(o){
+      var a=o.a?'<span class="arx">'+o.a+'</span>':'';
+      var eq=(o.eq&&o.eq.length)?o.eq.map(function(e){return '<div class="rp-eq">'+fmtEq(e)+'</div>';}).join(''):'';
+      var key=o.key?'<div class="rp-key"><b>Core thesis ·</b> '+o.key+'</div>':'';
+      return '<div class="rp-item '+icls+'"><h5>'+o.t+'</h5><p>'+o.d+'</p>'+eq+key+a+'</div>';
+    }).join('');
+  }
+  function rpSec(cls,label,html){
+    return '<div class="rp-sec '+cls+'"><h4><span class="dot"></span>'+label+'</h4>'+html+'</div>';
+  }
+  function renderReport(y){
+    var pg=REPORTS[PAGE]||{}; var r=pg[y]; if(!r)return;
+    document.getElementById('rpEra').textContent=r.era;
+    document.getElementById('rpYr').textContent=y;
+    document.getElementById('rpName').textContent=r.name;
+    document.getElementById('rpThesis').innerHTML=r.thesis;
+    var b='';
+    if(r.sub) b+=rpSec('s-sub','Substrate · already exists',r.sub);
+    if(r.ch&&r.ch.length) b+=rpSec('s-ch','Trunk · human choice',rpItems(r.ch,'i-ch'));
+    if(r.gh&&r.gh.length) b+=rpSec('s-gh','Road not taken · pruned',rpItems(r.gh,'i-gh'));
+    if(r.rv&&r.rv.length) b+=rpSec('s-rv','Revived · back once the substrate landed',rpItems(r.rv,'i-rv'));
+    if(r.note) b+=rpSec('s-note','Technical note',r.note);
+    if(r.refs) b+=rpSec('s-note','References · arXiv',' <div class="rp-refs">'+r.refs+'</div>');
+    var body=document.getElementById('rpBody');
+    body.innerHTML=b; body.scrollTop=0;
+  }
+
+  // ---------- open / close / navigate ----------
+  var curYear=null;
+  var scrim=document.getElementById('scrim');
+  var report=document.getElementById('report');
+  function setActiveTab(y){
+    var tabs=canvas.querySelectorAll('.yrtab');
+    for(var i=0;i<tabs.length;i++){
+      tabs[i].classList.toggle('active', (+tabs[i].getAttribute('data-year'))===y);
+    }
+  }
+  function openReport(y){
+    y=+y; if(!REPORTS[PAGE]||!REPORTS[PAGE][y])return;
+    curYear=y; renderReport(y);
+    document.getElementById('rpPrev').disabled=(y<=2020);
+    document.getElementById('rpNext').disabled=(y>=2026);
+    report.classList.add('on'); scrim.classList.add('on');
+    report.setAttribute('aria-hidden','false');
+    setActiveTab(y);
+  }
+  function closeReport(){
+    report.classList.remove('on'); scrim.classList.remove('on');
+    report.setAttribute('aria-hidden','true');
+    setActiveTab(-1); curYear=null;
+  }
+  canvas.addEventListener('click',function(e){
+    var tab=e.target.closest('.yrtab');
+    if(tab) openReport(tab.getAttribute('data-year'));
+  });
+  document.getElementById('rpClose').addEventListener('click',closeReport);
+  scrim.addEventListener('click',closeReport);
+  document.getElementById('rpPrev').addEventListener('click',function(){ if(curYear>2020)openReport(curYear-1); });
+  document.getElementById('rpNext').addEventListener('click',function(){ if(curYear<2026)openReport(curYear+1); });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){ closeReport(); return; }
+    if(report.classList.contains('on')){
+      if(e.key==='ArrowLeft'&&curYear>2020) openReport(curYear-1);
+      else if(e.key==='ArrowRight'&&curYear<2026) openReport(curYear+1);
+    }
+  });
+
+  // ---------- page tabs (HoI4 multi-page) ----------
+  var pageMeta=[['structure','REPRESENTATION','🔡','How a modality enters the model · discrete tokens vs continuous features · symmetric vs asymmetric I/O'],
+                ['data','FUSION','🧬','Where modalities meet & from what · late bolt-on (LLM-init) vs early native vs encoder-free'],
+                ['algorithm','GENERATION','🎨','How non-text output is produced · AR-over-discrete vs diffusion/flow vs external-bridge vs decoupled'],
+                ['infra','SPEECH','🔊','Real-time speech · streaming codec out · full-duplex vs half-duplex · frozen vs trained backbone']];
+  var ptbar=document.getElementById('pagetabs');
+  function setPage(pg){
+    if(!TREES[pg])return;
+    buildTree(pg);
+    var btns=ptbar.querySelectorAll('.ptab');
+    for(var i=0;i<btns.length;i++) btns[i].classList.toggle('active', btns[i].getAttribute('data-page')===pg);
+    if(report.classList.contains('on')){
+      if(REPORTS[pg]&&REPORTS[pg][curYear]){ renderReport(curYear); setActiveTab(curYear); }
+      else closeReport();
+    }
+  }
+  pageMeta.forEach(function(m){
+    var b=document.createElement('button');
+    b.className='ptab'; b.setAttribute('data-page',m[0]);
+    b.innerHTML='<span class="pt-ic">'+m[2]+'</span><span class="pt-tx"><b>'+m[1]+'</b><small>'+m[3]+'</small></span>';
+    b.addEventListener('click',function(){ setPage(m[0]); });
+    ptbar.appendChild(b);
+  });
+  setPage('structure');
+})();
+</script>
+</body>
+</html>
